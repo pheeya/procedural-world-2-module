@@ -43,6 +43,9 @@ public class NoiseGenerator
                     frequency *= _lacunarity;
                 }
 
+                if(value>=1){
+                }
+
                 if (value > maxNoiseHeight)
                 {
                     maxNoiseHeight = value;
@@ -67,12 +70,12 @@ public class NoiseGenerator
         return map;
     }
 
-    public static float[][,] Normalize(float[][,] _noiseMaps, int _height, int _width)
+    public static List<float[,]> Normalize(List<float[,]> _noiseMaps, int _height, int _width)
     {
         float maxNoiseHeight = float.MinValue;
         float minNoiseHeight = float.MaxValue;
 
-        for (int i = 0; i < _noiseMaps.Length; i++)
+        for (int i = 0; i < _noiseMaps.Count; i++)
         {
             for (int y = 0; y < _height; y++)
             {
@@ -91,13 +94,16 @@ public class NoiseGenerator
                 }
             }
         }
-        for (int i = 0; i < _noiseMaps.Length; i++)
+
+
+        for (int i = 0; i < _noiseMaps.Count; i++)
         {
             for (int y = 0; y < _height; y++)
             {
                 for (int x = 0; x < _width; x++)
                 {
                     _noiseMaps[i][x, y] = Mathf.InverseLerp(minNoiseHeight, maxNoiseHeight, _noiseMaps[i][x, y]);
+
                 }
             }
         }

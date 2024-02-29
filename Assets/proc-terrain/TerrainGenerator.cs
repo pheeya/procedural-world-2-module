@@ -15,7 +15,7 @@ public class TerrainGenerator : MonoBehaviour
 
     [Header("Terrain Config")]
     public float _heightScale;
-    [field:SerializeField] public bool Normalize {get; private set;}
+    [field: SerializeField] public bool Normalize { get; private set; }
     public static int _drawDistance = 480;
     public TerrainType[] terrainTypes;
 
@@ -44,16 +44,43 @@ public class TerrainGenerator : MonoBehaviour
 
     Dictionary<Vector2, TerrainChunk> terrainChunks = new Dictionary<Vector2, TerrainChunk>();
     private List<TerrainChunk> terrainChunksVisibleLastFrame = new List<TerrainChunk>();
+
+
+    public Color[] ColorMapFromHeight(HeightMap _hm)
+    {
+
+        Color[] colormap = new Color[_hm.Width * _hm.Height];
+        for (int y = 0; y < _hm.Height; y++)
+        {
+            for (int x = 0; x < _hm.Width; x++)
+            {
+                float value = _hm.Values[x, y];
+                // loop through all terrain height regions and assign color
+                for (int i = 0; i < terrainTypes.Length; i++)
+                {
+                    if (value <= terrainTypes[i].height)
+                    {
+                        int alreadyColored = y * _hm.Height;
+                        colormap[alreadyColored + x] = terrainTypes[i].color;
+                        break;
+                    }
+                }
+
+            }
+        }
+        return colormap;
+    }
     public MapData GenerateMapData(float _ofX, float _ofY)
     {
-        float[,] heightmap = NoiseGenerator.GenerateNoiseMap(_seed, VertsPerSide(), VertsPerSide(), _noiseScale, _octaves, _persistance, _lacunarity, _ofX, _ofY);
+        float[,] noise = NoiseGenerator.GenerateNoiseMap(_seed, VertsPerSide(), VertsPerSide(), _noiseScale, _octaves, _persistance, _lacunarity, _ofX, _ofY);
+        HeightMap heightmap = HeightMap.FromNoise(noise);
         Color[] colormap = new Color[VertsPerSide() * VertsPerSide()];
 
         for (int y = 0; y < VertsPerSide(); y++)
         {
             for (int x = 0; x < VertsPerSide(); x++)
             {
-                float value = heightmap[x, y];
+                float value = heightmap.Values[x, y];
                 // loop through all terrain height regions and assign color
                 for (int i = 0; i < terrainTypes.Length; i++)
                 {
@@ -74,27 +101,61 @@ public class TerrainGenerator : MonoBehaviour
     public void GenerateTerrain()
     {
         //float[,] heightmap = NoiseGenerator.GenerateNoiseMap(_seed, VertsPerSide(), VertsPerSide(), _noiseScale, _octaves, _persistance, _lacunarity, _offsetX, _offsetY);
-        MapData mapdata = GenerateMapData(_offsetX, _offsetY);
 
+        List<MapData> MapDatas = new();
+        List<Color[]> colorMaps = new();
+        List<float[,]> noises = new();
 
         for (int y = 0; y < m_neighboursY; y++)
         {
             for (int x = 0; x < m_neighboursX; x++)
             {
-                int index = m_neighboursY * y;
-                index += x;
 
-                int coord = index;
-
-
+                float[,] no = NoiseGenerator.GenerateNoiseMap(_seed, VertsPerSide(), VertsPerSide(), _noiseScale, _octaves, _persistance, _lacunarity, _offsetX + (m_chunkSize * x), _offsetY + (m_chunkSize * y));
+                if (!Normalize)
+                {
+                    HeightMap hm = HeightMap.FromNoise(no);
+                    MapData md = new(hm, ColorMapFromHeight(hm), VertsPerSide(), VertsPerSide());
+                    MapDatas.Add(md);
+                }
+                noises.Add(no);
             }
-
+        }
+        if (Normalize)
+        {
+            noises = NoiseGenerator.Normalize(noises, VertsPerSide(), VertsPerSide());
+            for (int y = 0; y < m_neighboursY; y++)
+            {
+                for (int x = 0; x < m_neighboursX; x++)
+                {
+                    int index = x + y * m_neighboursY;
+                    HeightMap hm = HeightMap.FromNoise(noises[index]);
+                    MapData md = new(hm, ColorMapFromHeight(hm), VertsPerSide(), VertsPerSide());
+                    MapDatas.Add(md);
+                }
+            }
+        }
+        for (int y = 0; y < m_neighboursY; y++)
+        {
+            for (int x = 0; x < m_neighboursX; x++)
+            {
+                Vector2 pos = new(x, y);
+                int index = x + y * m_neighboursY;
+                MapData mapdata = MapDatas[index];
+                Texture tex = TextureGenerator.TextureFromMap(mapdata.colormap, VertsPerSide(), VertsPerSide());
+                TerrainChunk chunk = new TerrainChunk(m_chunkSize, mapdata.GetHeightMap(), mapdata.GetColorMap(), _heightScale, _heightCurve, pos, _terrainMat, tex, transform);
+                chunk.SetMesh(MeshGenerator.GenerateMeshFromHeightMap(mapdata.GetHeightMap(), _heightScale, _heightCurve).CreateMesh());
+                terrainChunks.Add(pos, chunk);
+                chunk.SetVisibility(true);
+            }
         }
 
-        Texture tex = TextureGenerator.TextureFromMap(mapdata.colormap, VertsPerSide(), VertsPerSide());
-        TerrainChunk terrain = new TerrainChunk(m_chunkSize, new HeightMap(m_chunkSize, m_chunkSize, mapdata.GetHeightMap()), mapdata.GetColorMap(), _heightScale, _heightCurve, Vector2.zero, _terrainMat, tex, transform);
-        terrain.SetMesh(MeshGenerator.GenerateMeshFromHeightMap(mapdata.GetHeightMap(), _heightScale, _heightCurve).CreateMesh());
+        // Texture tex = TextureGenerator.TextureFromMap(mapdata.colormap, VertsPerSide(), VertsPerSide());
+        // TerrainChunk terrain = new TerrainChunk(m_chunkSize, new HeightMap(m_chunkSize, m_chunkSize, mapdata.GetHeightMap().Values), mapdata.GetColorMap(), _heightScale, _heightCurve, Vector2.zero, _terrainMat, tex, transform);
 
+
+        // terrain.SetMesh(MeshGenerator.GenerateMeshFromHeightMap(mapdata.GetHeightMap(), _heightScale, _heightCurve).CreateMesh());
+        // terrain.SetVisibility(true);
         //disabled features for now
         //_featureGenerator.GenerateFeatures(NoiseGenerator.GenerateNoiseMap(_seed+1, VertsPerSide(), VertsPerSide(), _noiseScale, _octaves, _persistance, _lacunarity, _offsetX, _offsetY), _heightScale, _heightCurve, mapdata.GetHeightMap());
     }
@@ -107,10 +168,11 @@ public class TerrainGenerator : MonoBehaviour
     public MeshData GenerateTerrainMeshData()
     {
         MapData mapdata = GenerateMapData(_offsetX, _offsetY);
-        float[][,] heights = { mapdata.GetHeightMap() };
+        List<float[,]> heights = new();
+        heights.Add(mapdata.GetHeightMap().Values);
         if (Normalize)
         {
-            mapdata.OverrideHeightMap(NoiseGenerator.Normalize(heights, mapdata.height, mapdata.width)[0]);
+            mapdata.OverrideHeightMap(HeightMap.FromNoise(NoiseGenerator.Normalize(heights, mapdata.height, mapdata.width)[0]));
         }
 
         return MeshGenerator.GenerateMeshFromHeightMap(mapdata.GetHeightMap(), _heightScale, _heightCurve);
@@ -148,10 +210,8 @@ public class TerrainGenerator : MonoBehaviour
 
                     MapData mapdata = GenerateMapData(_offsetX + viewedChunkCoord.x * m_chunkSize, _offsetY + viewedChunkCoord.y * m_chunkSize);
                     Texture tex = TextureGenerator.TextureFromMap(mapdata.colormap, VertsPerSide(), VertsPerSide());
-                    TerrainChunk chunk = new TerrainChunk(m_chunkSize, new HeightMap(m_chunkSize, m_chunkSize, mapdata.GetHeightMap()), mapdata.GetColorMap(), _heightScale, _heightCurve, viewedChunkCoord, _terrainMat, tex, transform);
+                    TerrainChunk chunk = new TerrainChunk(m_chunkSize, mapdata.GetHeightMap(), mapdata.GetColorMap(), _heightScale, _heightCurve, viewedChunkCoord, _terrainMat, tex, transform);
                     chunk.SetMesh(MeshGenerator.GenerateMeshFromHeightMap(mapdata.GetHeightMap(), _heightScale, _heightCurve).CreateMesh());
-
-
                     terrainChunks.Add(viewedChunkCoord, chunk);
                 }
             }
@@ -174,13 +234,13 @@ public class TerrainGenerator : MonoBehaviour
     private void Awake()
     {
         maxChunksVisible = Mathf.RoundToInt(_drawDistance / m_chunkSize);
-        //GenerateTerrain();
+        GenerateTerrain();
 
     }
     private void Update()
     {
         playerPos = new Vector2(_player.transform.position.x, _player.transform.position.z);
-        GenerateEndlessTerrain();
+        // GenerateEndlessTerrain();
     }
 
     public class TerrainChunk
@@ -210,7 +270,7 @@ public class TerrainGenerator : MonoBehaviour
 
             m_heightMap = _heightMap;
             m_colorMap = _colorMap;
-            meshFilter.mesh = MeshGenerator.GenerateMeshFromHeightMap(m_heightMap.Values, _heightScale, _heightCurve).CreateMesh();
+            meshFilter.mesh = MeshGenerator.GenerateMeshFromHeightMap(m_heightMap, _heightScale, _heightCurve).CreateMesh();
             SetVisibility(false);
         }
 
@@ -256,19 +316,19 @@ public struct MapData
 {
 
     public readonly int height, width;
-    private float[,] heightmap;
+    private HeightMap heightmap;
     public readonly Color[] colormap;
-    public MapData(float[,] heightmap, Color[] colormap, int _height, int _width)
+    public MapData(HeightMap heightmap, Color[] colormap, int _height, int _width)
     {
         this.heightmap = heightmap;
         this.colormap = colormap;
         height = _height;
         width = _width;
     }
-    public void OverrideHeightMap(float[,] _hm)
+    public void OverrideHeightMap(HeightMap _hm)
     {
         this.heightmap = _hm;
     }
-    public float[,] GetHeightMap() { return heightmap; }
+    public HeightMap GetHeightMap() { return heightmap; }
     public Color[] GetColorMap() { return colormap; }
 }

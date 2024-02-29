@@ -4,10 +4,10 @@ using UnityEngine;
 
 public class MeshGenerator
 {
-    public static MeshData GenerateMeshFromHeightMap(float[,] _heightmap, float _heightScale, AnimationCurve _heightCurve)
+    public static MeshData GenerateMeshFromHeightMap(HeightMap _heightmap, float _heightScale, AnimationCurve _heightCurve)
     {
-        int width = _heightmap.GetLength(0);
-        int height = _heightmap.GetLength(1);
+        int width = _heightmap.Width;
+        int height = _heightmap.Height;
         float topLeftX = (width - 1) / -2f;
         float topLeftZ = (height - 1) / 2f;
 
@@ -18,7 +18,7 @@ public class MeshGenerator
         {
             for (int x = 0; x < width; x++)
             {
-                meshData.vertices[vertexIndex] = new Vector3(topLeftX + x, _heightCurve.Evaluate(_heightmap[x, y]) * _heightScale, topLeftZ - y);
+                meshData.vertices[vertexIndex] = new Vector3(topLeftX + x, _heightCurve.Evaluate(_heightmap.Values[x, y]) * _heightScale, topLeftZ - y);
                 meshData.uvs[vertexIndex] = new Vector2(x / (float)width, y / (float)height);
                 if (x < width - 1 && y < height - 1)
                 {
