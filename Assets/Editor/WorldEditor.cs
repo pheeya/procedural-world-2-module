@@ -37,12 +37,12 @@ public class WorldEditor : Editor
 
             if (terrainGenerator.Normalize)
             {
-                mapdata.OverrideHeightMap(HeightMap.FromNoise(NoiseGenerator.Normalize(heights, mapdata.height, mapdata.width)[0]));
+                mapdata.OverrideHeightMap(HeightMap.FromNoise(NoiseGenerator.Normalize(heights, mapdata.height, mapdata.width)[0],0));
             }
             heightmap = TextureGenerator.TextureFromMap(mapdata.GetHeightMap().Values);
 
             colormap = TextureGenerator.TextureFromMap(mapdata.colormap, heightmap.width, heightmap.height);
-            debugTerrain.GenerateMesh(terrainGenerator.GenerateTerrainMeshData().CreateMesh(), colormap);
+            debugTerrain.GenerateMesh(terrainGenerator.GenerateTerrainMeshData().mesh, colormap);
         }
         EditorGUILayout.BeginHorizontal();
         GUILayout.Label(heightmap);
