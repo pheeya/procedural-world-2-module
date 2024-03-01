@@ -8,7 +8,7 @@ public class HeightMap
     public int Height { get; private set; }
 
     public int Width { get; private set; }
-    public int BorderSize {get; private set;}
+    public int BorderSize {get; set;}
     public HeightMap(int _w, int _h,int _borderSize ,float[,] _values)
     {
         Height = _h;
