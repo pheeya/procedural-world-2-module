@@ -37,7 +37,7 @@ public class WorldEditor : Editor
 
             if (terrainGenerator.Normalize)
             {
-                mapdata.OverrideHeightMap(HeightMap.FromNoise(NoiseGenerator.Normalize(heights, mapdata.height, mapdata.width)[0],0));
+                mapdata.OverrideHeightMap(HeightMap.FromNoise(NoiseGenerator.Normalize(heights, mapdata.height, mapdata.width)[0],1));
             }
             heightmap = TextureGenerator.TextureFromMap(mapdata.GetHeightMap().Values);
 

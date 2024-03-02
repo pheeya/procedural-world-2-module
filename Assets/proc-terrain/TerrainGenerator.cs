@@ -173,7 +173,7 @@ public class TerrainGenerator : MonoBehaviour
         heights.Add(mapdata.GetHeightMap().Values);
         if (Normalize)
         {
-            mapdata.OverrideHeightMap(HeightMap.FromNoise(NoiseGenerator.Normalize(heights, mapdata.height, mapdata.width)[0], 0));
+            mapdata.OverrideHeightMap(HeightMap.FromNoise(NoiseGenerator.Normalize(heights, mapdata.height, mapdata.width)[0], 1));
         }
 
         return MeshGenerator.GenerateMeshFromHeightMap(mapdata.GetHeightMap(), _heightScale, _heightCurve, DefaultLOD);

@@ -9,16 +9,20 @@ public class MeshGenerator
         int increment = _lod == 0 ? 1 : _lod * 2;
         int width = _heightmap.Width;
         int height = _heightmap.Height;
-        float topLeftX = (width - 1) / -2f;
-        float topLeftZ = (height - 1) / 2f;
 
 
+        int vertsPerSide = width - _heightmap.BorderSize * 2;
+        int vertSpanSimplified = width - 2 * increment;
+        int vertsPerSideSimplified = (vertSpanSimplified - 1) / increment + 1;
 
-        int vertsInWidth = (width - 1) / increment + 1 - _heightmap.BorderSize*2;
-        int vertsInHeight = (height - 1) / increment + 1- _heightmap.BorderSize*2;
+        int meshTargetPhysicalSize = vertsPerSide - 1;
+        float topLeftX = meshTargetPhysicalSize / -2f;
+        float topLeftZ = meshTargetPhysicalSize / 2f;
 
-        MeshData meshData = new MeshData(vertsInWidth, vertsInHeight);
 
+        int vertsInHeight = (height - 1) / increment + 1 - _heightmap.BorderSize * 2;
+
+        MeshData meshData = new MeshData(vertsPerSideSimplified, vertsPerSideSimplified);
 
 
 
@@ -53,6 +57,7 @@ public class MeshGenerator
         }
 
 
+
         vertexIndex = 0;
         for (int y = 0; y < height; y += increment)
         {
@@ -65,9 +70,17 @@ public class MeshGenerator
 
 
                 // remove this when reverting back to border aware code
-                currentIndex = vertexIndex;
+                // currentIndex = vertexIndex;
 
-                Vector3 pos = new Vector3(topLeftX + x, _heightCurve.Evaluate(_heightmap.Values[x, y]) * _heightScale, topLeftZ - y); ;
+
+
+                float normalizedX = x - increment;
+                normalizedX /= (vertSpanSimplified - 1);
+                float normalizedZ = y - increment;
+                normalizedZ /= (vertSpanSimplified - 1);
+                float yPos = _heightCurve.Evaluate(_heightmap.Values[x, y]) * _heightScale;
+
+                Vector3 pos = new Vector3(topLeftX + normalizedX*meshTargetPhysicalSize, yPos, topLeftZ - normalizedZ*meshTargetPhysicalSize); ;
                 if (isBorder)
                 {
                     borderVertices.Add(pos);
@@ -79,36 +92,36 @@ public class MeshGenerator
                 }
                 if (x < width - 1 && y < height - 1)
                 {
-                    // int a = vertexIndicesMap[x, y];
-                    // int b = vertexIndicesMap[x + 1, y];
-                    // int c = vertexIndicesMap[x, y + 1];
-                    // int d = vertexIndicesMap[x + 1, y + 1];
+                    int a = vertexIndicesMap[x, y];
+                    int b = vertexIndicesMap[x + increment, y];
+                    int c = vertexIndicesMap[x, y + increment];
+                    int d = vertexIndicesMap[x + increment, y + increment];
 
-                    // if (a < 0 || d < 0 || c < 0)
-                    // {
-                    //     borderTriangles.Add(a);
-                    //     borderTriangles.Add(d);
-                    //     borderTriangles.Add(c);
-                    // }
-                    // else
-                    // {
-                    //     meshData.AddTriangle(a, d, c);
-                    // }
+                    if (a < 0 || d < 0 || c < 0)
+                    {
+                        borderTriangles.Add(a);
+                        borderTriangles.Add(d);
+                        borderTriangles.Add(c);
+                    }
+                    else
+                    {
+                        meshData.AddTriangle(a, d, c);
+                    }
 
-                    // if (a < 0 || d < 0 || b < 0)
-                    // {
-                    //     borderTriangles.Add(d);
-                    //     borderTriangles.Add(a);
-                    //     borderTriangles.Add(b);
-                    // }
-                    // else
-                    // {
-                    //     meshData.AddTriangle(d, a, b);
-                    // }
+                    if (a < 0 || d < 0 || b < 0)
+                    {
+                        borderTriangles.Add(d);
+                        borderTriangles.Add(a);
+                        borderTriangles.Add(b);
+                    }
+                    else
+                    {
+                        meshData.AddTriangle(d, a, b);
+                    }
 
 
-                    meshData.AddTriangle(currentIndex, currentIndex + vertsInWidth + 1, vertexIndex + vertsInWidth);
-                    meshData.AddTriangle(currentIndex + vertsInWidth + 1, vertexIndex, vertexIndex + 1);
+                    // meshData.AddTriangle(currentIndex, currentIndex + vertsInWidth + 1, vertexIndex + vertsInWidth);
+                    // meshData.AddTriangle(currentIndex + vertsInWidth + 1, vertexIndex, vertexIndex + 1);
                 }
                 vertexIndex++;
             }
