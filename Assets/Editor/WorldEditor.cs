@@ -30,19 +30,14 @@ public class WorldEditor : Editor
 
         if (GUI.changed)
         {
-            MapData mapdata = terrainGenerator.GenerateMapData(terrainGenerator._offsetX, terrainGenerator._offsetY);
+            HeightMap hm = terrainGenerator.GenerateTestHeightMap();
+            Color[] cm = terrainGenerator.ColorMapFromHeight(hm);
 
-            List<float[,]> heights = new();
-            heights.Add(mapdata.GetHeightMap().Values);
 
-            if (terrainGenerator.Normalize)
-            {
-                mapdata.OverrideHeightMap(HeightMap.FromNoise(NoiseGenerator.Normalize(heights, mapdata.height, mapdata.width)[0],1));
-            }
-            heightmap = TextureGenerator.TextureFromMap(mapdata.GetHeightMap().Values);
 
-            colormap = TextureGenerator.TextureFromMap(mapdata.colormap, heightmap.width, heightmap.height);
-            debugTerrain.GenerateMesh(terrainGenerator.GenerateTerrainMeshData().mesh, colormap);
+            heightmap = TextureGenerator.TextureFromMap(hm.Values);
+            colormap = TextureGenerator.TextureFromMap(cm, heightmap.width, heightmap.height);
+            debugTerrain.GenerateMesh(terrainGenerator.GenerateTestMeshData().mesh, colormap);
         }
         EditorGUILayout.BeginHorizontal();
         GUILayout.Label(heightmap);
