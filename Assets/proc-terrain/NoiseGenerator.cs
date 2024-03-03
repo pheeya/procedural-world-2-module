@@ -43,7 +43,8 @@ public class NoiseGenerator
                     frequency *= _lacunarity;
                 }
 
-                if(value>=1){
+                if (value >= 1)
+                {
                 }
 
                 if (value > maxNoiseHeight)
@@ -70,6 +71,38 @@ public class NoiseGenerator
         return map;
     }
 
+
+    public static float[,] GenerateLongitudinalSinNoise(int _width, int _height, float _sharpness, float _amplitude, float _frequency, bool _invert)
+    {
+        float[,] map = new float[_width, _height];
+        for (int y = 0; y < _height; y++)
+        {
+            for (int x = 0; x < _width; x++)
+            {
+                // float offset = Mathf.Sin(y / (float)(_height - 1) * 2 * Mathf.PI * _frequency) * _amplitude * _width;
+                // float distanceFromCenter = 1 - Mathf.Abs(x + 1 + offset - _width / 2.0f) / (float)_width;
+
+                float x01 = (x) / (float)(_width - 1);
+                float y01 = (y) / (float)(_height - 1);
+
+                float xMinusOneToOne = x01 * 2 - 1.0f;
+
+                float centerMinusOneToOne = 0.0f;
+                float offset = Mathf.Sin(y01 * Mathf.PI * 2 * _frequency) * _amplitude;
+
+                float distanceFromCenter = Mathf.Abs(xMinusOneToOne + offset - centerMinusOneToOne) * Mathf.Pow(2, _sharpness); // divided by 2 because line is in center, 0.5 space on either side
+                if (_invert)
+                {
+                    distanceFromCenter = 1 - distanceFromCenter;
+                }
+
+                map[x, y] = distanceFromCenter;
+
+            }
+        }
+
+        return map;
+    }
     public static List<float[,]> Normalize(List<float[,]> _noiseMaps, int _height, int _width)
     {
         float maxNoiseHeight = float.MinValue;
