@@ -4,13 +4,13 @@ using UnityEngine;
 
 public class NoiseGenerator
 {
-    public static float[,] GenerateNoiseMap(int _seed, int _mapwidth, int _mapheight, float _scale, int _octaves, float _persistance, float _lacunarity, float _offsetX, float _offsetY)
+    public static float[,] GenerateNoiseMap(PerlinNoiseConfig _config, int _width, int _height, float _offsetX, float _offsetY)
     {
-        float[,] map = new float[_mapwidth, _mapheight];
-        System.Random prng = new System.Random(_seed);
-        Vector2[] octaveOffsets = new Vector2[_octaves];
+        float[,] map = new float[_width, _height];
+        System.Random prng = new System.Random(_config.seed);
+        Vector2[] octaveOffsets = new Vector2[_config.octaves];
 
-        for (int i = 0; i < _octaves; i++)
+        for (int i = 0; i < _config.octaves; i++)
         {
             float offsetX = prng.Next(-100000, 100000) + _offsetX;
             float offsetY = prng.Next(-100000, 100000) - _offsetY;
@@ -19,28 +19,28 @@ public class NoiseGenerator
         }
 
 
-        float halfWidth = _mapwidth / 2f;
-        float halfHeight = _mapheight / 2f;
+        float halfWidth = _width / 2f;
+        float halfHeight = _height / 2f;
 
         float maxNoiseHeight = float.MinValue;
         float minNoiseHeight = float.MaxValue;
-        for (int y = 0; y < _mapheight; y++)
+        for (int y = 0; y < _height; y++)
         {
-            for (int x = 0; x < _mapwidth; x++)
+            for (int x = 0; x < _width; x++)
             {
                 float amplitude = 1;
                 float frequency = 1;
                 float value = 0;
-                for (int o = 0; o < _octaves; o++)
+                for (int o = 0; o < _config.octaves; o++)
                 {
-                    float samplex = (x - halfWidth + octaveOffsets[o].x) / _scale * frequency;
-                    float sampley = (y - halfHeight + octaveOffsets[o].y) / _scale * frequency;
+                    float samplex = (x - halfWidth + octaveOffsets[o].x) / _config.scale * frequency;
+                    float sampley = (y - halfHeight + octaveOffsets[o].y) / _config.scale * frequency;
                     float perlin = Mathf.PerlinNoise(samplex, sampley) * 2 - 1; // change perlinnoise range to -1 1
 
                     value += perlin * amplitude;
 
-                    amplitude *= _persistance;
-                    frequency *= _lacunarity;
+                    amplitude *= _config.persistance;
+                    frequency *= _config.lacunarity;
                 }
 
                 if (value >= 1)
@@ -63,7 +63,7 @@ public class NoiseGenerator
 
         // for (int y = 0; y < _mapheight; y++)
         // {
-        //     for (int x = 0; x < _mapwidth; x++)
+        //     for (int x = 0; x < _config.width; x++)
         //     {
         //         map[x, y] = Mathf.InverseLerp(minNoiseHeight, maxNoiseHeight, map[x, y]);
         //     }
@@ -72,7 +72,7 @@ public class NoiseGenerator
     }
 
 
-    public static float[,] GenerateLongitudinalSinNoise(int _width, int _height, float _sharpness, float _amplitude, float _frequency, bool _invert)
+    public static float[,] GenerateLongitudinalSinNoise(int _width, int _height,float _softness, float _waveThickness, float _sharpness, float _amplitude, float _frequency, bool _invert)
     {
         float[,] map = new float[_width, _height];
         for (int y = 0; y < _height; y++)
@@ -90,7 +90,14 @@ public class NoiseGenerator
                 float centerMinusOneToOne = 0.0f;
                 float offset = Mathf.Sin(y01 * Mathf.PI * 2 * _frequency) * _amplitude;
 
-                float distanceFromCenter = Mathf.Abs(xMinusOneToOne + offset - centerMinusOneToOne) * Mathf.Pow(2, _sharpness); // divided by 2 because line is in center, 0.5 space on either side
+                float distanceFromCenter = Mathf.Abs(xMinusOneToOne + offset - centerMinusOneToOne) * Mathf.Pow(2, _sharpness) - _waveThickness;
+                float debugDist = distanceFromCenter;
+                distanceFromCenter = Mathf.Max(0, distanceFromCenter);
+                distanceFromCenter = Mathf.Pow(distanceFromCenter, _softness);
+
+                if(float.IsNaN(distanceFromCenter)){
+                    Debug.Log(debugDist);
+                }
                 if (_invert)
                 {
                     distanceFromCenter = 1 - distanceFromCenter;
@@ -143,4 +150,21 @@ public class NoiseGenerator
 
         return _noiseMaps;
     }
+
+
+
+
+}
+
+[System.Serializable]
+public struct PerlinNoiseConfig
+{
+    public int seed;
+    public float scale;
+    [Range(1, 5)]
+    public int octaves;
+    [Range(0.01f, 1)]
+    public float persistance;
+    [Range(1, 20)]
+    public float lacunarity;
 }

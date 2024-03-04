@@ -13,8 +13,6 @@ public class WorldEditor : Editor
     Texture2D roadMap = null;
 
 
-    float m_roadNoiseFrequency, m_roadNoiseAmp, m_roadSharpness;
-    bool m_invertRoad;
     public override void OnInspectorGUI()
     {
         base.OnInspectorGUI();
@@ -31,12 +29,6 @@ public class WorldEditor : Editor
             debugTerrain = FindObjectOfType<DebugTerrain>();
         }
 
-        GUILayout.BeginVertical();
-        m_roadNoiseAmp = EditorGUILayout.FloatField("Road Amp", m_roadNoiseAmp);
-        m_roadNoiseFrequency = EditorGUILayout.FloatField("Road Freq", m_roadNoiseFrequency);
-        m_roadSharpness = EditorGUILayout.FloatField("Road Sharpness", m_roadSharpness);
-        m_invertRoad = GUILayout.Toggle(m_invertRoad, "Invert Road");
-        GUILayout.EndVertical();
 
 
         GUILayout.Button("Refresh");
@@ -48,7 +40,7 @@ public class WorldEditor : Editor
 
             heightmap = TextureGenerator.TextureFromMap(hm.Values);
 
-            HeightMap roadNoise = HeightMap.FromNoise(NoiseGenerator.GenerateLongitudinalSinNoise(hm.Width, hm.Height,m_roadSharpness, m_roadNoiseAmp, m_roadNoiseFrequency, m_invertRoad), 0);
+            HeightMap roadNoise = HeightMap.FromNoise(NoiseGenerator.GenerateLongitudinalSinNoise(hm.Width, hm.Height,terrainGenerator.RoadNoiseSoftness,terrainGenerator.RoadNoiseThickness, terrainGenerator.RoadNoiseSharpness, terrainGenerator.RoadNoiseAmp, terrainGenerator.RoadNoiseFreq, terrainGenerator.RoadNoiseInvert), 0);
 
             roadMap = TextureGenerator.TextureFromMap(roadNoise.Values);
 

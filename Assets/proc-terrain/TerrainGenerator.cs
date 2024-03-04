@@ -19,25 +19,19 @@ public class TerrainGenerator : MonoBehaviour
     [field: SerializeField] public bool Normalize { get; private set; }
     public static int _drawDistance = 480;
     public TerrainType[] terrainTypes;
+    [field: SerializeField] public float RoadNoiseAmp { get; private set; }
+    [field: SerializeField] public float RoadNoiseFreq { get; private set; }
+    [field: SerializeField] public float RoadNoiseSharpness { get; private set; }
+    [field: SerializeField] public float RoadNoiseMaxHeight { get; private set; }
+    [field: SerializeField] public float RoadNoiseThickness { get; private set; }
+    [field: SerializeField] public float RoadNoiseSoftness { get; private set; }
+    [field: SerializeField] public bool RoadNoiseInvert { get; private set; }
 
     [SerializeField, Range(1, 250)] int m_chunkSize;
     [SerializeField] int m_neighboursX;
     [SerializeField] int m_neighboursY;
-    [Header("Noise Config")]
-    [Range(0.001f, 1500)]
-    public float _noiseScale;
+    [field: SerializeField] public PerlinNoiseConfig PerlinConfig { get; private set; }
     private static int maxChunksVisible;
-
-    [Range(1, 5)]
-    public int _octaves = 1;
-    [Range(0.01f, 1)]
-    public float _persistance;
-
-
-    [Range(1, 20)]
-    public float _lacunarity;
-
-    public int _seed;
 
     public float _offsetX, _offsetY;
 
@@ -72,10 +66,10 @@ public class TerrainGenerator : MonoBehaviour
         return colormap;
     }
 
-    
+
     public MapData GenerateMapData(float _ofX, float _ofY)
     {
-        float[,] noise = NoiseGenerator.GenerateNoiseMap(_seed, VertsPerSide(), VertsPerSide(), _noiseScale, _octaves, _persistance, _lacunarity, _ofX, _ofY);
+        float[,] noise = NoiseGenerator.GenerateNoiseMap(PerlinConfig, VertsPerSide(), VertsPerSide(), _ofX, _ofY);
         HeightMap heightmap = HeightMap.FromNoise(noise, 0);
         Color[] colormap = new Color[VertsPerSide() * VertsPerSide()];
 
@@ -104,7 +98,7 @@ public class TerrainGenerator : MonoBehaviour
 
     public HeightMap GenerateTestHeightMap()
     {
-        float[,] noise = NoiseGenerator.GenerateNoiseMap(_seed, VertsPerSide() + 2, VertsPerSide() + 2, _noiseScale, _octaves, _persistance, _lacunarity, _offsetX , _offsetY);
+        float[,] noise = NoiseGenerator.GenerateNoiseMap(PerlinConfig, VertsPerSide() + 2, VertsPerSide() + 2, _offsetX, _offsetY);
         List<float[,]> maps = new(1);
         maps.Add(noise);
         if (Normalize)
@@ -112,9 +106,21 @@ public class TerrainGenerator : MonoBehaviour
             noise = NoiseGenerator.Normalize(maps, VertsPerSide() + 2, VertsPerSide() + 2)[0];
         }
 
-        return HeightMap.FromNoise(noise,1);
+        float[,] roadNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2,RoadNoiseSoftness, RoadNoiseThickness, RoadNoiseSharpness, RoadNoiseAmp, RoadNoiseFreq, RoadNoiseInvert);
+
+
+        for (int i = 0; i < roadNoise.GetLength(1); i++)
+        {
+            for (int j = 0; j < roadNoise.GetLength(0); j++)
+            {
+                noise[i, j] = Mathf.Lerp(noise[i, j], RoadNoiseMaxHeight, roadNoise[i, j]);
+            }
+        }
+
+        return HeightMap.FromNoise(noise, 1);
     }
-    public MeshData GenerateTestMeshData(){
+    public MeshData GenerateTestMeshData()
+    {
         HeightMap hm = GenerateTestHeightMap();
 
         return MeshGenerator.GenerateMeshFromHeightMap(hm, _heightScale, _heightCurve, DefaultLOD);
@@ -132,7 +138,7 @@ public class TerrainGenerator : MonoBehaviour
             for (int x = 0; x < m_neighboursX; x++)
             {
 
-                float[,] no = NoiseGenerator.GenerateNoiseMap(_seed, VertsPerSide() + 2, VertsPerSide() + 2, _noiseScale, _octaves, _persistance, _lacunarity, _offsetX + (m_chunkSize * x), _offsetY + (m_chunkSize * y));
+                float[,] no = NoiseGenerator.GenerateNoiseMap(PerlinConfig, VertsPerSide() + 2, VertsPerSide() + 2, _offsetX + (m_chunkSize * x), _offsetY + (m_chunkSize * y));
                 if (!Normalize)
                 {
                     HeightMap hm = HeightMap.FromNoise(no, 1);
