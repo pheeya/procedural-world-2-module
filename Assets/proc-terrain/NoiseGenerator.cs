@@ -22,8 +22,8 @@ public class NoiseGenerator
         float halfWidth = _width / 2f;
         float halfHeight = _height / 2f;
 
-        float maxNoiseHeight = float.MinValue;
-        float minNoiseHeight = float.MaxValue;
+        float maxNoiseHeight = -5;
+        float minNoiseHeight = 5;
         for (int y = 0; y < _height; y++)
         {
             for (int x = 0; x < _width; x++)
@@ -35,6 +35,10 @@ public class NoiseGenerator
                 {
                     float samplex = (x - halfWidth + octaveOffsets[o].x) / _config.scale * frequency;
                     float sampley = (y - halfHeight + octaveOffsets[o].y) / _config.scale * frequency;
+
+
+                    // figure out why we are changing this range from 01 to -1 1
+                    // then make sure returned value is 0-1
                     float perlin = Mathf.PerlinNoise(samplex, sampley) * 2 - 1; // change perlinnoise range to -1 1
 
                     value += perlin * amplitude;
@@ -72,7 +76,7 @@ public class NoiseGenerator
     }
 
 
-    public static float[,] GenerateLongitudinalSinNoise(int _width, int _height,float _softness, float _waveThickness, float _sharpness, float _amplitude, float _frequency, bool _invert)
+    public static float[,] GenerateLongitudinalSinNoise(int _width, int _height, float _softness, float _waveThickness, float _sharpness, float _amplitude, float _frequency, bool _invert, float _offsetX, float _offsetY)
     {
         float[,] map = new float[_width, _height];
         for (int y = 0; y < _height; y++)
@@ -81,21 +85,24 @@ public class NoiseGenerator
             {
                 // float offset = Mathf.Sin(y / (float)(_height - 1) * 2 * Mathf.PI * _frequency) * _amplitude * _width;
                 // float distanceFromCenter = 1 - Mathf.Abs(x + 1 + offset - _width / 2.0f) / (float)_width;
+                float physicalWidth = _width - 3;
+                float physicalHeight = _height - 3;
+                float x01 = (x + _offsetX) / (float)(physicalWidth);
+                float y01 = (y + _offsetY) / (float)(physicalHeight);
 
-                float x01 = (x) / (float)(_width - 1);
-                float y01 = (y) / (float)(_height - 1);
 
                 float xMinusOneToOne = x01 * 2 - 1.0f;
 
                 float centerMinusOneToOne = 0.0f;
-                float offset = Mathf.Sin(y01 * Mathf.PI * 2 * _frequency) * _amplitude;
+                float offset = (Mathf.Sin(y01 * Mathf.PI * 2 * _frequency)) * _amplitude;
 
                 float distanceFromCenter = Mathf.Abs(xMinusOneToOne + offset - centerMinusOneToOne) * Mathf.Pow(2, _sharpness) - _waveThickness;
                 float debugDist = distanceFromCenter;
                 distanceFromCenter = Mathf.Max(0, distanceFromCenter);
                 distanceFromCenter = Mathf.Pow(distanceFromCenter, _softness);
 
-                if(float.IsNaN(distanceFromCenter)){
+                if (float.IsNaN(distanceFromCenter))
+                {
                     Debug.Log(debugDist);
                 }
                 if (_invert)

@@ -35,7 +35,8 @@ public class TerrainGenerator : MonoBehaviour
 
     public float _offsetX, _offsetY;
 
-
+public float testX;
+public float testY;
 
     Dictionary<Vector2, TerrainChunk> terrainChunks = new Dictionary<Vector2, TerrainChunk>();
     private List<TerrainChunk> terrainChunksVisibleLastFrame = new List<TerrainChunk>();
@@ -106,7 +107,7 @@ public class TerrainGenerator : MonoBehaviour
             noise = NoiseGenerator.Normalize(maps, VertsPerSide() + 2, VertsPerSide() + 2)[0];
         }
 
-        float[,] roadNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2,RoadNoiseSoftness, RoadNoiseThickness, RoadNoiseSharpness, RoadNoiseAmp, RoadNoiseFreq, RoadNoiseInvert);
+        float[,] roadNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2, RoadNoiseSoftness, RoadNoiseThickness, RoadNoiseSharpness, RoadNoiseAmp, RoadNoiseFreq, RoadNoiseInvert,testX,testY);
 
 
         for (int i = 0; i < roadNoise.GetLength(1); i++)
@@ -125,6 +126,22 @@ public class TerrainGenerator : MonoBehaviour
 
         return MeshGenerator.GenerateMeshFromHeightMap(hm, _heightScale, _heightCurve, DefaultLOD);
     }
+
+    float[,] AddRoadNoise(float _offsetX, float _offseY, float[,] _noise)
+    {
+        float[,] roadNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2, RoadNoiseSoftness, RoadNoiseThickness, RoadNoiseSharpness, RoadNoiseAmp, RoadNoiseFreq, RoadNoiseInvert, _offsetX, _offsetY);
+
+
+        for (int i = 0; i < roadNoise.GetLength(1); i++)
+        {
+            for (int j = 0; j < roadNoise.GetLength(0); j++)
+            {
+                _noise[i, j] = Mathf.Lerp(_noise[i, j], RoadNoiseMaxHeight, roadNoise[i, j]);
+            }
+        }
+
+        return _noise;
+    }
     public void GenerateTerrain()
     {
         //float[,] heightmap = NoiseGenerator.GenerateNoiseMap(_seed, VertsPerSide(), VertsPerSide(), _noiseScale, _octaves, _persistance, _lacunarity, _offsetX, _offsetY);
@@ -137,10 +154,13 @@ public class TerrainGenerator : MonoBehaviour
         {
             for (int x = 0; x < m_neighboursX; x++)
             {
-
-                float[,] no = NoiseGenerator.GenerateNoiseMap(PerlinConfig, VertsPerSide() + 2, VertsPerSide() + 2, _offsetX + (m_chunkSize * x), _offsetY + (m_chunkSize * y));
+                float offsetX = _offsetX + (m_chunkSize * x);
+                float offsetY = _offsetY + (m_chunkSize * y);
+                float[,] no = NoiseGenerator.GenerateNoiseMap(PerlinConfig, VertsPerSide() + 2, VertsPerSide() + 2, offsetX, offsetY);
                 if (!Normalize)
                 {
+                    // create road
+                    no = AddRoadNoise(offsetX, offsetY, no);
                     HeightMap hm = HeightMap.FromNoise(no, 1);
                     MapData md = new(hm, ColorMapFromHeight(hm), VertsPerSide() + 2, VertsPerSide() + 2);
                     MapDatas.Add(md);
@@ -156,12 +176,19 @@ public class TerrainGenerator : MonoBehaviour
                 for (int x = 0; x < m_neighboursX; x++)
                 {
                     int index = x + y * m_neighboursY;
+                    float offsetX = _offsetX + (m_chunkSize * x);
+                    float offsetY = _offsetY + (m_chunkSize * y);
+
+                    // create road
+                    noises[index] = AddRoadNoise(offsetX, offsetY, noises[index]);
+
                     HeightMap hm = HeightMap.FromNoise(noises[index], 1);
                     MapData md = new(hm, ColorMapFromHeight(hm), VertsPerSide() + 2, VertsPerSide() + 2);
                     MapDatas.Add(md);
                 }
             }
         }
+
         for (int y = 0; y < m_neighboursY; y++)
         {
             for (int x = 0; x < m_neighboursX; x++)
