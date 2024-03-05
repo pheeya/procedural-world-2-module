@@ -35,8 +35,8 @@ public class TerrainGenerator : MonoBehaviour
 
     public float _offsetX, _offsetY;
 
-public float testX;
-public float testY;
+    public float testX;
+    public float testY;
 
     Dictionary<Vector2, TerrainChunk> terrainChunks = new Dictionary<Vector2, TerrainChunk>();
     private List<TerrainChunk> terrainChunksVisibleLastFrame = new List<TerrainChunk>();
@@ -107,7 +107,7 @@ public float testY;
             noise = NoiseGenerator.Normalize(maps, VertsPerSide() + 2, VertsPerSide() + 2)[0];
         }
 
-        float[,] roadNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2, RoadNoiseSoftness, RoadNoiseThickness, RoadNoiseSharpness, RoadNoiseAmp, RoadNoiseFreq, RoadNoiseInvert,testX,testY);
+        float[,] roadNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2, RoadNoiseSoftness, RoadNoiseThickness, RoadNoiseSharpness, RoadNoiseAmp, RoadNoiseFreq, RoadNoiseInvert, testX, testY);
 
 
         for (int i = 0; i < roadNoise.GetLength(1); i++)
@@ -127,7 +127,7 @@ public float testY;
         return MeshGenerator.GenerateMeshFromHeightMap(hm, _heightScale, _heightCurve, DefaultLOD);
     }
 
-    float[,] AddRoadNoise(float _offsetX, float _offseY, float[,] _noise)
+    float[,] AddRoadNoise(float _offsetX, float _offsetY, float[,] _noise)
     {
         float[,] roadNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2, RoadNoiseSoftness, RoadNoiseThickness, RoadNoiseSharpness, RoadNoiseAmp, RoadNoiseFreq, RoadNoiseInvert, _offsetX, _offsetY);
 
@@ -154,8 +154,8 @@ public float testY;
         {
             for (int x = 0; x < m_neighboursX; x++)
             {
-                float offsetX = _offsetX + (m_chunkSize * x);
-                float offsetY = _offsetY + (m_chunkSize * y);
+                float offsetX = _offsetX + (m_chunkSize * x) - (m_neighboursX - 1) / 2 * m_chunkSize;
+                float offsetY = _offsetY + (m_chunkSize * y) - (m_neighboursY - 1) / 2 * m_chunkSize;
                 float[,] no = NoiseGenerator.GenerateNoiseMap(PerlinConfig, VertsPerSide() + 2, VertsPerSide() + 2, offsetX, offsetY);
                 if (!Normalize)
                 {
@@ -176,8 +176,8 @@ public float testY;
                 for (int x = 0; x < m_neighboursX; x++)
                 {
                     int index = x + y * m_neighboursY;
-                    float offsetX = _offsetX + (m_chunkSize * x);
-                    float offsetY = _offsetY + (m_chunkSize * y);
+                    float offsetX = _offsetX + (m_chunkSize * x) - (m_neighboursX - 1) / 2* m_chunkSize;
+                    float offsetY = _offsetY + (m_chunkSize * y) - (m_neighboursY - 1) / 2* m_chunkSize;
 
                     // create road
                     noises[index] = AddRoadNoise(offsetX, offsetY, noises[index]);
@@ -193,7 +193,7 @@ public float testY;
         {
             for (int x = 0; x < m_neighboursX; x++)
             {
-                Vector2 pos = new(x, y);
+                Vector2 pos = new(x - (m_neighboursX - 1) / 2, y - (m_neighboursY - 1) / 2);
                 int index = x + y * m_neighboursY;
                 MapData mapdata = MapDatas[index];
                 Texture tex = TextureGenerator.TextureFromMap(mapdata.colormap, VertsPerSide() + 2, VertsPerSide() + 2);
