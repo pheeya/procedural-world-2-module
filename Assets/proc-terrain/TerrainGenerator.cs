@@ -31,6 +31,8 @@ public class TerrainGenerator : MonoBehaviour
     [SerializeField] int m_neighboursX;
     [SerializeField] int m_neighboursY;
     [field: SerializeField] public PerlinNoiseConfig PerlinConfig { get; private set; }
+    [field: SerializeField] public PerlinNoiseConfig RoadHorizontalPerlinConfig { get; private set; }
+    [field: SerializeField] public PerlinNoiseConfig RoadVerticalPerlinConfig { get; private set; }
     private static int maxChunksVisible;
 
     public float _offsetX, _offsetY;
@@ -107,7 +109,7 @@ public class TerrainGenerator : MonoBehaviour
             noise = NoiseGenerator.Normalize(maps, VertsPerSide() + 2, VertsPerSide() + 2)[0];
         }
 
-        float[,] roadNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2, RoadNoiseSoftness, RoadNoiseThickness, RoadNoiseSharpness, RoadNoiseAmp, RoadNoiseFreq, RoadNoiseInvert, testX, testY);
+        float[,] roadNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2, RoadNoiseSoftness, RoadNoiseThickness, RoadNoiseSharpness, RoadNoiseAmp, RoadNoiseFreq, RoadNoiseInvert, testX, testY, RoadHorizontalPerlinConfig, RoadVerticalPerlinConfig);
 
 
         for (int i = 0; i < roadNoise.GetLength(1); i++)
@@ -127,9 +129,9 @@ public class TerrainGenerator : MonoBehaviour
         return MeshGenerator.GenerateMeshFromHeightMap(hm, _heightScale, _heightCurve, DefaultLOD);
     }
 
-    float[,] AddRoadNoise(float _offsetX, float _offsetY, float[,] _noise)
+    float[,] AddRoadNoise(float _ofstX, float _ofstY, float[,] _noise)
     {
-        float[,] roadNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2, RoadNoiseSoftness, RoadNoiseThickness, RoadNoiseSharpness, RoadNoiseAmp, RoadNoiseFreq, RoadNoiseInvert, _offsetX, _offsetY);
+        float[,] roadNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2, RoadNoiseSoftness, RoadNoiseThickness, RoadNoiseSharpness, RoadNoiseAmp, RoadNoiseFreq, RoadNoiseInvert, _ofstX, _ofstY, RoadHorizontalPerlinConfig, RoadVerticalPerlinConfig);
 
 
         for (int i = 0; i < roadNoise.GetLength(1); i++)

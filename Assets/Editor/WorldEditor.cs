@@ -39,7 +39,7 @@ public class WorldEditor : Editor
 
             heightmap = TextureGenerator.TextureFromMap(hm.Values);
 
-            HeightMap roadNoise = HeightMap.FromNoise(NoiseGenerator.GenerateLongitudinalSinNoise(hm.Width, hm.Height,terrainGenerator.RoadNoiseSoftness,terrainGenerator.RoadNoiseThickness, terrainGenerator.RoadNoiseSharpness, terrainGenerator.RoadNoiseAmp, terrainGenerator.RoadNoiseFreq, terrainGenerator.RoadNoiseInvert,terrainGenerator.testX, terrainGenerator.testY), 0);
+            HeightMap roadNoise = HeightMap.FromNoise(NoiseGenerator.GenerateLongitudinalSinNoise(hm.Width, hm.Height,terrainGenerator.RoadNoiseSoftness,terrainGenerator.RoadNoiseThickness, terrainGenerator.RoadNoiseSharpness, terrainGenerator.RoadNoiseAmp, terrainGenerator.RoadNoiseFreq, terrainGenerator.RoadNoiseInvert,terrainGenerator.testX, terrainGenerator.testY, terrainGenerator.RoadHorizontalPerlinConfig, terrainGenerator.RoadVerticalPerlinConfig), 0);
 
             roadMap = TextureGenerator.TextureFromMap(roadNoise.Values);
 
