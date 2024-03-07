@@ -25,7 +25,21 @@ public class NoiseGenerator
 
         return map;
     }
+    public static float[,] GenerateSingleAxisNoiseMap(PerlinNoiseConfig _config, int _width, int _height, float _offsetX, float _offsetY)
+    {
+        float[,] map = new float[1, _height];
+        Vector2[] octaveOffsets = GetOctaveOffsets(_config, _offsetX, _offsetY);
+        float halfWidth = _width / 2f;
+        float halfHeight = _height / 2f;
 
+
+        for (int y = 0; y < _height; y++)
+        {
+            map[0, y] = GetPerlinValue(_config, 0, y, octaveOffsets, -halfWidth, -halfHeight);
+        }
+
+        return map;
+    }
     public static float GetPerlinValue(PerlinNoiseConfig _config, float _x, float _y, Vector2[] _octaves, float _offsetX, float _offsetY)
     {
 
@@ -94,78 +108,16 @@ public class NoiseGenerator
         float[,] map = new float[_width, _height];
 
 
-        // -5 + 5 to make brush stamping go beyond the bounds, to make the edges somewhat seamless
+        // -radius to radius offset in y axis to make brush stamping go beyond the bounds, to make the edges somewhat seamless
+
+        // NOTE: brush spacing more than 1 causes small seams between chunks
+        // should be okay to use 1 brush spacing since we save computation but only going through the y axis and x axis pixels around the noise
         for (int y = -_brushRadius * 2; y < _height + _brushRadius * 2; y += _brushSpacing)
         {
             int yPos = y;
             int xPos = _width / 2;
             xPos += Mathf.RoundToInt(GetPerlinValue(_horizontalNoise, xPos, yPos, horizontalOctaveOffsets, -halfWidth, -halfHeight) * _amplitude * _width - _offsetX);
-
             map = StampCircle(map, xPos, yPos, _brush, _brushRadius);
-
-            for (int x = 0; x < _width; x++)
-            {
-
-                // float physicalWidth = _width - 3;
-                // float physicalHeight = _height - 3;
-                // float x01 = (x + _offsetX) / (float)(physicalWidth);
-                // float y01 = (y + _offsetY) / (float)(physicalHeight);
-
-                // x01 = x - 2+ _offsetX;
-                // x01 /= _width - 3;
-
-                // y01 = y - 2+ _offsetY;
-                // y01 /= _height - 3;
-
-
-                // float xMinusOneToOne = x01 * 2 - 1.0f;
-
-                // float centerMinusOneToOne = 0.0f;
-                // float offset = (Mathf.Sin(y01 * Mathf.PI * 2 * _frequency)) * _amplitude;
-
-                // float distanceFromCenter = Mathf.Abs(xMinusOneToOne + offset - centerMinusOneToOne) * Mathf.Pow(2, _sharpness) - _waveThickness;
-
-
-                // float debugDist = distanceFromCenter;
-                // distanceFromCenter = Mathf.Max(0, distanceFromCenter);
-                // distanceFromCenter = Mathf.Pow(distanceFromCenter, _softness);
-
-                // if (float.IsNaN(distanceFromCenter))
-                // {
-                //     Debug.Log(debugDist);
-                // }
-                // if (_invert)
-                // {
-                //     distanceFromCenter = 1 - distanceFromCenter;
-                // }
-
-                // map[x, y] = distanceFromCenter;
-
-                // float prevX = x - GetPerlinValue(_horizontalNoise, 0, y - 1, horizontalOctaveOffsets, -halfWidth, -halfHeight) * _amplitude * _width - halfWidth + _offsetX;
-                // float distanceFromCenter = x - GetPerlinValue(_horizontalNoise, 0, y, horizontalOctaveOffsets, -halfWidth, -halfHeight) * _amplitude * _width - halfWidth + _offsetX;
-
-
-
-
-
-                // distanceFromCenter /= _width;
-                // distanceFromCenter *= Mathf.Pow(2, _sharpness);
-                // distanceFromCenter = Mathf.Abs(distanceFromCenter);
-
-
-
-                // prevX /= _width;
-                // prevX *= Mathf.Pow(2, _sharpness);
-                // prevX = Mathf.Abs(prevX);
-                // if (_invert)
-                // {
-                //     distanceFromCenter = 1 - distanceFromCenter;
-                //     prevX = 1 - prevX;
-                // }
-                // map[x, y] = distanceFromCenter;
-                // map[x, y - 1] = prevX;
-
-            }
         }
 
 

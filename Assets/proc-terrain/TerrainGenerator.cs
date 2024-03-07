@@ -29,6 +29,7 @@ public class TerrainGenerator : MonoBehaviour
     [field: SerializeField] public AnimationCurve RoadBrushShape { get; private set; }
     [field: SerializeField] public int RoadBrushRadius { get; private set; }
     [field: SerializeField] public int RoadBrushSpacing { get; private set; }
+    [field: SerializeField] public float RoadNoiseBlend { get; private set; }
 
     [SerializeField, Range(1, 250)] int m_chunkSize;
     [SerializeField] int m_neighboursX;
@@ -112,16 +113,7 @@ public class TerrainGenerator : MonoBehaviour
             noise = NoiseGenerator.Normalize(maps, VertsPerSide() + 2, VertsPerSide() + 2)[0];
         }
 
-        float[,] roadNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2, RoadNoiseAmp, RoadNoiseFreq, RoadNoiseInvert, testX, testY, RoadHorizontalPerlinConfig, RoadVerticalPerlinConfig, RoadBrushShape, RoadBrushRadius, RoadBrushSpacing);
-
-
-        for (int i = 0; i < roadNoise.GetLength(1); i++)
-        {
-            for (int j = 0; j < roadNoise.GetLength(0); j++)
-            {
-                noise[i, j] = Mathf.Lerp(noise[i, j], RoadNoiseMaxHeight, roadNoise[i, j]);
-            }
-        }
+        noise = AddRoadNoise(testX, testY, noise);
 
         return HeightMap.FromNoise(noise, 1);
     }
@@ -135,13 +127,15 @@ public class TerrainGenerator : MonoBehaviour
     float[,] AddRoadNoise(float _ofstX, float _ofstY, float[,] _noise)
     {
         float[,] roadNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2, RoadNoiseAmp, RoadNoiseFreq, RoadNoiseInvert, _ofstX, _ofstY, RoadHorizontalPerlinConfig, RoadVerticalPerlinConfig, RoadBrushShape, RoadBrushRadius, RoadBrushSpacing);
-
-
+        float[,] verticality = NoiseGenerator.GenerateSingleAxisNoiseMap(RoadVerticalPerlinConfig, VertsPerSide() + 2, VertsPerSide() + 2, _offsetX, _offsetY);
         for (int i = 0; i < roadNoise.GetLength(1); i++)
         {
             for (int j = 0; j < roadNoise.GetLength(0); j++)
             {
-                _noise[i, j] = Mathf.Lerp(_noise[i, j], RoadNoiseMaxHeight, roadNoise[i, j]);
+                // float vert = verticality[0,i];
+                // vert += RoadNoiseMaxHeight;
+                // vert = Mathf.Clamp01(vert);
+                _noise[i, j] = Mathf.Lerp(_noise[i, j], RoadNoiseMaxHeight, roadNoise[i, j] * RoadNoiseBlend);
             }
         }
 

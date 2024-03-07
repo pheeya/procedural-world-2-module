@@ -11,6 +11,7 @@ public class WorldEditor : Editor
     Texture2D colormap = null;
     DebugTerrain debugTerrain;
     Texture2D roadMap = null;
+    Texture2D roadVerticallityMap = null;
 
     public override void OnInspectorGUI()
     {
@@ -39,18 +40,24 @@ public class WorldEditor : Editor
 
             heightmap = TextureGenerator.TextureFromMap(hm.Values);
 
-            HeightMap roadNoise = HeightMap.FromNoise(NoiseGenerator.GenerateLongitudinalSinNoise(hm.Width, hm.Height,terrainGenerator.RoadNoiseAmp, terrainGenerator.RoadNoiseFreq, terrainGenerator.RoadNoiseInvert,terrainGenerator.testX, terrainGenerator.testY, terrainGenerator.RoadHorizontalPerlinConfig, terrainGenerator.RoadVerticalPerlinConfig, terrainGenerator.RoadBrushShape, terrainGenerator.RoadBrushRadius, terrainGenerator.RoadBrushSpacing), 0);
+            HeightMap roadNoise = HeightMap.FromNoise(NoiseGenerator.GenerateLongitudinalSinNoise(hm.Width, hm.Height, terrainGenerator.RoadNoiseAmp, terrainGenerator.RoadNoiseFreq, terrainGenerator.RoadNoiseInvert, terrainGenerator.testX, terrainGenerator.testY, terrainGenerator.RoadHorizontalPerlinConfig, terrainGenerator.RoadVerticalPerlinConfig, terrainGenerator.RoadBrushShape, terrainGenerator.RoadBrushRadius, terrainGenerator.RoadBrushSpacing), 0);
+
+            HeightMap roadVerticalityNoise = HeightMap.FromNoise(NoiseGenerator.GenerateSingleAxisNoiseMap(terrainGenerator.RoadVerticalPerlinConfig, hm.Width, hm.Height, terrainGenerator._offsetX, terrainGenerator._offsetY),0);
 
             roadMap = TextureGenerator.TextureFromMap(roadNoise.Values);
 
             colormap = TextureGenerator.TextureFromMap(cm, heightmap.width, heightmap.height);
+
+            roadVerticallityMap = TextureGenerator.TextureFromMap(roadVerticalityNoise.Values);
+            
             debugTerrain.GenerateMesh(terrainGenerator.GenerateTestMeshData().mesh, colormap);
         }
-        EditorGUILayout.BeginHorizontal();
+        EditorGUILayout.BeginVertical();
         GUILayout.Label(heightmap);
         GUILayout.Label(colormap);
         GUILayout.Label(roadMap);
-        EditorGUILayout.EndHorizontal();
+        GUILayout.Label(roadVerticallityMap);
+        EditorGUILayout.EndVertical();
     }
 
 }
