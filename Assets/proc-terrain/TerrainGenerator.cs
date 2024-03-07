@@ -26,6 +26,8 @@ public class TerrainGenerator : MonoBehaviour
     [field: SerializeField] public float RoadNoiseThickness { get; private set; }
     [field: SerializeField] public float RoadNoiseSoftness { get; private set; }
     [field: SerializeField] public bool RoadNoiseInvert { get; private set; }
+    [field: SerializeField] public AnimationCurve RoadBrushShape { get; private set; }
+    [field: SerializeField] public int RoadBrushRadius { get; private set; }
 
     [SerializeField, Range(1, 250)] int m_chunkSize;
     [SerializeField] int m_neighboursX;
@@ -109,7 +111,7 @@ public class TerrainGenerator : MonoBehaviour
             noise = NoiseGenerator.Normalize(maps, VertsPerSide() + 2, VertsPerSide() + 2)[0];
         }
 
-        float[,] roadNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2, RoadNoiseSoftness, RoadNoiseThickness, RoadNoiseSharpness, RoadNoiseAmp, RoadNoiseFreq, RoadNoiseInvert, testX, testY, RoadHorizontalPerlinConfig, RoadVerticalPerlinConfig);
+        float[,] roadNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2, RoadNoiseSoftness, RoadNoiseThickness, RoadNoiseSharpness, RoadNoiseAmp, RoadNoiseFreq, RoadNoiseInvert, testX, testY, RoadHorizontalPerlinConfig, RoadVerticalPerlinConfig, RoadBrushShape, RoadBrushRadius);
 
 
         for (int i = 0; i < roadNoise.GetLength(1); i++)
@@ -131,7 +133,7 @@ public class TerrainGenerator : MonoBehaviour
 
     float[,] AddRoadNoise(float _ofstX, float _ofstY, float[,] _noise)
     {
-        float[,] roadNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2, RoadNoiseSoftness, RoadNoiseThickness, RoadNoiseSharpness, RoadNoiseAmp, RoadNoiseFreq, RoadNoiseInvert, _ofstX, _ofstY, RoadHorizontalPerlinConfig, RoadVerticalPerlinConfig);
+        float[,] roadNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2, RoadNoiseSoftness, RoadNoiseThickness, RoadNoiseSharpness, RoadNoiseAmp, RoadNoiseFreq, RoadNoiseInvert, _ofstX, _ofstY, RoadHorizontalPerlinConfig, RoadVerticalPerlinConfig, RoadBrushShape, RoadBrushRadius);
 
 
         for (int i = 0; i < roadNoise.GetLength(1); i++)

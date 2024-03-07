@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.Mathematics;
 using UnityEngine;
 
 public class NoiseGenerator
@@ -77,7 +78,7 @@ public class NoiseGenerator
         return octaveOffsets;
     }
 
-    public static float[,] GenerateLongitudinalSinNoise(int _width, int _height, float _softness, float _waveThickness, float _sharpness, float _amplitude, float _frequency, bool _invert, float _offsetX, float _offsetY, PerlinNoiseConfig _horizontalNoise, PerlinNoiseConfig _verticalNoise)
+    public static float[,] GenerateLongitudinalSinNoise(int _width, int _height, float _softness, float _waveThickness, float _sharpness, float _amplitude, float _frequency, bool _invert, float _offsetX, float _offsetY, PerlinNoiseConfig _horizontalNoise, PerlinNoiseConfig _verticalNoise, AnimationCurve _brush, int _brushRadius)
     {
 
 
@@ -88,8 +89,14 @@ public class NoiseGenerator
 
         float[,] map = new float[_width, _height];
 
-        for (int y = 0; y < _height; y++)
+        for (int y = 1; y < _height; y += 2)
         {
+            int yPos = y;
+            int xPos = _width / 2;
+            xPos += Mathf.RoundToInt(GetPerlinValue(_horizontalNoise, xPos, yPos, horizontalOctaveOffsets, -halfWidth, -halfHeight) * _amplitude * _width);
+
+            map = StampCircle(map, xPos, yPos, _brush, _brushRadius);
+
             for (int x = 0; x < _width; x++)
             {
 
@@ -128,22 +135,60 @@ public class NoiseGenerator
 
                 // map[x, y] = distanceFromCenter;
 
+                // float prevX = x - GetPerlinValue(_horizontalNoise, 0, y - 1, horizontalOctaveOffsets, -halfWidth, -halfHeight) * _amplitude * _width - halfWidth + _offsetX;
+                // float distanceFromCenter = x - GetPerlinValue(_horizontalNoise, 0, y, horizontalOctaveOffsets, -halfWidth, -halfHeight) * _amplitude * _width - halfWidth + _offsetX;
 
-                float distanceFromCenter = x - GetPerlinValue(_horizontalNoise, 0, y, horizontalOctaveOffsets, -halfWidth, -halfHeight) * _amplitude * _width - halfWidth + _offsetX;
-                distanceFromCenter /= _width;
-                distanceFromCenter *= Mathf.Pow(2, _sharpness);
-                distanceFromCenter = Mathf.Abs(distanceFromCenter);
-                if (_invert)
-                {
-                    distanceFromCenter = 1 - distanceFromCenter;
-                }
-                map[x, y] = distanceFromCenter;
+
+
+
+
+                // distanceFromCenter /= _width;
+                // distanceFromCenter *= Mathf.Pow(2, _sharpness);
+                // distanceFromCenter = Mathf.Abs(distanceFromCenter);
+
+
+
+                // prevX /= _width;
+                // prevX *= Mathf.Pow(2, _sharpness);
+                // prevX = Mathf.Abs(prevX);
+                // if (_invert)
+                // {
+                //     distanceFromCenter = 1 - distanceFromCenter;
+                //     prevX = 1 - prevX;
+                // }
+                // map[x, y] = distanceFromCenter;
+                // map[x, y - 1] = prevX;
 
             }
         }
 
+
+
         return map;
     }
+
+
+    public static float[,] StampCircle(float[,] _noise, int _centerX, int _centerY, AnimationCurve _brush, int _radius)
+    {
+        for (int y = _centerY - _radius; y < _centerY + _radius; y++)
+        {
+            if (y < 0 || y > _noise.GetLength(0) - 1) continue;
+
+            for (int x = _centerX - _radius; x < _centerX + _radius; x++)
+            {
+                if (x < 0 || x > _noise.GetLength(0) - 1) continue;
+
+                Vector2 pos = new(x, y);
+                float dist = (pos - new Vector2(_centerX, _centerY)).magnitude / _radius;
+                dist = Mathf.Clamp01(dist);
+                _noise[x, y] += _brush.Evaluate((1 - dist));
+            }
+        }
+
+        return _noise;
+    }
+
+
     public static List<float[,]> Normalize(List<float[,]> _noiseMaps, int _height, int _width)
     {
         float maxNoiseHeight = float.MinValue;
