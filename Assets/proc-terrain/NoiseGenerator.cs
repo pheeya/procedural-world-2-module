@@ -78,9 +78,13 @@ public class NoiseGenerator
         return octaveOffsets;
     }
 
-    public static float[,] GenerateLongitudinalSinNoise(int _width, int _height, float _softness, float _waveThickness, float _sharpness, float _amplitude, float _frequency, bool _invert, float _offsetX, float _offsetY, PerlinNoiseConfig _horizontalNoise, PerlinNoiseConfig _verticalNoise, AnimationCurve _brush, int _brushRadius)
+    public static float[,] GenerateLongitudinalSinNoise(int _width, int _height, float _amplitude, float _frequency, bool _invert, float _offsetX, float _offsetY, PerlinNoiseConfig _horizontalNoise, PerlinNoiseConfig _verticalNoise, AnimationCurve _brush, int _brushRadius, int _brushSpacing)
     {
-
+        if (_brushSpacing < 1)
+        {
+            _brushSpacing = 1;
+            Debug.Log("Check brush spacing, it should be > 0");
+        }
 
         Vector2[] horizontalOctaveOffsets = GetOctaveOffsets(_horizontalNoise, 0, _offsetY);
         Vector2[] verticalOctaveOffsets = GetOctaveOffsets(_verticalNoise, 0, _offsetY);
@@ -89,11 +93,13 @@ public class NoiseGenerator
 
         float[,] map = new float[_width, _height];
 
-        for (int y = 1; y < _height; y += 2)
+
+        // -5 + 5 to make brush stamping go beyond the bounds, to make the edges somewhat seamless
+        for (int y = -_brushRadius * 2; y < _height + _brushRadius * 2; y += _brushSpacing)
         {
             int yPos = y;
             int xPos = _width / 2;
-            xPos += Mathf.RoundToInt(GetPerlinValue(_horizontalNoise, xPos, yPos, horizontalOctaveOffsets, -halfWidth, -halfHeight) * _amplitude * _width);
+            xPos += Mathf.RoundToInt(GetPerlinValue(_horizontalNoise, xPos, yPos, horizontalOctaveOffsets, -halfWidth, -halfHeight) * _amplitude * _width - _offsetX);
 
             map = StampCircle(map, xPos, yPos, _brush, _brushRadius);
 
@@ -178,9 +184,18 @@ public class NoiseGenerator
             {
                 if (x < 0 || x > _noise.GetLength(0) - 1) continue;
 
-                Vector2 pos = new(x, y);
+                Vector2 pos = new Vector2(x, y);
+
+                // circle shape
                 float dist = (pos - new Vector2(_centerX, _centerY)).magnitude / _radius;
                 dist = Mathf.Clamp01(dist);
+
+                // dist = dist * Mathf.Pow(2, _brushStrength);
+                // box shape 
+                // dist = (pos - new Vector2(_centerX, pos.y)).magnitude / _radius;
+                // dist = Mathf.Clamp01(dist);
+
+
                 _noise[x, y] += _brush.Evaluate((1 - dist));
             }
         }
