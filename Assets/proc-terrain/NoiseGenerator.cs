@@ -110,21 +110,89 @@ public class NoiseGenerator
 
         // -radius to radius offset in y axis to make brush stamping go beyond the bounds, to make the edges somewhat seamless
 
+
+
+        // Circle stamp based noise generation
         // NOTE: brush spacing more than 1 causes small seams between chunks
         // should be okay to use 1 brush spacing since we save computation but only going through the y axis and x axis pixels around the noise
+
+        Vector2 previousPos = Vector2.zero;
+        float interpolatedStampStepSize = 0.1f;
         for (int y = -_brushRadius * 2; y < _height + _brushRadius * 2; y += _brushSpacing)
         {
             int yPos = y;
             int xPos = _width / 2;
             xPos += Mathf.RoundToInt(GetPerlinValue(_horizontalNoise, xPos, yPos, horizontalOctaveOffsets, -halfWidth, -halfHeight) * _amplitude * _width - _offsetX);
+            Vector2 currentPos = new(xPos, y);
+            if (y > -_brushRadius * 2)
+            {
+                if ((currentPos - previousPos).magnitude > .5f)
+                {
+
+
+
+                    for (float t = 0; t < 1; t += interpolatedStampStepSize)
+                    {
+                        Vector2 pos = Vector2.Lerp(previousPos, currentPos, t);
+                        map = StampCircle(map, Mathf.RoundToInt(pos.x), Mathf.RoundToInt(pos.y), _brush, _brushRadius);
+
+                    }
+
+                }
+            }
+
             map = StampCircle(map, xPos, yPos, _brush, _brushRadius);
+            previousPos = currentPos;
         }
+        // END
 
 
+        // float interpolatedStampStepSize = 0.05f;
+        // Vector2 previousPos = Vector2.zero;
+        // for (int starting = (_width / 2) - 5; starting < (_width / 2) + 5; starting++)
+        // {
+        //     for (int y = 0; y < _height; y++)
+        //     {
+        //         int yPos = y;
+        //         int xPos = starting + Mathf.RoundToInt(GetPerlinValue(_horizontalNoise, starting, yPos, horizontalOctaveOffsets, -halfWidth, -halfHeight) * _amplitude * _width - _offsetX);
+        //         Vector2 currentPos = new(xPos, yPos);
+        //         if (y > 0)
+        //         {
+        //             if ((currentPos - previousPos).magnitude > 1.0f)
+        //             {
+        //                 for (float t = 0; t < 1; t += interpolatedStampStepSize)
+        //                 {
+        //                     Vector2 pos = Vector2.Lerp(previousPos, currentPos, t);
 
+        //                     if (pos.x > _width - 1 || pos.x < 0)
+        //                     {
+
+        //                     }
+        //                     else
+        //                     {
+        //                         map[Mathf.RoundToInt(pos.x), Mathf.RoundToInt(pos.y)] = 1;
+        //                     }
+
+        //                 }
+
+        //             }
+        //         }
+
+        //         if (xPos > _width - 1 || xPos < 0)
+        //         {
+
+        //         }
+        //         else
+        //         {
+        //             map[xPos, yPos] = 1;
+        //         }
+        //         previousPos = currentPos;
+        //     }
+
+
+        // }
         return map;
     }
-
 
     public static float[,] StampCircle(float[,] _noise, int _centerX, int _centerY, AnimationCurve _brush, int _radius)
     {
@@ -136,6 +204,8 @@ public class NoiseGenerator
             {
                 if (x < 0 || x > _noise.GetLength(0) - 1) continue;
 
+
+
                 Vector2 pos = new Vector2(x, y);
 
                 // circle shape
@@ -146,7 +216,6 @@ public class NoiseGenerator
                 // box shape 
                 // dist = (pos - new Vector2(_centerX, pos.y)).magnitude / _radius;
                 // dist = Mathf.Clamp01(dist);
-
 
                 _noise[x, y] += _brush.Evaluate((1 - dist));
             }

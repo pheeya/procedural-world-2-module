@@ -174,7 +174,7 @@ public class TerrainGenerator : MonoBehaviour
             {
                 for (int x = 0; x < m_neighboursX; x++)
                 {
-                    int index = x + y * m_neighboursY;
+                    int index = x + y * m_neighboursX;
                     float offsetX = _offsetX + (m_chunkSize * x) - (m_neighboursX - 1) / 2 * m_chunkSize;
                     float offsetY = _offsetY + (m_chunkSize * y) - (m_neighboursY - 1) / 2 * m_chunkSize;
 
@@ -193,7 +193,7 @@ public class TerrainGenerator : MonoBehaviour
             for (int x = 0; x < m_neighboursX; x++)
             {
                 Vector2 pos = new(x - (m_neighboursX - 1) / 2, y - (m_neighboursY - 1) / 2);
-                int index = x + y * m_neighboursY;
+                int index = x + y * m_neighboursX;
                 MapData mapdata = MapDatas[index];
                 Texture tex = TextureGenerator.TextureFromMap(mapdata.colormap, VertsPerSide() + 2, VertsPerSide() + 2);
                 TerrainChunk chunk = new TerrainChunk(m_chunkSize, mapdata.GetHeightMap(), mapdata.GetColorMap(), _heightScale, _heightCurve, pos, _terrainMat, tex, transform, DefaultLOD);
