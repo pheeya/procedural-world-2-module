@@ -106,7 +106,12 @@ public class NoiseGenerator
         float halfWidth = _width / 2f;
         float halfHeight = _height / 2f;
 
+        int padding = 200;
+        int blurredMapWidth = _width + padding;
         float[,] map = new float[_width, _height];
+
+
+        float[,] blurredMap = new float[blurredMapWidth, blurredMapWidth];
 
 
         // -radius to radius offset in y axis to make brush stamping go beyond the bounds, to make the edges somewhat seamless
@@ -117,13 +122,46 @@ public class NoiseGenerator
         // NOTE: brush spacing more than 1 causes small seams between chunks
         // should be okay to use 1 brush spacing since we save computation but only going through the y axis and x axis pixels around the noise
 
+        // Vector2 previousPos = Vector2.zero;
+        // float interpolatedStampStepSize = 0.1f;
+        // for (int y = -_brushRadius * 2; y < _height + _brushRadius * 2; y += _brushSpacing)
+        // {
+        //     int yPos = y;
+        //     int xPos = _width / 2;
+        //     xPos += Mathf.RoundToInt(GetPerlinValue(_horizontalNoise, xPos, yPos, horizontalOctaveOffsets, -halfWidth, -halfHeight) * _amplitude * _width - _offsetX);
+        //     Vector2 currentPos = new(xPos, y);
+        //     if (y > -_brushRadius * 2)
+        //     {
+        //         if ((currentPos - previousPos).magnitude > .5f)
+        //         {
+
+
+
+        //             for (float t = 0; t < 1; t += interpolatedStampStepSize)
+        //             {
+        //                 Vector2 pos = Vector2.Lerp(previousPos, currentPos, t);
+        //                 map = StampCircle(map, Mathf.RoundToInt(pos.x), Mathf.RoundToInt(pos.y), _brush, _brushRadius);
+
+        //             }
+
+        //         }
+        //     }
+
+        //     map = StampCircle(map, xPos, yPos, _brush, _brushRadius);
+        //     previousPos = currentPos;
+        // }
+        // END
+
         Vector2 previousPos = Vector2.zero;
         float interpolatedStampStepSize = 0.1f;
-        for (int y = -_brushRadius * 2; y < _height + _brushRadius * 2; y += _brushSpacing)
+        for (int y = 0; y < blurredMapWidth; y += _brushSpacing)
         {
             int yPos = y;
-            int xPos = _width / 2;
-            xPos += Mathf.RoundToInt(GetPerlinValue(_horizontalNoise, xPos, yPos, horizontalOctaveOffsets, -halfWidth, -halfHeight) * _amplitude * _width - _offsetX);
+            int xPos = blurredMapWidth / 2;
+
+            float hw = blurredMapWidth / 2f;
+            float hh = blurredMapWidth / 2f;
+            xPos += Mathf.RoundToInt(GetPerlinValue(_horizontalNoise, xPos, yPos, horizontalOctaveOffsets, -(hw), -(hh)) * _amplitude * _width - _offsetX);
             Vector2 currentPos = new(xPos, y);
             if (y > -_brushRadius * 2)
             {
@@ -135,63 +173,31 @@ public class NoiseGenerator
                     for (float t = 0; t < 1; t += interpolatedStampStepSize)
                     {
                         Vector2 pos = Vector2.Lerp(previousPos, currentPos, t);
-                        map = StampCircle(map, Mathf.RoundToInt(pos.x), Mathf.RoundToInt(pos.y), _brush, _brushRadius);
+                        blurredMap = StampCircle(blurredMap, Mathf.RoundToInt(pos.x), Mathf.RoundToInt(pos.y), _brush, _brushRadius);
 
                     }
 
                 }
             }
 
-            map = StampCircle(map, xPos, yPos, _brush, _brushRadius);
+            blurredMap = StampCircle(blurredMap, xPos, yPos, _brush, _brushRadius);
             previousPos = currentPos;
         }
-        // END
 
 
-        // float interpolatedStampStepSize = 0.05f;
-        // Vector2 previousPos = Vector2.zero;
-        // for (int starting = (_width / 2) - 5; starting < (_width / 2) + 5; starting++)
-        // {
-        //     for (int y = 0; y < _height; y++)
-        //     {
-        //         int yPos = y;
-        //         int xPos = starting + Mathf.RoundToInt(GetPerlinValue(_horizontalNoise, starting, yPos, horizontalOctaveOffsets, -halfWidth, -halfHeight) * _amplitude * _width - _offsetX);
-        //         Vector2 currentPos = new(xPos, yPos);
-        //         if (y > 0)
-        //         {
-        //             if ((currentPos - previousPos).magnitude > 1.0f)
-        //             {
-        //                 for (float t = 0; t < 1; t += interpolatedStampStepSize)
-        //                 {
-        //                     Vector2 pos = Vector2.Lerp(previousPos, currentPos, t);
+        blurredMap = ApplyBlur(blurredMap, 5);
 
-        //                     if (pos.x > _width - 1 || pos.x < 0)
-        //                     {
+        int dif = blurredMapWidth - _width;
+        dif /= 2;
+        for (int y = dif; y < blurredMapWidth - dif; y++)
+        {
+            for (int x = dif; x < blurredMapWidth - dif; x++)
+            {
+                map[x - dif, y - dif] = blurredMap[x, y];
 
-        //                     }
-        //                     else
-        //                     {
-        //                         map[Mathf.RoundToInt(pos.x), Mathf.RoundToInt(pos.y)] = 1;
-        //                     }
+            }
+        }
 
-        //                 }
-
-        //             }
-        //         }
-
-        //         if (xPos > _width - 1 || xPos < 0)
-        //         {
-
-        //         }
-        //         else
-        //         {
-        //             map[xPos, yPos] = 1;
-        //         }
-        //         previousPos = currentPos;
-        //     }
-
-
-        // }
 
         return map;
     }
