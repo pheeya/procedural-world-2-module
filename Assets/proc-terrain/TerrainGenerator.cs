@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -124,6 +125,7 @@ public class TerrainGenerator : MonoBehaviour
         return MeshGenerator.GenerateMeshFromHeightMap(hm, _heightScale, _heightCurve, DefaultLOD);
     }
 
+
     float[,] AddRoadNoise(float _ofstX, float _ofstY, float[,] _noise)
     {
         float[,] roadNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2, RoadNoiseAmp, RoadNoiseFreq, RoadNoiseInvert, _ofstX, _ofstY, RoadHorizontalPerlinConfig, RoadVerticalPerlinConfig, RoadBrushShape, RoadBrushRadius, RoadBrushSpacing);
@@ -135,12 +137,36 @@ public class TerrainGenerator : MonoBehaviour
                 // float vert = verticality[0,i];
                 // vert += RoadNoiseMaxHeight;
                 // vert = Mathf.Clamp01(vert);
+
+                // figure out why this blending doesn't work properly
                 _noise[i, j] = Mathf.Lerp(_noise[i, j], RoadNoiseMaxHeight, roadNoise[i, j] * RoadNoiseBlend);
             }
         }
 
         return _noise;
     }
+    float[,] GetRoadNoise(float _ofstX, float _ofstY, float[,] _noise)
+    {
+        float[,] roadNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2, RoadNoiseAmp, RoadNoiseFreq, RoadNoiseInvert, _ofstX, _ofstY, RoadHorizontalPerlinConfig, RoadVerticalPerlinConfig, RoadBrushShape, RoadBrushRadius, RoadBrushSpacing);
+        return roadNoise;
+    }
+    public float[,] AddRoadNoiseFromMaster(float[,] _master, float[,] _map, int _startingIndex)
+    {
+        float[,] road = new float[VertsPerSide() + 2, VertsPerSide() + 2];
+
+        Array.Copy(_master, _startingIndex, road, 0, (VertsPerSide() + 2) * (VertsPerSide() + 2));
+        for (int y = 0; y < VertsPerSide() + 2; y++)
+        {
+            for (int x = 0; x < VertsPerSide() + 2; x++)
+            {
+                _map[x, y] = Mathf.Lerp(_map[x, y], RoadNoiseMaxHeight, road[x, y] * RoadNoiseBlend);
+            }
+        }
+
+        return _map;
+    }
+    int maxLogs = 100;
+    int logs = 0;
     public void GenerateTerrain()
     {
         //float[,] heightmap = NoiseGenerator.GenerateNoiseMap(_seed, VertsPerSide(), VertsPerSide(), _noiseScale, _octaves, _persistance, _lacunarity, _offsetX, _offsetY);
@@ -148,6 +174,32 @@ public class TerrainGenerator : MonoBehaviour
         List<MapData> MapDatas = new();
         List<Color[]> colorMaps = new();
         List<float[,]> noises = new();
+
+        float[,] masterRoadNoise = new float[m_neighboursX * (VertsPerSide() + 2), m_neighboursY * (VertsPerSide() + 2)];
+
+        for (int y = 0; y < m_neighboursY; y++)
+        {
+            for (int x = 0; x < m_neighboursX; x++)
+            {
+
+                float offsetX = _offsetX + (m_chunkSize * x) - (m_neighboursX - 1) / 2 * m_chunkSize;
+                float offsetY = _offsetY + (m_chunkSize * y) - (m_neighboursY - 1) / 2 * m_chunkSize;
+                float[,] no = new float[VertsPerSide() + 2, VertsPerSide() + 2];
+                no = GetRoadNoise(offsetX, offsetY, no);
+
+                if (logs < maxLogs)
+                {
+                    Debug.Log(no[35, 25]);
+                    logs++;
+                }
+
+                int neighbourIndex = x + y * m_neighboursX;
+                Array.Copy(no, 0, masterRoadNoise, neighbourIndex * ((VertsPerSide() + 2) * (VertsPerSide() + 2)), (VertsPerSide() + 2) * (VertsPerSide() + 2));
+            }
+        }
+
+        // masterRoadNoise = NoiseGenerator.ApplyBlur(masterRoadNoise, 15);
+
 
         for (int y = 0; y < m_neighboursY; y++)
         {
@@ -159,7 +211,12 @@ public class TerrainGenerator : MonoBehaviour
                 if (!Normalize)
                 {
                     // create road
+
                     no = AddRoadNoise(offsetX, offsetY, no);
+                    // int roadNoiseIndex = x + m_neighboursX * y * (VertsPerSide() + 2);
+                    // no = AddRoadNoiseFromMaster(masterRoadNoise, no, roadNoiseIndex);
+
+
                     HeightMap hm = HeightMap.FromNoise(no, 1);
                     MapData md = new(hm, ColorMapFromHeight(hm), VertsPerSide() + 2, VertsPerSide() + 2);
                     MapDatas.Add(md);
@@ -180,6 +237,8 @@ public class TerrainGenerator : MonoBehaviour
 
                     // create road
                     noises[index] = AddRoadNoise(offsetX, offsetY, noises[index]);
+                    // int roadNoiseIndex = x + m_neighboursX * y * (VertsPerSide() + 2);
+                    // noises[index] = AddRoadNoiseFromMaster(masterRoadNoise, noises[index], roadNoiseIndex);
 
                     HeightMap hm = HeightMap.FromNoise(noises[index], 1);
                     MapData md = new(hm, ColorMapFromHeight(hm), VertsPerSide() + 2, VertsPerSide() + 2);

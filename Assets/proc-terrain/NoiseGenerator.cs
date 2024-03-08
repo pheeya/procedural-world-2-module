@@ -60,6 +60,7 @@ public class NoiseGenerator
 
             value += perlin * amplitude;
 
+
             amplitude *= _config.persistance;
             frequency *= _config.lacunarity;
         }
@@ -191,8 +192,10 @@ public class NoiseGenerator
 
 
         // }
+
         return map;
     }
+
 
     public static float[,] StampCircle(float[,] _noise, int _centerX, int _centerY, AnimationCurve _brush, int _radius)
     {
@@ -210,6 +213,8 @@ public class NoiseGenerator
 
                 // circle shape
                 float dist = (pos - new Vector2(_centerX, _centerY)).magnitude / _radius;
+
+
                 dist = Mathf.Clamp01(dist);
 
                 // dist = dist * Mathf.Pow(2, _brushStrength);
@@ -217,14 +222,52 @@ public class NoiseGenerator
                 // dist = (pos - new Vector2(_centerX, pos.y)).magnitude / _radius;
                 // dist = Mathf.Clamp01(dist);
 
+
+
+
                 _noise[x, y] += _brush.Evaluate((1 - dist));
+
+
+                _noise[x, y] = Mathf.Clamp01(_noise[x, y]);
             }
         }
 
         return _noise;
     }
+    public static float[,] ApplyBlur(float[,] inputArray, int blurSize)
+    {
+        int width = inputArray.GetLength(0);
+        int height = inputArray.GetLength(1);
 
+        float[,] resultArray = new float[width, height];
 
+        for (int x = 0; x < width; x++)
+        {
+            for (int y = 0; y < height; y++)
+            {
+                float sum = 0;
+                int count = 0;
+
+                // Apply blur kernel
+                for (int i = -blurSize; i <= blurSize; i++)
+                {
+                    for (int j = -blurSize; j <= blurSize; j++)
+                    {
+                        int newX = Mathf.Clamp(x + i, 0, width - 1);
+                        int newY = Mathf.Clamp(y + j, 0, height - 1);
+
+                        sum += inputArray[newX, newY];
+                        count++;
+                    }
+                }
+
+                // Calculate the average
+                resultArray[x, y] = sum / count;
+            }
+        }
+
+        return resultArray;
+    }
     public static List<float[,]> Normalize(List<float[,]> _noiseMaps, int _height, int _width)
     {
         float maxNoiseHeight = float.MinValue;
