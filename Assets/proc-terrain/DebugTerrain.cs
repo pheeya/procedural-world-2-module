@@ -2,14 +2,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class DebugTerrain: MonoBehaviour
+namespace ProcWorld
 {
-    public MeshFilter _meshFilter;
-    public MeshRenderer _meshRenderer;
-   public void GenerateMesh(Mesh _mesh,Texture _tex)
+    public class DebugTerrain : MonoBehaviour
     {
-        _meshFilter.sharedMesh = _mesh;
-        _meshRenderer.sharedMaterial.mainTexture = _tex;
-    }
+        public MeshFilter _meshFilter;
+        public MeshRenderer _meshRenderer;
+        public void GenerateMesh(Mesh _mesh, Texture _tex)
+        {
+            _meshFilter.sharedMesh = _mesh;
+            _meshRenderer.sharedMaterial.mainTexture = _tex;
+        }
 
+    }
 }

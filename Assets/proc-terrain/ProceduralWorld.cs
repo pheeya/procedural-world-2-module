@@ -2,10 +2,13 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class ProceduralWorld : MonoBehaviour
+namespace ProcWorld
 {
-    private void Awake()
+    public class ProceduralWorld : MonoBehaviour
     {
-        FindObjectOfType<DebugTerrain>().transform.gameObject.SetActive(false);
+        private void Awake()
+        {
+            FindObjectOfType<DebugTerrain>().transform.gameObject.SetActive(false);
+        }
     }
 }
