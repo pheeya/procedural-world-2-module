@@ -17,7 +17,11 @@ namespace ProcWorld
 
         public override void OnInspectorGUI()
         {
+
             base.OnInspectorGUI();
+            System.Diagnostics.Stopwatch sw = new();
+
+
             if (Application.isPlaying) return;
 
             TerrainGenerator terrainGenerator = (TerrainGenerator)target;
@@ -36,6 +40,7 @@ namespace ProcWorld
             GUILayout.Button("Refresh");
             if (GUI.changed || heightmap == null)
             {
+                sw.Start();
                 HeightMap hm = terrainGenerator.GenerateTestHeightMap();
 
                 Color[] cm = terrainGenerator.ColorMapFromHeight(hm);
@@ -53,7 +58,10 @@ namespace ProcWorld
                 roadVerticallityMap = TextureGenerator.TextureFromMap(roadVerticalityNoise.Values);
 
                 debugTerrain.GenerateMesh(terrainGenerator.GenerateTestMeshData().mesh, colormap);
+                sw.Stop();
+                Debug.Log("Generated debug terrain, took: " + sw.Elapsed.TotalMilliseconds + " ms");
             }
+
             EditorGUILayout.BeginVertical();
             GUILayout.Label(heightmap);
             GUILayout.Label(colormap);

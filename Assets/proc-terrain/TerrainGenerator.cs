@@ -125,7 +125,8 @@ namespace ProcWorld
         int logs = 0;
         float[,] AddRoadNoise(float _ofstX, float _ofstY, float[,] _noise)
         {
-
+            System.Diagnostics.Stopwatch roadSw = new();
+            roadSw.Start();
             float[,] roadNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2, RoadConfig, _ofstX, _ofstY, RoadHorizontalPerlinConfig, RoadVerticalPerlinConfig);
             float[,] verticality = NoiseGenerator.GenerateSingleAxisNoiseMap(RoadVerticalPerlinConfig, VertsPerSide() + 2, VertsPerSide() + 2, _offsetX, _offsetY);
             for (int i = 0; i < roadNoise.GetLength(1); i++)
@@ -159,6 +160,7 @@ namespace ProcWorld
             //     }
             // }
 
+            Debug.Log("Generated road , took: " + roadSw.Elapsed.TotalMilliseconds + " ms");
             return _noise;
         }
         float[,] GetRoadNoise(float _ofstX, float _ofstY, float[,] _noise)
@@ -172,6 +174,8 @@ namespace ProcWorld
         {
             //float[,] heightmap = NoiseGenerator.GenerateNoiseMap(_seed, VertsPerSide(), VertsPerSide(), _noiseScale, _octaves, _persistance, _lacunarity, _offsetX, _offsetY);
 
+            System.Diagnostics.Stopwatch masterSw = new();
+            masterSw.Start();
             System.Diagnostics.Stopwatch sw = new();
 
             List<MapData> MapDatas = new();
@@ -181,21 +185,22 @@ namespace ProcWorld
 
 
 
+
+            sw.Start();
             for (int y = 0; y < m_neighboursY; y++)
             {
                 for (int x = 0; x < m_neighboursX; x++)
                 {
-                    
+
                     float offsetX = _offsetX + (m_chunkSize * x) - (m_neighboursX - 1) / 2 * m_chunkSize;
                     float offsetY = _offsetY + (m_chunkSize * y) - (m_neighboursY - 1) / 2 * m_chunkSize;
                     float[,] no = NoiseGenerator.GenerateNoiseMap(PerlinConfig, VertsPerSide() + 2, VertsPerSide() + 2, offsetX, offsetY);
                     if (!Normalize)
                     {
+
                         // create road
-
-
-
-
+                        int index = x + y * m_neighboursX;
+                        noises[index] = AddRoadNoise(offsetX, offsetY, noises[index]);
                         HeightMap hm = HeightMap.FromNoise(no, 1);
                         MapData md = new(hm, ColorMapFromHeight(hm), VertsPerSide() + 2, VertsPerSide() + 2);
                         MapDatas.Add(md);
@@ -203,8 +208,11 @@ namespace ProcWorld
                     noises.Add(no);
                 }
             }
+            sw.Stop();
+            Debug.Log("Generated terrain base shape, took: " + sw.Elapsed.TotalMilliseconds + " ms");
             if (Normalize)
             {
+                sw.Start();
                 noises = NoiseGenerator.Normalize(noises, VertsPerSide() + 2, VertsPerSide() + 2);
                 for (int y = 0; y < m_neighboursY; y++)
                 {
@@ -230,8 +238,12 @@ namespace ProcWorld
                         MapDatas.Add(md);
                     }
                 }
+                sw.Stop();
+                Debug.Log("Normalized terrain, took: " + sw.Elapsed.TotalMilliseconds + " ms");
             }
 
+
+            sw.Start();
             for (int y = 0; y < m_neighboursY; y++)
             {
                 for (int x = 0; x < m_neighboursX; x++)
@@ -241,11 +253,13 @@ namespace ProcWorld
                     MapData mapdata = MapDatas[index];
                     Texture tex = TextureGenerator.TextureFromMap(mapdata.colormap, VertsPerSide() + 2, VertsPerSide() + 2);
                     TerrainChunk chunk = new TerrainChunk(m_chunkSize, mapdata.GetHeightMap(), mapdata.GetColorMap(), _heightScale, _heightCurve, pos, _terrainMat, tex, transform, DefaultLOD);
-                    chunk.SetMesh(MeshGenerator.GenerateMeshFromHeightMap(mapdata.GetHeightMap(), _heightScale, _heightCurve, DefaultLOD).mesh);
+                    // chunk.SetMesh(MeshGenerator.GenerateMeshFromHeightMap(mapdata.GetHeightMap(), _heightScale, _heightCurve, DefaultLOD).mesh);
                     terrainChunks.Add(pos, chunk);
                     chunk.SetVisibility(true);
                 }
             }
+            sw.Stop();
+            Debug.Log("Generated terrain mesh, took: " + sw.Elapsed.TotalMilliseconds + " ms");
 
             // Texture tex = TextureGenerator.TextureFromMap(mapdata.colormap, VertsPerSide(), VertsPerSide());
             // TerrainChunk terrain = new TerrainChunk(m_chunkSize, new HeightMap(m_chunkSize, m_chunkSize, mapdata.GetHeightMap().Values), mapdata.GetColorMap(), _heightScale, _heightCurve, Vector2.zero, _terrainMat, tex, transform);
@@ -255,6 +269,14 @@ namespace ProcWorld
             // terrain.SetVisibility(true);
             //disabled features for now
             //_featureGenerator.GenerateFeatures(NoiseGenerator.GenerateNoiseMap(_seed+1, VertsPerSide(), VertsPerSide(), _noiseScale, _octaves, _persistance, _lacunarity, _offsetX, _offsetY), _heightScale, _heightCurve, mapdata.GetHeightMap());
+
+
+
+            masterSw.Stop();
+
+
+            Debug.Log("Finished generating terrain, took: " + masterSw.Elapsed.TotalMilliseconds + " ms");
+            Debug.Log("Finished generating terrain, took: " + masterSw.Elapsed.TotalSeconds + " s");
         }
 
         // public TerrainChunk CreateTerrain(ColorMap _heightMap, ColorMap _colorMap)

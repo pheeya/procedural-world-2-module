@@ -8,6 +8,11 @@ namespace ProcWorld
     {
         public static MeshData GenerateMeshFromHeightMap(HeightMap _heightmap, float _heightScale, AnimationCurve _heightCurve, int _lod)
         {
+
+            System.Diagnostics.Stopwatch sw = new();
+
+            sw.Start();
+
             int increment = _lod == 0 ? 1 : _lod * 2;
             int width = _heightmap.Width;
             int height = _heightmap.Height;
@@ -135,7 +140,8 @@ namespace ProcWorld
 
 
             meshData.UpdateMesh();
-
+            sw.Stop();
+            Debug.Log("Generated mesh from heightmap, took: " + sw.Elapsed.TotalMilliseconds + " ms");
             return meshData;
         }
         public static Vector3[] CalculateNormals(List<Vector3> _vertices, List<int> _triangles, List<Vector3> _borderVerts, List<int> _borderTriangles)
