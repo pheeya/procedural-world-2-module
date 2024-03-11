@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Mathematics;
@@ -50,8 +51,8 @@ namespace ProcWorld
             float value = 0;
             for (int o = 0; o < _config.octaves; o++)
             {
-                float samplex = (_x + _offsetX + _octaves[o].x) / _config.scale * frequency;
-                float sampley = (_y + _offsetY + _octaves[o].y) / _config.scale * frequency;
+                float samplex = (_x + _octaves[o].x) / _config.scale * frequency;
+                float sampley = (_y + _octaves[o].y) / _config.scale * frequency;
 
 
                 // figure out why we are changing this range from 01 to -1 1
@@ -95,6 +96,9 @@ namespace ProcWorld
             return octaveOffsets;
         }
 
+
+
+        static int sinVal = 1;
         public static float[,] GenerateLongitudinalSinNoise(int _width, int _height, RoadNoiseConfig _roadConfig, float _offsetX, float _offsetY, PerlinNoiseConfig _horizontalNoise, PerlinNoiseConfig _verticalNoise)
         {
             System.Diagnostics.Stopwatch sw = new();
@@ -112,11 +116,59 @@ namespace ProcWorld
             float halfHeight = _height / 2f;
 
             int blurredMapWidth = _width + _roadConfig.blurPadding;
+
             float[,] map = new float[_width, _height];
 
 
             float[,] blurredMap = new float[blurredMapWidth, blurredMapWidth];
 
+
+            int physicalWidth = blurredMapWidth - 2;
+
+
+            int CenterX = (blurredMapWidth / 2);
+            int CenterY = (blurredMapWidth / 2);
+
+            int BottomY = CenterY + physicalWidth / 2;
+            int TopY = CenterY - physicalWidth / 2;
+
+            int LeftX = CenterX - physicalWidth / 2;
+            int RightX = CenterX + physicalWidth / 2;
+
+
+            // // stamp center
+            // blurredMap = StampCircle(blurredMap, CenterX + Mathf.RoundToInt(_offsetX), CenterY + Mathf.RoundToInt(_offsetY), _roadConfig.brushRadius);
+
+
+            // //stamp bottom center
+            // blurredMap = StampCircle(blurredMap, CenterX + Mathf.RoundToInt(_offsetX), BottomY + Mathf.RoundToInt(_offsetY), _roadConfig.brushRadius);
+
+            // //stamp top center
+            // blurredMap = StampCircle(blurredMap, CenterX + Mathf.RoundToInt(_offsetX), TopY + Mathf.RoundToInt(_offsetY), _roadConfig.brushRadius);
+
+
+            // //stamp Left center
+            // blurredMap = StampCircle(blurredMap, LeftX + Mathf.RoundToInt(_offsetX), CenterY + Mathf.RoundToInt(_offsetY), _roadConfig.brushRadius);
+
+            // //stamp Right center
+            // blurredMap = StampCircle(blurredMap, RightX + Mathf.RoundToInt(_offsetX), CenterY + Mathf.RoundToInt(_offsetY), _roadConfig.brushRadius);
+
+
+            // //stamp bottom left
+            // blurredMap = StampCircle(blurredMap, LeftX + Mathf.RoundToInt(_offsetX), BottomY + Mathf.RoundToInt(_offsetY), _roadConfig.brushRadius);
+
+            // //stamp bottom right
+            // blurredMap = StampCircle(blurredMap, RightX + Mathf.RoundToInt(_offsetX), BottomY + Mathf.RoundToInt(_offsetY), _roadConfig.brushRadius);
+
+            // //stamp Top left
+            // blurredMap = StampCircle(blurredMap, LeftX + Mathf.RoundToInt(_offsetX), TopY + Mathf.RoundToInt(_offsetY), _roadConfig.brushRadius);
+
+            // //stamp Top right
+            // blurredMap = StampCircle(blurredMap, RightX + Mathf.RoundToInt(_offsetX), TopY + Mathf.RoundToInt(_offsetY), _roadConfig.brushRadius);
+
+
+
+            // return blurredMap;
 
             // -radius to radius offset in y axis to make brush stamping go beyond the bounds, to make the edges somewhat seamless
 
@@ -157,51 +209,89 @@ namespace ProcWorld
             // END
 
             Vector2 previousPos = Vector2.zero;
+
             float interpolatedStampStepSize = 0.1f;
+
+            int startingYPos = 0;
+
+            Debug.Log("Chunk: \n\n");
+            int dif = blurredMapWidth - _width;
+            dif /= 2;
+            Debug.Log(_offsetX);
             for (int y = 0; y < blurredMapWidth; y += _roadConfig.brushSpacing)
             {
-                Debug.Log(y);
-                int yPos = y;
-                int xPos = blurredMapWidth / 2;
-                xPos -= 1;
+
+
+
+                int xPosLocal = blurredMapWidth / 2;
 
                 float hw = blurredMapWidth / 2f;
                 float hh = blurredMapWidth / 2f;
 
-                // xPos += Mathf.RoundToInt(GetPerlinValue(_horizontalNoise, xPos, yPos, horizontalOctaveOffsets, -(hw), -(hh)) * _roadConfig.amplitude * _width - _offsetX);
-                xPos += Mathf.RoundToInt(Mathf.Sin(y - Mathf.RoundToInt(_offsetY)) * _roadConfig.amplitude*blurredMapWidth -_offsetX);
-                Vector2 currentPos = new(xPos, y);
-                // if (y > -_roadConfig.brushRadius * 2)
-                // {
-                //     if ((currentPos - previousPos).magnitude > .5f)
-                //     {
+
+
+                int worldYPos = startingYPos - y + (int)_offsetY + (int)(blurredMapWidth) / 2;
+
+                // only happens once at the start, after that y is always a factor of _brushSpacing
+                if (y == 0)
+                {
+                    int mod = worldYPos % _roadConfig.brushSpacing;
+                    if (mod != 0)
+                    {
+                        startingYPos -= mod;
+                        worldYPos = startingYPos - y + (int)_offsetY + (int)(blurredMapWidth) / 2;
+                    }
+                }
 
 
 
-                //         for (float t = 0; t < 1; t += interpolatedStampStepSize)
-                //         {
-                //             Vector2 pos = Vector2.Lerp(previousPos, currentPos, t);
-                //             blurredMap = StampCircle(blurredMap, Mathf.RoundToInt(pos.x), Mathf.RoundToInt(pos.y), _roadConfig.brushRadius);
-
-                //         }
-
-                //     }
-                // }
-
-                // xPos+=(y - Mathf.RoundToInt(_offsetY));
-                // xPos -= Mathf.RoundToInt(_offsetX);
 
 
-                blurredMap = StampCircle(blurredMap, xPos, yPos, _roadConfig.brushRadius);
+                float perlin = Mathf.RoundToInt(GetPerlinValue(_horizontalNoise, xPosLocal, y - startingYPos, horizontalOctaveOffsets, -hw, -hh) * _roadConfig.amplitude * ((_width - 2) / 2.0f)); ;
+
+                // float perlin = (Mathf.PerlinNoise(0f, worldYPos/500f) * 2 - 1) * _roadConfig.amplitude * 3;
+                xPosLocal += Mathf.RoundToInt(perlin);
+                // xPosLocal += Mathf.RoundToInt(Mathf.Sin(worldYPos) * _roadConfig.amplitude * 3);
+
+                xPosLocal -= (int)_offsetX;
+
+                Vector2 currentPos = new(xPosLocal, y - startingYPos);
+
+
+                if (y > 0)
+                {
+                    Debug.Log((currentPos - previousPos).magnitude);
+                    float dist = (currentPos - previousPos).magnitude;
+                    if (dist > _roadConfig.brushSpacing)
+                    {
+                        int strokes = Mathf.FloorToInt(dist/_roadConfig.brushSpacing);
+                        for (float t = 0; t < 1; t += (1f/strokes))
+                        {
+                            Vector2 pos = Vector2.Lerp(previousPos, currentPos, t);
+                            blurredMap = StampCircle(blurredMap, Mathf.RoundToInt(pos.x), Mathf.RoundToInt(pos.y), _roadConfig.brushRadius);
+
+                        }
+
+                    }
+                }
+
+                // xPosLocal+=(y - Mathf.RoundToInt(_offsetY));
+                // xPosLocal -= Mathf.RoundToInt(_offsetX);
+
+
+                blurredMap = StampCircle(blurredMap, xPosLocal, y - startingYPos, _roadConfig.brushRadius);
+                // blurredMap = StampCircle(blurredMap, xPosLocal, yPos, _roadConfig.brushRadius);
                 previousPos = currentPos;
+
+
             }
 
 
+
+            // return blurredMap;
+
             blurredMap = ApplyBlur(blurredMap, _roadConfig.blurAmount);
 
-            int dif = blurredMapWidth - _width;
-            dif /= 2;
-            Debug.Log(dif);
             for (int y = dif; y < blurredMapWidth - dif; y++)
             {
                 for (int x = dif; x < blurredMapWidth - dif; x++)
@@ -218,6 +308,7 @@ namespace ProcWorld
             Debug.Log("Road noise generation completed, took: " + sw.Elapsed.TotalSeconds);
             return map;
         }
+
 
 
         static int maxLogs = 100;
@@ -248,11 +339,7 @@ namespace ProcWorld
                     // dist = Mathf.Clamp01(dist);
 
 
-                    if (logs < maxLogs)
-                    {
-                        Debug.Log(y);
-                        logs++;
-                    }
+
 
 
 
@@ -367,6 +454,7 @@ namespace ProcWorld
         public int brushSpacing;
         public int blurPadding;
         public int blurAmount;
+        public int test;
 
 
     }

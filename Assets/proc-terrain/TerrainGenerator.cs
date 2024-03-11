@@ -209,7 +209,12 @@ namespace ProcWorld
                     {
                         int index = x + y * m_neighboursX;
                         float offsetX = _offsetX + (m_chunkSize * x) - (m_neighboursX - 1) / 2 * m_chunkSize;
+
+                        // offsetX = _offsetX - (x - (m_neighboursX - 1) / 2) * m_chunkSize;
+
                         float offsetY = _offsetY + (m_chunkSize * y) - (m_neighboursY - 1) / 2 * m_chunkSize;
+
+                        // offsetY = _offsetY + (y - (m_neighboursY - 1) / 2) * m_chunkSize;
 
                         // create road
 
