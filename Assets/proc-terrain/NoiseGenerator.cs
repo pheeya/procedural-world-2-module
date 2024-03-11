@@ -101,9 +101,7 @@ namespace ProcWorld
         static int sinVal = 1;
         public static float[,] GenerateLongitudinalSinNoise(int _width, int _height, RoadNoiseConfig _roadConfig, float _offsetX, float _offsetY, PerlinNoiseConfig _horizontalNoise, PerlinNoiseConfig _verticalNoise)
         {
-            System.Diagnostics.Stopwatch sw = new();
 
-            sw.Start();
             if (_roadConfig.brushSpacing < 1)
             {
                 _roadConfig.brushSpacing = 1;
@@ -214,10 +212,8 @@ namespace ProcWorld
 
             int startingYPos = 0;
 
-            Debug.Log("Chunk: \n\n");
             int dif = blurredMapWidth - _width;
             dif /= 2;
-            Debug.Log(_offsetX);
             for (int y = 0; y < blurredMapWidth; y += _roadConfig.brushSpacing)
             {
 
@@ -260,7 +256,6 @@ namespace ProcWorld
 
                 if (y > 0)
                 {
-                    Debug.Log((currentPos - previousPos).magnitude);
                     float dist = (currentPos - previousPos).magnitude;
                     if (dist > _roadConfig.brushSpacing)
                     {
@@ -302,10 +297,7 @@ namespace ProcWorld
             }
 
 
-            sw.Stop();
 
-
-            Debug.Log("Road noise generation completed, took: " + sw.Elapsed.TotalSeconds);
             return map;
         }
 

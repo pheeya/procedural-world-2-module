@@ -172,6 +172,8 @@ namespace ProcWorld
         {
             //float[,] heightmap = NoiseGenerator.GenerateNoiseMap(_seed, VertsPerSide(), VertsPerSide(), _noiseScale, _octaves, _persistance, _lacunarity, _offsetX, _offsetY);
 
+            System.Diagnostics.Stopwatch sw = new();
+
             List<MapData> MapDatas = new();
             List<Color[]> colorMaps = new();
             List<float[,]> noises = new();
@@ -183,6 +185,7 @@ namespace ProcWorld
             {
                 for (int x = 0; x < m_neighboursX; x++)
                 {
+                    
                     float offsetX = _offsetX + (m_chunkSize * x) - (m_neighboursX - 1) / 2 * m_chunkSize;
                     float offsetY = _offsetY + (m_chunkSize * y) - (m_neighboursY - 1) / 2 * m_chunkSize;
                     float[,] no = NoiseGenerator.GenerateNoiseMap(PerlinConfig, VertsPerSide() + 2, VertsPerSide() + 2, offsetX, offsetY);
@@ -217,6 +220,7 @@ namespace ProcWorld
                         // offsetY = _offsetY + (y - (m_neighboursY - 1) / 2) * m_chunkSize;
 
                         // create road
+
 
                         noises[index] = AddRoadNoise(offsetX, offsetY, noises[index]);
 
