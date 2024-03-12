@@ -360,6 +360,7 @@ namespace ProcWorld
             MeshRenderer meshRenderer;
             MeshFilter meshFilter;
             Bounds bounds;
+            MeshCollider meshCollider;
 
             public TerrainChunk(int _size, HeightMap _heightMap, Color[] _colorMap, float _heightScale, AnimationCurve _heightCurve, Vector2 _coord, Material _mat, Texture _tex, Transform _parent, int _defaultLOD)
             {
@@ -370,6 +371,7 @@ namespace ProcWorld
                 chunkObj = new GameObject("Chunk");
                 meshRenderer = chunkObj.AddComponent<MeshRenderer>();
                 meshFilter = chunkObj.AddComponent<MeshFilter>();
+                meshCollider = chunkObj.AddComponent<MeshCollider>();
                 meshRenderer.material = _mat;
                 meshRenderer.material.mainTexture = _tex;
                 chunkObj.transform.position = positionV3;
@@ -379,8 +381,13 @@ namespace ProcWorld
                 m_heightMap = _heightMap;
                 m_colorMap = _colorMap;
                 meshFilter.mesh = MeshGenerator.GenerateMeshFromHeightMap(m_heightMap, _heightScale, _heightCurve, _defaultLOD).mesh;
+                meshCollider.sharedMesh = meshFilter.mesh;
                 SetVisibility(false);
+
+
+            // generate LODS
             }
+
 
             public void UpdateChunk()
             {
