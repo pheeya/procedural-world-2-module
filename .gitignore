@@ -27,6 +27,10 @@
 .vs/
 .vscode/
 
+
+# Meta
+*.meta 
+
 # Gradle cache directory
 .gradle/
 

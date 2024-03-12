@@ -42,7 +42,9 @@ namespace ProcWorld
         Dictionary<Vector2, TerrainChunk> terrainChunks = new Dictionary<Vector2, TerrainChunk>();
         private List<TerrainChunk> terrainChunksVisibleLastFrame = new List<TerrainChunk>();
 
+        public delegate void TerrainGeneratorEvent();
 
+        public TerrainGeneratorEvent EOnFinished;
         public Color[] ColorMapFromHeight(HeightMap _hm)
         {
 
@@ -277,6 +279,9 @@ namespace ProcWorld
 
             Debug.Log("Finished generating terrain, took: " + masterSw.Elapsed.TotalMilliseconds + " ms");
             Debug.Log("Finished generating terrain, took: " + masterSw.Elapsed.TotalSeconds + " s");
+
+
+            EOnFinished?.Invoke();
         }
 
         // public TerrainChunk CreateTerrain(ColorMap _heightMap, ColorMap _colorMap)
@@ -385,7 +390,7 @@ namespace ProcWorld
                 SetVisibility(false);
 
 
-            // generate LODS
+                // generate LODS
             }
 
 
