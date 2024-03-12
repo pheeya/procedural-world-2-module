@@ -252,50 +252,128 @@ namespace ProcWorld
 
             return _noise;
         }
-
+        delegate void BlurParamThreadStart(int _lineIndex, int _lineNum);
+        struct BlurParams
+        {
+            public int lineIndex;
+            public int lineCount;
+        }
         public static float[,] ApplyBlur(float[,] inputArray, int blurSize)
         {
-            void blur(int _startIndex, int _endIndex){
-
-            }
             int width = inputArray.GetLength(0);
             int height = inputArray.GetLength(1);
-
             float[,] resultArray = new float[width, height];
-            // int threadNum = 10;
-            // if (width * height < threadNum)
-            // {
-            //     threadNum = 1;
-            // }
-            // List<Thread> workers = new(threadNum);
-            // for(int i=0;i<threadNum;i++){
-            //   Thread t = new Thread()
-            // }
-
-            for (int x = 0; x < width; x++)
+            void blur(object _params)
             {
-                for (int y = 0; y < height; y++)
+                int _lineIndex = ((BlurParams)_params).lineIndex;
+                int _lineNum = ((BlurParams)_params).lineCount;
+                for (int x = 0; x < width; x++)
                 {
-                    float sum = 0;
-                    int count = 0;
-
-                    // Apply blur kernel
-                    for (int i = -blurSize; i <= blurSize; i++)
+                    for (int y = _lineIndex; y < _lineIndex + _lineNum; y++)
                     {
-                        for (int j = -blurSize; j <= blurSize; j++)
+                        float sum = 0;
+                        int count = 0;
+
+                        // Apply blur kernel
+                        for (int i = -blurSize; i <= blurSize; i++)
                         {
-                            int newX = Mathf.Clamp(x + i, 0, width - 1);
-                            int newY = Mathf.Clamp(y + j, 0, height - 1);
+                            for (int j = -blurSize; j <= blurSize; j++)
+                            {
+                                int newX = Mathf.Clamp(x + i, 0, width - 1);
+                                int newY = Mathf.Clamp(y + j, 0, height - 1);
 
-                            sum += inputArray[newX, newY];
-                            count++;
+                                sum += inputArray[newX, newY];
+                                count++;
+                            }
                         }
-                    }
+                        // Calculate the average
 
-                    // Calculate the average
-                    resultArray[x, y] = sum / count;
+                        if (y > height - 1 || y < 0)
+                        {
+                            
+                            Debug.Log(_lineNum);
+                            Debug.Log(y);
+                            Debug.Log(y < y + _lineNum);
+                        }
+
+                        if (x > width - 1 || x < 0)
+                        {
+                            Debug.Log(_lineIndex);
+                            Debug.Log(_lineNum);
+                            Debug.Log(y);
+                            Debug.Log(x);
+                        }
+                        resultArray[x, y] = sum / count;
+
+                    }
                 }
             }
+
+
+
+// this is slow, should be much faster probably and should be able to make lines per thread smaller
+// but this is not the case, likely due to overhead from threads being created here instead of using a pool
+
+            int lines = height;
+            int linesPerThread = 5;
+
+            List<Thread> workers = new();
+            int count = 0;
+
+            for (int i = 0; i < height; i += linesPerThread)
+            {
+
+                int lineNum = linesPerThread;
+
+                if (i + lineNum > (height - 1))
+                {
+                    lineNum = height - i;
+                }
+
+
+                Thread t = new Thread(new ParameterizedThreadStart(blur));
+
+
+                BlurParams p;
+                p.lineCount = lineNum;
+                p.lineIndex = i;
+                t.Start(p);
+
+                workers.Add(t);
+                count++;
+
+
+            }
+
+            for (int i = 0; i < workers.Count; i++)
+            {
+                workers[i].Join();
+            }
+
+            // for (int x = 0; x < width; x++)
+            // {
+            //     for (int y = 0; y < height; y++)
+            //     {
+            //         float sum = 0;
+            //         int count = 0;
+
+            //         // Apply blur kernel
+            //         for (int i = -blurSize; i <= blurSize; i++)
+            //         {
+            //             for (int j = -blurSize; j <= blurSize; j++)
+            //             {
+            //                 int newX = Mathf.Clamp(x + i, 0, width - 1);
+            //                 int newY = Mathf.Clamp(y + j, 0, height - 1);
+
+            //                 sum += inputArray[newX, newY];
+            //                 count++;
+            //             }
+            //         }
+
+            //         // Calculate the average
+            //         resultArray[x, y] = sum / count;
+            //     }
+            // }
 
             return resultArray;
         }
