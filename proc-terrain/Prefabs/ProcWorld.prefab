@@ -1,0 +1,282 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &371271285687471738
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4504104080151289365}
+  - component: {fileID: 3314144022405146678}
+  - component: {fileID: 6131098863559810031}
+  - component: {fileID: 7622778287149279648}
+  m_Layer: 0
+  m_Name: ProcWorld
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4504104080151289365
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 371271285687471738}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 3945784075660335143}
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3314144022405146678
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 371271285687471738}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8d1bf775654835347944a7e23b070586, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _featureGenerator: {fileID: 6131098863559810031}
+  _terrainMat: {fileID: 2100000, guid: cb644a6710cff6543a974c65d8336498, type: 2}
+  _heightCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 1
+      outSlope: 1
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 1
+      outSlope: 1
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  _player: {fileID: 0}
+  _heightScale: 45
+  <DefaultLOD>k__BackingField: 0
+  <Normalize>k__BackingField: 1
+  terrainTypes:
+  - name: ground
+    height: 0
+    color: {r: 0.3019758, g: 0.4542973, b: 0.5471698, a: 1}
+  - name: ground
+    height: 0
+    color: {r: 0.745283, g: 0.6713985, b: 0.45349768, a: 1}
+  - name: ground
+    height: 0.88
+    color: {r: 1, g: 0.90466833, b: 0.6650944, a: 1}
+  - name: ground
+    height: 1
+    color: {r: 0.5, g: 0.43756822, b: 0.370283, a: 1}
+  <RoadConfig>k__BackingField:
+    amplitude: 5
+    brushRadius: 45
+    brushSpacing: 5
+    blurPadding: 100
+    blurAmount: 7
+    test: 0
+    brush:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 0.14586614
+        outSlope: 0.14586614
+        tangentMode: 34
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.656983
+        value: 0.09583157
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.17202179
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 2.635929
+        outSlope: 2.635929
+        tangentMode: 34
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  <RoadNoiseMaxHeight>k__BackingField: 0.5
+  <RoadNoiseBlend>k__BackingField: 0.7
+  m_chunkSize: 238
+  m_neighboursX: 3
+  m_neighboursY: 3
+  <PerlinConfig>k__BackingField:
+    seed: 1
+    scale: 200
+    octaves: 3
+    persistance: 0.087
+    lacunarity: 3.12
+  <RoadHorizontalPerlinConfig>k__BackingField:
+    seed: 5
+    scale: 600
+    octaves: 1
+    persistance: 0.01
+    lacunarity: 1
+  <RoadVerticalPerlinConfig>k__BackingField:
+    seed: 1
+    scale: 150
+    octaves: 1
+    persistance: 0.01
+    lacunarity: 1
+  _offsetX: 0
+  _offsetY: 0
+  testX: 0
+  testY: 0
+--- !u!114 &6131098863559810031
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 371271285687471738}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8e366cd5eb007fc41892f4dcdda31d8c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  features: []
+--- !u!114 &7622778287149279648
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 371271285687471738}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1c8cf3b90d7b7624d87daca7d3a9d9f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!1 &7073969558852055452
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3945784075660335143}
+  - component: {fileID: 3637111174493244373}
+  - component: {fileID: 7768340361023716504}
+  - component: {fileID: 2254129465748418129}
+  m_Layer: 0
+  m_Name: DebugTerrain
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3945784075660335143
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7073969558852055452}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4504104080151289365}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3637111174493244373
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7073969558852055452}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed33c0045bb76ae40866d188f3982203, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _meshFilter: {fileID: 7768340361023716504}
+  _meshRenderer: {fileID: 2254129465748418129}
+--- !u!33 &7768340361023716504
+MeshFilter:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7073969558852055452}
+  m_Mesh: {fileID: 0}
+--- !u!23 &2254129465748418129
+MeshRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7073969558852055452}
+  m_Enabled: 1
+  m_CastShadows: 1
+  m_ReceiveShadows: 1
+  m_DynamicOccludee: 1
+  m_StaticShadowCaster: 0
+  m_MotionVectors: 1
+  m_LightProbeUsage: 1
+  m_ReflectionProbeUsage: 1
+  m_RayTracingMode: 2
+  m_RayTraceProcedural: 0
+  m_RenderingLayerMask: 1
+  m_RendererPriority: 0
+  m_Materials:
+  - {fileID: 2100000, guid: cb644a6710cff6543a974c65d8336498, type: 2}
+  m_StaticBatchInfo:
+    firstSubMesh: 0
+    subMeshCount: 0
+  m_StaticBatchRoot: {fileID: 0}
+  m_ProbeAnchor: {fileID: 0}
+  m_LightProbeVolumeOverride: {fileID: 0}
+  m_ScaleInLightmap: 1
+  m_ReceiveGI: 1
+  m_PreserveUVs: 0
+  m_IgnoreNormalsForChartDetection: 0
+  m_ImportantGI: 0
+  m_StitchLightmapSeams: 1
+  m_SelectedEditorRenderState: 3
+  m_MinimumChartSize: 4
+  m_AutoUVMaxDistance: 0.5
+  m_AutoUVMaxAngle: 89
+  m_LightmapParameters: {fileID: 0}
+  m_SortingLayerID: 0
+  m_SortingLayer: 0
+  m_SortingOrder: 0
+  m_AdditionalVertexStreams: {fileID: 0}
