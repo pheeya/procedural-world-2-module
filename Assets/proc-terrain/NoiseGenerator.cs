@@ -173,7 +173,7 @@ namespace ProcWorld
                         for (float t = 0; t < 1; t += (1f / strokes))
                         {
                             Vector2 pos = Vector2.Lerp(previousPos, currentPos, t);
-                            blurredMap = StampCircle(blurredMap, Mathf.RoundToInt(pos.x), Mathf.RoundToInt(pos.y), _roadConfig.brushRadius);
+                            blurredMap = StampCircle(blurredMap, Mathf.RoundToInt(pos.x), Mathf.RoundToInt(pos.y), _roadConfig.brushRadius, _roadConfig.brush);
 
                         }
 
@@ -182,7 +182,7 @@ namespace ProcWorld
 
 
 
-                blurredMap = StampCircle(blurredMap, xPosLocal, y - startingYPos, _roadConfig.brushRadius);
+                blurredMap = StampCircle(blurredMap, xPosLocal, y - startingYPos, _roadConfig.brushRadius, _roadConfig.brush);
                 previousPos = currentPos;
 
 
@@ -211,7 +211,7 @@ namespace ProcWorld
 
         static int maxLogs = 100;
         static int logs = 0;
-        public static float[,] StampCircle(float[,] _noise, int _centerX, int _centerY, int _radius)
+        public static float[,] StampCircle(float[,] _noise, int _centerX, int _centerY, int _radius, AnimationCurve _brush)
         {
             for (int y = _centerY - _radius; y < _centerY + _radius; y++)
             {
@@ -243,7 +243,8 @@ namespace ProcWorld
 
 
                     dist = 1 - dist;
-                    _noise[x, y] += dist > 0 ? 1 : 0;
+                    // _noise[x, y] += dist > 0 ? 1 : 0;
+                    _noise[x,y] += _brush.Evaluate(dist);
 
 
                     _noise[x, y] = Mathf.Clamp01(_noise[x, y]);
@@ -290,7 +291,7 @@ namespace ProcWorld
 
                         if (y > height - 1 || y < 0)
                         {
-                            
+
                             Debug.Log(_lineNum);
                             Debug.Log(y);
                             Debug.Log(y < y + _lineNum);
@@ -311,11 +312,11 @@ namespace ProcWorld
 
 
 
-// this is slow, should be much faster probably and should be able to make lines per thread smaller
-// but this is not the case, likely due to overhead from threads being created here instead of using a pool
+            // this is slow, should be much faster probably and should be able to make lines per thread smaller
+            // but this is not the case, likely due to overhead from threads being created here instead of using a pool
 
             int lines = height;
-            int linesPerThread = 5;
+            int linesPerThread = 15;
 
             List<Thread> workers = new();
             int count = 0;
@@ -444,7 +445,7 @@ namespace ProcWorld
         public int blurPadding;
         public int blurAmount;
         public int test;
-
+        public AnimationCurve brush;
 
     }
 
