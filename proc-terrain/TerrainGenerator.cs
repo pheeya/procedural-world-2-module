@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.UIElements;
 using UnityEngine;
 
 namespace ProcWorld
@@ -17,6 +18,7 @@ namespace ProcWorld
         private static Vector2 playerPos;
 
         [Header("Terrain Config")]
+        [SerializeField] Transform m_chunksParent;
         public float _heightScale;
         [field: SerializeField, Range(0, 6)] public int DefaultLOD { get; private set; }
         [field: SerializeField] public bool Normalize { get; private set; }
@@ -74,6 +76,8 @@ namespace ProcWorld
             }
             return colormap;
         }
+
+
 
         public MapData GenerateMapData(float _ofX, float _ofY)
         {
@@ -258,7 +262,7 @@ namespace ProcWorld
                     int index = x + y * m_neighboursX;
                     MapData mapdata = MapDatas[index];
                     Texture tex = TextureGenerator.TextureFromMap(mapdata.colormap, VertsPerSide() + 2, VertsPerSide() + 2);
-                    TerrainChunk chunk = new TerrainChunk(m_chunkSize, mapdata.GetHeightMap(), mapdata.GetColorMap(), _heightScale, _heightCurve, pos, _terrainMat, tex, transform, DefaultLOD);
+                    TerrainChunk chunk = new TerrainChunk(m_chunkSize, mapdata.GetHeightMap(), mapdata.GetColorMap(), _heightScale, _heightCurve, pos, _terrainMat, tex, m_chunksParent, DefaultLOD);
                     // chunk.SetMesh(MeshGenerator.GenerateMeshFromHeightMap(mapdata.GetHeightMap(), _heightScale, _heightCurve, DefaultLOD).mesh);
                     terrainChunks.Add(pos, chunk);
                     chunk.SetVisibility(true);
@@ -386,6 +390,7 @@ namespace ProcWorld
                 chunkObj.transform.position = positionV3;
                 // chunkObj.transform.localScale = Vector3.one * _size / 10f;
                 chunkObj.transform.parent = _parent;
+                chunkObj.transform.gameObject.layer = _parent.gameObject.layer;
 
                 m_heightMap = _heightMap;
                 m_colorMap = _colorMap;
@@ -397,7 +402,10 @@ namespace ProcWorld
                 // generate LODS
             }
 
-
+            public HeightMap GetHeightMap()
+            {
+                return m_heightMap;
+            }
             public void UpdateChunk()
             {
                 float closestDist = Mathf.Sqrt(bounds.SqrDistance(playerPos));

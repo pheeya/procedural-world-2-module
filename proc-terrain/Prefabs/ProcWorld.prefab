@@ -33,6 +33,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 3945784075660335143}
+  - {fileID: 4991065311066778598}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &3314144022405146678
@@ -74,6 +75,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   _player: {fileID: 0}
+  m_chunksParent: {fileID: 4991065311066778598}
   _heightScale: 45
   <DefaultLOD>k__BackingField: 0
   <Normalize>k__BackingField: 1
@@ -182,7 +184,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1c8cf3b90d7b7624d87daca7d3a9d9f1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_terrainHeightSampleLayerMask:
+    serializedVersion: 2
+    m_Bits: 512
   m_terrainGen: {fileID: 3314144022405146678}
+--- !u!1 &1756790704923694779
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4991065311066778598}
+  m_Layer: 9
+  m_Name: Terrain Chunks
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4991065311066778598
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1756790704923694779}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4504104080151289365}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7073969558852055452
 GameObject:
   m_ObjectHideFlags: 0

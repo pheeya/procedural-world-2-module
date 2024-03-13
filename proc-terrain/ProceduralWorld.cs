@@ -7,6 +7,8 @@ namespace ProcWorld
     public class ProceduralWorld : MonoBehaviour
     {
 
+
+        [SerializeField] LayerMask m_terrainHeightSampleLayerMask;
         TerrainGenerator generator;
 
         bool m_finished = false;
@@ -41,6 +43,21 @@ namespace ProcWorld
         {
             return m_terrainGen.GetFinalTerrainSize();
         }
-        
+        public bool GetHeightAtPoint(Vector3 _pos, out float _height)
+        {
+            _height = 0;
+            Vector3 sample = _pos;
+            sample.y = m_terrainGen._heightScale + 10f; ;
+            bool hit = Physics.Raycast(sample, Vector3.down, out RaycastHit hitInfo, m_terrainGen._heightScale + 20f, m_terrainHeightSampleLayerMask);
+
+
+            if (!hit)
+            {
+                return false;
+            }
+
+            _height = hitInfo.point.y;
+            return true;
+        }
     }
 }
