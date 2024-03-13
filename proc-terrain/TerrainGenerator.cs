@@ -45,6 +45,11 @@ namespace ProcWorld
         public delegate void TerrainGeneratorEvent();
 
         public TerrainGeneratorEvent EOnFinished;
+
+        public Vector2 GetFinalTerrainSize()
+        {
+            return new Vector2(m_chunkSize * m_neighboursX, m_chunkSize * m_neighboursY);
+        }
         public Color[] ColorMapFromHeight(HeightMap _hm)
         {
 
@@ -69,7 +74,6 @@ namespace ProcWorld
             }
             return colormap;
         }
-
 
         public MapData GenerateMapData(float _ofX, float _ofY)
         {

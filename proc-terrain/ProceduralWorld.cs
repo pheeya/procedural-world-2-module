@@ -15,6 +15,8 @@ namespace ProcWorld
 
         public delegate void ProceduralWorldEvent();
         public ProceduralWorldEvent EOnCreated;
+
+        [SerializeField] TerrainGenerator m_terrainGen;
         private void Awake()
         {
             FindObjectOfType<DebugTerrain>().transform.gameObject.SetActive(false);
@@ -34,5 +36,11 @@ namespace ProcWorld
 
             EOnCreated?.Invoke();
         }
+
+        public Vector2 GetMapSize()
+        {
+            return m_terrainGen.GetFinalTerrainSize();
+        }
+        
     }
 }
