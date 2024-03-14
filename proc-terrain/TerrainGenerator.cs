@@ -386,7 +386,7 @@ namespace ProcWorld
                 meshFilter = chunkObj.AddComponent<MeshFilter>();
                 meshCollider = chunkObj.AddComponent<MeshCollider>();
                 meshRenderer.material = _mat;
-                meshRenderer.material.mainTexture = _tex;
+                // meshRenderer.material.mainTexture = _tex;
                 chunkObj.transform.position = positionV3;
                 // chunkObj.transform.localScale = Vector3.one * _size / 10f;
                 chunkObj.transform.parent = _parent;
