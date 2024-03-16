@@ -48,25 +48,43 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d1bf775654835347944a7e23b070586, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _featureGenerator: {fileID: 6131098863559810031}
-  _terrainMat: {fileID: 2100000, guid: cb644a6710cff6543a974c65d8336498, type: 2}
+  _featureGenerator: {fileID: 0}
+  _terrainMat: {fileID: 2100000, guid: 08f135f1fddcdf245883d63863a605ac, type: 2}
   _heightCurve:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
       value: 0
-      inSlope: 1
-      outSlope: 1
+      inSlope: 0.5647162
+      outSlope: 0.5647162
       tangentMode: 34
       weightedMode: 0
       inWeight: 0
       outWeight: 0.33333334
     - serializedVersion: 3
+      time: 0.5966184
+      value: 0.33692008
+      inSlope: 0.5890297
+      outSlope: 0.5890297
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.11149229
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.7458834
+      value: 0.85086185
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
       time: 1
       value: 1
-      inSlope: 1
-      outSlope: 1
+      inSlope: 0.5868887
+      outSlope: 0.5868887
       tangentMode: 34
       weightedMode: 0
       inWeight: 0.33333334
@@ -75,29 +93,26 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   _player: {fileID: 0}
-  m_chunksParent: {fileID: 4991065311066778598}
-  _heightScale: 45
+  m_chunksParent: {fileID: 0}
+  _heightScale: 70
   <DefaultLOD>k__BackingField: 0
   <Normalize>k__BackingField: 1
   terrainTypes:
-  - name: ground
+  - name: water
     height: 0
     color: {r: 0.3019758, g: 0.4542973, b: 0.5471698, a: 1}
   - name: ground
-    height: 0
-    color: {r: 0.745283, g: 0.6713985, b: 0.45349768, a: 1}
-  - name: ground
-    height: 0.88
-    color: {r: 1, g: 0.90466833, b: 0.6650944, a: 1}
-  - name: ground
+    height: 0.7
+    color: {r: 0.98039216, g: 0.8822159, b: 0.7372549, a: 1}
+  - name: Peaks
     height: 1
-    color: {r: 0.5, g: 0.43756822, b: 0.370283, a: 1}
+    color: {r: 0.8117647, g: 0.7633675, b: 0.654902, a: 1}
   <RoadConfig>k__BackingField:
     amplitude: 5
-    brushRadius: 45
+    brushRadius: 25
     brushSpacing: 5
     blurPadding: 100
-    blurAmount: 7
+    blurAmount: 2
     test: 0
     brush:
       serializedVersion: 2
@@ -105,15 +120,15 @@ MonoBehaviour:
       - serializedVersion: 3
         time: 0
         value: 0
-        inSlope: 0.14586614
-        outSlope: 0.14586614
+        inSlope: 0.11882413
+        outSlope: 0.11882413
         tangentMode: 34
         weightedMode: 0
         inWeight: 0
         outWeight: 0.33333334
       - serializedVersion: 3
-        time: 0.656983
-        value: 0.09583157
+        time: 0.63827574
+        value: 0.07584256
         inSlope: 0
         outSlope: 0
         tangentMode: 0
@@ -123,8 +138,8 @@ MonoBehaviour:
       - serializedVersion: 3
         time: 1
         value: 1
-        inSlope: 2.635929
-        outSlope: 2.635929
+        inSlope: 2.5548673
+        outSlope: 2.5548673
         tangentMode: 34
         weightedMode: 0
         inWeight: 0.33333334
@@ -133,7 +148,58 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   <RoadNoiseMaxHeight>k__BackingField: 0.5
-  <RoadNoiseBlend>k__BackingField: 0.7
+  <RoadNoiseBlend>k__BackingField: 0.9
+  <ValleyConfig>k__BackingField:
+    amplitude: 5
+    brushRadius: 120
+    brushSpacing: 75
+    blurPadding: 450
+    blurAmount: 6
+    test: 0
+    brush:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 1.3320891
+        outSlope: 1.3320891
+        tangentMode: 34
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.16857584
+        value: 0.22455803
+        inSlope: 2.1187203
+        outSlope: 2.1187203
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.26890516
+        outWeight: 0.08120509
+      - serializedVersion: 3
+        time: 0.87829983
+        value: 1
+        inSlope: 0.36987698
+        outSlope: 0
+        tangentMode: 1
+        weightedMode: 0
+        inWeight: 0.11403036
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 34
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  <ValleyNoiseMaxHeight>k__BackingField: 1.5
+  <ValleyNoiseBlend>k__BackingField: 1
   m_chunkSize: 238
   m_neighboursX: 3
   m_neighboursY: 3
@@ -141,8 +207,8 @@ MonoBehaviour:
     seed: 1
     scale: 200
     octaves: 3
-    persistance: 0.087
-    lacunarity: 3.12
+    persistance: 0.126
+    lacunarity: 3.92
   <RoadHorizontalPerlinConfig>k__BackingField:
     seed: 5
     scale: 600
@@ -155,6 +221,12 @@ MonoBehaviour:
     octaves: 1
     persistance: 0.01
     lacunarity: 1
+  <ValleyPerlinConfig>k__BackingField:
+    seed: 5
+    scale: 600
+    octaves: 2
+    persistance: 0.5
+    lacunarity: 2.5
   _offsetX: 0
   _offsetY: 0
   testX: 0

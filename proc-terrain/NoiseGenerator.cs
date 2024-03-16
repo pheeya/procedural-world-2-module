@@ -44,7 +44,7 @@ namespace ProcWorld
 
             return map;
         }
-        public static float GetPerlinValue(PerlinNoiseConfig _config, float _x, float _y, Vector2[] _octaves, float _offsetX, float _offsetY)
+        public static float GetPerlinValue(PerlinNoiseConfig _config, float _x, float _y, Vector2[] _octaves, float _additionalOffsetX, float _additionalOffsetY)
         {
 
             float amplitude = 1;
@@ -52,8 +52,8 @@ namespace ProcWorld
             float value = 0;
             for (int o = 0; o < _config.octaves; o++)
             {
-                float samplex = (_x + _octaves[o].x) / _config.scale * frequency;
-                float sampley = (_y + _octaves[o].y) / _config.scale * frequency;
+                float samplex = (_x + _additionalOffsetX + _octaves[o].x) / _config.scale * frequency;
+                float sampley = (_y + _additionalOffsetY + _octaves[o].y) / _config.scale * frequency;
 
 
                 // figure out why we are changing this range from 01 to -1 1
@@ -108,8 +108,7 @@ namespace ProcWorld
                 Debug.Log("Check brush spacing, it should be > 0");
             }
 
-            Vector2[] horizontalOctaveOffsets = GetOctaveOffsets(_horizontalNoise, 0, _offsetY);
-            Vector2[] verticalOctaveOffsets = GetOctaveOffsets(_verticalNoise, 0, _offsetY);
+
 
             int blurredMapWidth = _width + _roadConfig.blurPadding;
 
@@ -126,6 +125,9 @@ namespace ProcWorld
 
             int dif = blurredMapWidth - _width;
             dif /= 2;
+            Vector2[] horizontalOctaveOffsets = GetOctaveOffsets(_horizontalNoise, 0, _offsetY);
+            Vector2[] verticalOctaveOffsets = GetOctaveOffsets(_verticalNoise, 0, _offsetY);
+
             for (int y = 0; y < blurredMapWidth; y += _roadConfig.brushSpacing)
             {
 
@@ -148,6 +150,7 @@ namespace ProcWorld
                     {
                         startingYPos -= mod;
                         worldYPos = startingYPos - y + (int)_offsetY + (int)(blurredMapWidth) / 2;
+
                     }
                 }
 
@@ -244,7 +247,7 @@ namespace ProcWorld
 
                     dist = 1 - dist;
                     // _noise[x, y] += dist > 0 ? 1 : 0;
-                    _noise[x,y] += _brush.Evaluate(dist);
+                    _noise[x, y] += _brush.Evaluate(dist);
 
 
                     _noise[x, y] = Mathf.Clamp01(_noise[x, y]);

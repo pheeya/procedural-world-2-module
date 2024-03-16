@@ -27,6 +27,9 @@ namespace ProcWorld
         [field: SerializeField] public RoadNoiseConfig RoadConfig { get; private set; }
         [field: SerializeField] public float RoadNoiseMaxHeight { get; private set; }
         [field: SerializeField] public float RoadNoiseBlend { get; private set; }
+        [field: SerializeField] public RoadNoiseConfig ValleyConfig { get; private set; }
+        [field: SerializeField] public float ValleyNoiseMaxHeight { get; private set; }
+        [field: SerializeField] public float ValleyNoiseBlend { get; private set; }
 
         [SerializeField, Range(1, 250)] int m_chunkSize;
         [SerializeField] int m_neighboursX;
@@ -34,6 +37,7 @@ namespace ProcWorld
         [field: SerializeField] public PerlinNoiseConfig PerlinConfig { get; private set; }
         [field: SerializeField] public PerlinNoiseConfig RoadHorizontalPerlinConfig { get; private set; }
         [field: SerializeField] public PerlinNoiseConfig RoadVerticalPerlinConfig { get; private set; }
+        [field: SerializeField] public PerlinNoiseConfig ValleyPerlinConfig { get; private set; }
         private static int maxChunksVisible;
 
         public float _offsetX, _offsetY;
@@ -113,6 +117,9 @@ namespace ProcWorld
             float[,] noise = NoiseGenerator.GenerateNoiseMap(PerlinConfig, VertsPerSide() + 2, VertsPerSide() + 2, _offsetX, _offsetY);
             List<float[,]> maps = new(1);
             maps.Add(noise);
+
+            // add valley before normalization, so that it's the highest point
+            noise = CreateValleyAroundRoad(testX, testY, noise);
             if (Normalize)
             {
                 noise = NoiseGenerator.Normalize(maps, VertsPerSide() + 2, VertsPerSide() + 2)[0];
@@ -173,6 +180,40 @@ namespace ProcWorld
             Debug.Log("Generated road , took: " + roadSw.Elapsed.TotalMilliseconds + " ms");
             return _noise;
         }
+        float[,] CreateValleyAroundRoad(float _ofstX, float _ofstY, float[,] _noise)
+        {
+            logs = 0;
+            System.Diagnostics.Stopwatch valleySw = new();
+            valleySw.Start();
+            float[,] valleyNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2, ValleyConfig, _ofstX, _ofstY, ValleyPerlinConfig, RoadVerticalPerlinConfig);
+            float[,] verticality = NoiseGenerator.GenerateSingleAxisNoiseMap(RoadVerticalPerlinConfig, VertsPerSide() + 2, VertsPerSide() + 2, _offsetX, _offsetY);
+            for (int i = 0; i < valleyNoise.GetLength(1); i++)
+            {
+                for (int j = 0; j < valleyNoise.GetLength(0); j++)
+                {
+                    // float vert = verticality[0,i];
+                    // vert += valleyNoiseMaxHeight;
+                    // vert = Mathf.Clamp01(vert);
+
+
+
+
+                    _noise[i, j] = Mathf.Lerp(_noise[i, j], ValleyNoiseMaxHeight, Mathf.Clamp01((1 - valleyNoise[i, j])) * ValleyNoiseBlend);
+
+                    if (logs < maxLogs && _noise[i, j] > 5)
+                    {
+                        logs++;
+                        Debug.Log(_noise[i, j]);
+
+                    }
+                }
+            }
+
+
+
+            Debug.Log("Generated valley , took: " + valleySw.Elapsed.TotalMilliseconds + " ms");
+            return _noise;
+        }
         float[,] GetRoadNoise(float _ofstX, float _ofstY, float[,] _noise)
         {
             float[,] roadNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2, RoadConfig, _ofstX, _ofstY, RoadHorizontalPerlinConfig, RoadVerticalPerlinConfig);
@@ -204,17 +245,27 @@ namespace ProcWorld
 
                     float offsetX = _offsetX + (m_chunkSize * x) - (m_neighboursX - 1) / 2 * m_chunkSize;
                     float offsetY = _offsetY + (m_chunkSize * y) - (m_neighboursY - 1) / 2 * m_chunkSize;
+
+
+                    int index = x + y * m_neighboursX;
+
+
+
+
                     float[,] no = NoiseGenerator.GenerateNoiseMap(PerlinConfig, VertsPerSide() + 2, VertsPerSide() + 2, offsetX, offsetY);
+                    no = CreateValleyAroundRoad(offsetX, offsetY, no);
                     if (!Normalize)
                     {
 
                         // create road
-                        int index = x + y * m_neighboursX;
                         noises[index] = AddRoadNoise(offsetX, offsetY, noises[index]);
                         HeightMap hm = HeightMap.FromNoise(no, 1);
                         MapData md = new(hm, ColorMapFromHeight(hm), VertsPerSide() + 2, VertsPerSide() + 2);
                         MapDatas.Add(md);
                     }
+
+
+                    // create valley before normalization, set values to greater than 1 so that it's the highest point after normalization
                     noises.Add(no);
                 }
             }
