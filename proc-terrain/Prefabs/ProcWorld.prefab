@@ -48,7 +48,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d1bf775654835347944a7e23b070586, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _featureGenerator: {fileID: 0}
+  _featureGenerator: {fileID: 6131098863559810031}
   _terrainMat: {fileID: 2100000, guid: 08f135f1fddcdf245883d63863a605ac, type: 2}
   _heightCurve:
     serializedVersion: 2
@@ -93,7 +93,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   _player: {fileID: 0}
-  m_chunksParent: {fileID: 0}
+  m_chunksParent: {fileID: 4991065311066778598}
   _heightScale: 70
   <DefaultLOD>k__BackingField: 0
   <Normalize>k__BackingField: 1

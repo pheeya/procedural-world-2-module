@@ -119,13 +119,13 @@ namespace ProcWorld
             maps.Add(noise);
 
             // add valley before normalization, so that it's the highest point
-            noise = CreateValleyAroundRoad(testX, testY, noise);
+            noise = CreateValleyAroundRoad(0, 0, noise);
             if (Normalize)
             {
                 noise = NoiseGenerator.Normalize(maps, VertsPerSide() + 2, VertsPerSide() + 2)[0];
             }
 
-            noise = AddRoadNoise(testX, testY, noise);
+            noise = AddRoadNoise(0, 0, noise);
 
             return HeightMap.FromNoise(noise, 1);
         }
@@ -218,6 +218,38 @@ namespace ProcWorld
         {
             float[,] roadNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2, RoadConfig, _ofstX, _ofstY, RoadHorizontalPerlinConfig, RoadVerticalPerlinConfig);
             return roadNoise;
+        }
+
+        public int GetRoadCenterAtPos(int _yPos)
+        {
+
+            int blurredMapWidth = (VertsPerSide() + 1) + RoadConfig.blurPadding;
+            float hw = blurredMapWidth / 2f;
+            float hh = blurredMapWidth / 2f;
+
+            int chunk = (_yPos / m_chunkSize);
+
+            int localY = (int)hh - _yPos + chunk * m_chunkSize;
+
+
+
+            float offsetY = chunk * m_chunkSize;
+
+            return NoiseGenerator.GetPointOnLongNoise(localY, VertsPerSide() + 2, RoadHorizontalPerlinConfig, RoadConfig, offsetY) - (int)hw;
+        }
+        public Vector2 GetRoadForwardAtPos(int _yPos)
+        {
+            int blurredMapWidth = (VertsPerSide() + 1) + RoadConfig.blurPadding;
+            float hw = blurredMapWidth / 2f;
+            float hh = blurredMapWidth / 2f;
+
+            int chunk = (_yPos / m_chunkSize);
+
+            int localY = (int)hh - _yPos + chunk * m_chunkSize;
+            float offsetY = chunk * m_chunkSize;
+
+
+            return NoiseGenerator.GetLongNoiseGradient(localY, VertsPerSide() + 2, RoadHorizontalPerlinConfig, RoadConfig, offsetY);
         }
 
 

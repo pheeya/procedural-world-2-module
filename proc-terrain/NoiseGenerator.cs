@@ -127,12 +127,8 @@ namespace ProcWorld
             dif /= 2;
             Vector2[] horizontalOctaveOffsets = GetOctaveOffsets(_horizontalNoise, 0, _offsetY);
             Vector2[] verticalOctaveOffsets = GetOctaveOffsets(_verticalNoise, 0, _offsetY);
-
             for (int y = 0; y < blurredMapWidth; y += _roadConfig.brushSpacing)
             {
-
-
-
                 int xPosLocal = blurredMapWidth / 2;
 
                 float hw = blurredMapWidth / 2f;
@@ -158,10 +154,9 @@ namespace ProcWorld
 
 
 
-                float perlin = Mathf.RoundToInt(GetPerlinValue(_horizontalNoise, xPosLocal, y - startingYPos, horizontalOctaveOffsets, -hw, -hh) * _roadConfig.amplitude * ((_width - 2) / 2.0f)); ;
-
-                xPosLocal += Mathf.RoundToInt(perlin);
-
+                // float perlin = Mathf.RoundToInt(GetPerlinValue(_horizontalNoise, xPosLocal, y - startingYPos, horizontalOctaveOffsets, -hw, -hh) * _roadConfig.amplitude * ((_width - 2) / 2.0f)); ;
+                // xPosLocal += Mathf.RoundToInt(perlin);
+                xPosLocal = GetPointOnLongNoise(horizontalOctaveOffsets, y - startingYPos, _width, _horizontalNoise, _roadConfig, _offsetY);
                 xPosLocal -= (int)_offsetX;
 
                 Vector2 currentPos = new(xPosLocal, y - startingYPos);
@@ -183,15 +178,10 @@ namespace ProcWorld
                     }
                 }
 
-
-
                 blurredMap = StampCircle(blurredMap, xPosLocal, y - startingYPos, _roadConfig.brushRadius, _roadConfig.brush);
                 previousPos = currentPos;
 
-
             }
-
-
 
 
             blurredMap = ApplyBlur(blurredMap, _roadConfig.blurAmount);
@@ -209,9 +199,63 @@ namespace ProcWorld
 
             return map;
         }
+        public static int GetPointOnLongNoise(int _y, int _width, PerlinNoiseConfig _horizontalNoise, RoadNoiseConfig _roadConfig, float _offsetY)
+        {
+
+            Vector2[] horizontalOctaveOffsets = GetOctaveOffsets(_horizontalNoise, 0, _offsetY);
+            return GetPointOnLongNoise(horizontalOctaveOffsets, _y, _width, _horizontalNoise, _roadConfig, _offsetY);
+        }
+
+        public static int GetPointOnLongNoise(Vector2[] _horizontalOctaveOffsets, int _y, int _width, PerlinNoiseConfig _horizontalNoise, RoadNoiseConfig _roadConfig, float _offsetY)
+        {
+
+            int blurredMapWidth = _width + _roadConfig.blurPadding;
+            float hw = blurredMapWidth / 2f;
+            float hh = blurredMapWidth / 2f;
+
+            int xPosLocal = blurredMapWidth / 2;
+            float perlin = Mathf.RoundToInt(GetPerlinValue(_horizontalNoise, xPosLocal, _y, _horizontalOctaveOffsets, -hw, -hh) * _roadConfig.amplitude * ((_width - 2) / 2.0f)); ;
+            xPosLocal += Mathf.RoundToInt(perlin);
+            return xPosLocal;
+        }
+        public static Vector2 GetLongNoiseGradient(int _y, int _width, PerlinNoiseConfig _horizontalNoise, RoadNoiseConfig _roadConfig, float _offsetY)
+        {
+
+            Vector2[] horizontalOctaveOffsets = GetOctaveOffsets(_horizontalNoise, 0, _offsetY);
+            int blurredMapWidth = _width + _roadConfig.blurPadding;
+            float hw = blurredMapWidth / 2f;
+            float hh = blurredMapWidth / 2f;
+
+            int y1, y2, y3;
+            y1 = _y;
+            y2 = y1 + 1;
+            y3 = y1 + 2;
 
 
+            int xPosLocal = blurredMapWidth / 2;
+            int perlin = Mathf.RoundToInt(GetPerlinValue(_horizontalNoise, xPosLocal, y1, horizontalOctaveOffsets, -hw, -hh) * _roadConfig.amplitude * ((_width - 2) / 2.0f)); ;
+            int perlin1 = Mathf.RoundToInt(GetPerlinValue(_horizontalNoise, xPosLocal, y2, horizontalOctaveOffsets, -hw, -hh) * _roadConfig.amplitude * ((_width - 2) / 2.0f)); ;
+            int perlin2 = Mathf.RoundToInt(GetPerlinValue(_horizontalNoise, xPosLocal, y3, horizontalOctaveOffsets, -hw, -hh) * _roadConfig.amplitude * ((_width - 2) / 2.0f)); ;
 
+            int x1, x2, x3;
+            x1 = xPosLocal + perlin;
+            x2 = xPosLocal + perlin1;
+            x3 = xPosLocal + perlin2;
+
+
+            Vector2 p1,p2,p3;
+            p1 = new(x1,y1);
+            p2 = new(x2,y2);
+            p3 = new(x3,y3);
+
+            Vector2 gradient = (p3-p2);
+            Vector2 gradient2 = (p2-p1);
+
+            return gradient2.normalized;
+
+            
+            return (gradient + gradient2).normalized;
+        }
         static int maxLogs = 100;
         static int logs = 0;
         public static float[,] StampCircle(float[,] _noise, int _centerX, int _centerY, int _radius, AnimationCurve _brush)

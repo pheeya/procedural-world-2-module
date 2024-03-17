@@ -48,8 +48,8 @@ namespace ProcWorld
 
                 heightmap = TextureGenerator.TextureFromMap(hm.Values);
 
-                HeightMap roadNoise = HeightMap.FromNoise(NoiseGenerator.GenerateLongitudinalSinNoise(hm.Width, hm.Height, terrainGenerator.RoadConfig, terrainGenerator.testX, terrainGenerator.testY, terrainGenerator.RoadHorizontalPerlinConfig, terrainGenerator.RoadVerticalPerlinConfig), 0);
-                HeightMap valleyNoise = HeightMap.FromNoise(NoiseGenerator.GenerateLongitudinalSinNoise(hm.Width, hm.Height, terrainGenerator.ValleyConfig, terrainGenerator.testX, terrainGenerator.testY, terrainGenerator.ValleyPerlinConfig, terrainGenerator.RoadVerticalPerlinConfig), 0);
+                HeightMap roadNoise = HeightMap.FromNoise(NoiseGenerator.GenerateLongitudinalSinNoise(hm.Width, hm.Height, terrainGenerator.RoadConfig, 0, 0, terrainGenerator.RoadHorizontalPerlinConfig, terrainGenerator.RoadVerticalPerlinConfig), 0);
+                HeightMap valleyNoise = HeightMap.FromNoise(NoiseGenerator.GenerateLongitudinalSinNoise(hm.Width, hm.Height, terrainGenerator.ValleyConfig, 0, 0, terrainGenerator.ValleyPerlinConfig, terrainGenerator.RoadVerticalPerlinConfig), 0);
 
                 HeightMap roadVerticalityNoise = HeightMap.FromNoise(NoiseGenerator.GenerateSingleAxisNoiseMap(terrainGenerator.RoadVerticalPerlinConfig, hm.Width, hm.Height, terrainGenerator._offsetX, terrainGenerator._offsetY), 0);
 
@@ -64,6 +64,8 @@ namespace ProcWorld
                 debugTerrain.GenerateMesh(terrainGenerator.GenerateTestMeshData().mesh, colormap);
                 sw.Stop();
                 Debug.Log("Generated debug terrain, took: " + sw.Elapsed.TotalMilliseconds + " ms");
+
+
             }
 
             EditorGUILayout.BeginVertical();

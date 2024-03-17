@@ -59,5 +59,14 @@ namespace ProcWorld
             _height = hitInfo.point.y;
             return true;
         }
+
+        public int GetRoadCenterAtPos(int _yPos)
+        {
+            return m_terrainGen.GetRoadCenterAtPos(_yPos);
+        }
+        public Vector2 GetRoadForwardAtPos(int _yPos)
+        {
+            return m_terrainGen.GetRoadForwardAtPos(_yPos);
+        }
     }
 }
