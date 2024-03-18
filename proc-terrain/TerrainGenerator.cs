@@ -252,6 +252,49 @@ namespace ProcWorld
             return NoiseGenerator.GetLongNoiseGradient(localY, VertsPerSide() + 2, RoadHorizontalPerlinConfig, RoadConfig, offsetY);
         }
 
+        public float GetDistanceBetweenRoadPoints(int _fromY, int _toY)
+        {
+            int xFrom = GetRoadCenterAtPos(_fromY);
+            int xTo = GetRoadCenterAtPos(_toY);
+
+            Vector2 from = new(xFrom, _fromY);
+            Vector2 to = new(xTo, _toY);
+
+            return (to - from).magnitude;
+        }
+        public Vector2 GetPointOnRoadWithDistance(int _fromY, float _distance)
+        {
+            float dist = 0;
+
+            int maxTries = Mathf.Abs(Mathf.RoundToInt((_distance + 10)));
+            int tries = 0;
+
+
+            float finalX = GetRoadCenterAtPos((Mathf.RoundToInt(_fromY))), finalY;
+            finalY = _fromY;
+
+
+            while (dist < _distance && tries < maxTries)
+            {
+                int xFrom = GetRoadCenterAtPos((Mathf.RoundToInt(finalY)));
+                int xTo = GetRoadCenterAtPos((Mathf.RoundToInt(finalY)) + 1);
+
+
+                Vector2 from = new(xFrom, finalY);
+                Vector2 to = new(xTo, finalY + 1);
+
+                dist += (to - from).magnitude;
+
+                finalX = xTo;
+                finalY++;
+
+
+                tries++;
+            }
+
+            return new(finalX, finalY);
+
+        }
 
         public void GenerateTerrain()
         {

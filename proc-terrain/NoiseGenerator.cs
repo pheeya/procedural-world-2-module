@@ -250,9 +250,6 @@ namespace ProcWorld
 
             Vector2 gradient = (p3-p2);
             Vector2 gradient2 = (p2-p1);
-
-            return gradient2.normalized;
-
             
             return (gradient + gradient2).normalized;
         }

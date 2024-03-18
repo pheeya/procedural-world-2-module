@@ -68,5 +68,8 @@ namespace ProcWorld
         {
             return m_terrainGen.GetRoadForwardAtPos(_yPos);
         }
+        public Vector2 GetPointOnRoadWithDistance(int _yFrom, float _dist){
+            return m_terrainGen.GetPointOnRoadWithDistance(_yFrom, _dist);
+        }
     }
 }
