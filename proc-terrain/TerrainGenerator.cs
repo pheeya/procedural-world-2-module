@@ -285,6 +285,8 @@ namespace ProcWorld
 
                 dist += (to - from).magnitude;
 
+
+
                 finalX = xTo;
                 finalY++;
 
@@ -294,6 +296,11 @@ namespace ProcWorld
 
             return new(finalX, finalY);
 
+        }
+
+
+        public float GetPlayableAreaWidth(){
+            return ValleyConfig.brushRadius*2;
         }
 
         public void GenerateTerrain()

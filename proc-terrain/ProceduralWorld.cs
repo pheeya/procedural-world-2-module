@@ -71,5 +71,8 @@ namespace ProcWorld
         public Vector2 GetPointOnRoadWithDistance(int _yFrom, float _dist){
             return m_terrainGen.GetPointOnRoadWithDistance(_yFrom, _dist);
         }
+        public float GetPlayableAreaWidth(){
+            return m_terrainGen.GetPlayableAreaWidth();
+        }
     }
 }
