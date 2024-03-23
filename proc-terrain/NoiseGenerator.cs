@@ -24,6 +24,23 @@ namespace ProcWorld
 
                     map[x, y] = GetPerlinValue(_config, x, y, octaveOffsets, -halfWidth, -halfHeight);
 
+               
+                }
+            }
+
+            return map;
+        }
+
+        public static float[,] NormalizeGlobally(float[,] map, int _height, int _width, float _maxValue)
+        {
+            for (int y = 0; y < _height; y++)
+            {
+                for (int x = 0; x < _width; x++)
+                {
+                    float normH = (map[x, y] + 1) / 2f;
+                    normH /= _maxValue * .5f;
+
+                    map[x, y] = normH;
                 }
             }
 
@@ -50,6 +67,8 @@ namespace ProcWorld
             float amplitude = 1;
             float frequency = 1;
             float value = 0;
+
+
             for (int o = 0; o < _config.octaves; o++)
             {
                 float samplex = (_x + _additionalOffsetX + _octaves[o].x) / _config.scale * frequency;
@@ -81,6 +100,32 @@ namespace ProcWorld
 
         }
 
+        public static Vector2[] GetOctaveOffsets(PerlinNoiseConfig _config, float _offsetX, float _offsetY, out float MaxPossibleValue)
+        {
+            System.Random prng = new System.Random(_config.seed);
+            Vector2[] octaveOffsets = new Vector2[_config.octaves];
+            float amp = 1;
+
+            float maxPossibleNoise = 0;
+            for (int i = 0; i < _config.octaves; i++)
+            {
+                float offsetX = prng.Next(-100000, 100000) + _offsetX;
+                float offsetY = prng.Next(-100000, 100000) - _offsetY;
+
+                octaveOffsets[i] = new Vector2(offsetX, offsetY);
+
+                maxPossibleNoise += amp;
+                amp *= _config.persistance;
+            }
+
+            MaxPossibleValue = maxPossibleNoise;
+
+            return octaveOffsets;
+        }
+
+
+
+
         public static Vector2[] GetOctaveOffsets(PerlinNoiseConfig _config, float _offsetX, float _offsetY)
         {
             System.Random prng = new System.Random(_config.seed);
@@ -92,11 +137,11 @@ namespace ProcWorld
                 float offsetY = prng.Next(-100000, 100000) - _offsetY;
 
                 octaveOffsets[i] = new Vector2(offsetX, offsetY);
+
             }
 
             return octaveOffsets;
         }
-
 
 
         public static float[,] GenerateLongitudinalSinNoise(int _width, int _height, RoadNoiseConfig _roadConfig, float _offsetX, float _offsetY, PerlinNoiseConfig _horizontalNoise, PerlinNoiseConfig _verticalNoise)
@@ -243,14 +288,14 @@ namespace ProcWorld
             x3 = xPosLocal + perlin2;
 
 
-            Vector2 p1,p2,p3;
-            p1 = new(x1,y1);
-            p2 = new(x2,y2);
-            p3 = new(x3,y3);
+            Vector2 p1, p2, p3;
+            p1 = new(x1, y1);
+            p2 = new(x2, y2);
+            p3 = new(x3, y3);
 
-            Vector2 gradient = (p3-p2);
-            Vector2 gradient2 = (p2-p1);
-            
+            Vector2 gradient = (p3 - p2);
+            Vector2 gradient2 = (p2 - p1);
+
             return (gradient + gradient2).normalized;
         }
         static int maxLogs = 100;
@@ -465,7 +510,6 @@ namespace ProcWorld
 
 
 
-
     }
 
     [System.Serializable]
@@ -479,6 +523,7 @@ namespace ProcWorld
         public float persistance;
         [Range(1, 20)]
         public float lacunarity;
+        public float standardMaxValue;
     }
     [System.Serializable]
     public struct RoadNoiseConfig
