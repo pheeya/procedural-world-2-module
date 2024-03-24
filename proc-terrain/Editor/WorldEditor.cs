@@ -20,7 +20,6 @@ namespace ProcWorld
         {
 
             base.OnInspectorGUI();
-            System.Diagnostics.Stopwatch sw = new();
 
 
             if (Application.isPlaying) return;
@@ -41,7 +40,6 @@ namespace ProcWorld
             GUILayout.Button("Refresh");
             if (GUI.changed || heightmap == null)
             {
-                sw.Start();
                 HeightMap hm = terrainGenerator.GenerateTestHeightMap();
 
                 Color[] cm = terrainGenerator.ColorMapFromHeight(hm);
@@ -62,8 +60,6 @@ namespace ProcWorld
                 valleyMap = TextureGenerator.TextureFromMap(valleyNoise.Values);
 
                 debugTerrain.GenerateMesh(terrainGenerator.GenerateTestMeshData().CreateMesh(), colormap);
-                sw.Stop();
-                Debug.Log("Generated debug terrain, took: " + sw.Elapsed.TotalMilliseconds + " ms");
 
 
             }

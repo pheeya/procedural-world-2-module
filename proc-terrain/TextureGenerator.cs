@@ -8,8 +8,6 @@ namespace ProcWorld
     {
         public static Texture2D TextureFromMap(Color[] map, int width, int height)
         {
-            System.Diagnostics.Stopwatch sw = new();
-            sw.Start();
 
             Texture2D texture = new Texture2D(width, height);
             texture.filterMode = FilterMode.Point;
@@ -17,14 +15,10 @@ namespace ProcWorld
             texture.SetPixels(map);
             texture.Apply();
 
-            sw.Stop();
-            Debug.Log("Generated texture from map, took: " + sw.Elapsed.TotalMilliseconds + " ms");
             return texture;
         }
         public static Texture2D TextureFromMap(float[,] map)
         {
-            System.Diagnostics.Stopwatch sw = new();
-            sw.Start();
             int mapWidth = map.GetLength(0);
             int mapHeight = map.GetLength(1);
 
@@ -39,8 +33,6 @@ namespace ProcWorld
                     colormap[alreadyColored + x] = Color.Lerp(Color.black, Color.white, map[x, y]);
                 }
             }
-            sw.Stop();
-            Debug.Log("Generated texture from map, took: " + sw.Elapsed.TotalMilliseconds + " ms");
             return TextureFromMap(colormap, mapWidth, mapHeight);
         }
 

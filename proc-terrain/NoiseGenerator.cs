@@ -147,11 +147,10 @@ namespace ProcWorld
         public static float[,] GenerateLongitudinalSinNoise(int _width, int _height, RoadNoiseConfig _roadConfig, float _offsetX, float _offsetY, PerlinNoiseConfig _horizontalNoise, PerlinNoiseConfig _verticalNoise)
         {
             _roadConfig.brush = new(_roadConfig.brush.keys);
-            
+
             if (_roadConfig.brushSpacing < 1)
             {
                 _roadConfig.brushSpacing = 1;
-                Debug.Log("Check brush spacing, it should be > 0");
             }
 
 
@@ -175,8 +174,6 @@ namespace ProcWorld
             Vector2[] verticalOctaveOffsets = GetOctaveOffsets(_verticalNoise, 0, _offsetY);
 
 
-            System.Diagnostics.Stopwatch sw = new();
-            sw.Start();
 
 
             for (int y = 0; y < blurredMapWidth; y += _roadConfig.brushSpacing)
@@ -235,8 +232,6 @@ namespace ProcWorld
 
             }
 
-            sw.Stop();
-            Debug.Log("Stampped long noise , took: " + sw.Elapsed.TotalMilliseconds + " ms");
             blurredMap = ApplyBlur(blurredMap, _roadConfig.blurAmount);
 
             for (int y = dif; y < blurredMapWidth - dif; y++)
@@ -392,23 +387,7 @@ namespace ProcWorld
                                 count++;
                             }
                         }
-                        // Calculate the average
-
-                        if (y > height - 1 || y < 0)
-                        {
-
-                            Debug.Log(_lineNum);
-                            Debug.Log(y);
-                            Debug.Log(y < y + _lineNum);
-                        }
-
-                        if (x > width - 1 || x < 0)
-                        {
-                            Debug.Log(_lineIndex);
-                            Debug.Log(_lineNum);
-                            Debug.Log(y);
-                            Debug.Log(x);
-                        }
+               
                         resultArray[x, y] = sum / count;
 
                     }
@@ -422,6 +401,8 @@ namespace ProcWorld
 
             int lines = height;
             int linesPerThread = 15;
+
+            linesPerThread = lines;
 
             List<Thread> workers = new();
             int count = 0;

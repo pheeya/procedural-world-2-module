@@ -17,6 +17,7 @@ namespace ProcWorld
 
         public delegate void ProceduralWorldEvent();
         public ProceduralWorldEvent EOnCreated;
+        public ProceduralWorldEvent EInitialChunksCreated;
 
         [SerializeField] TerrainGenerator m_terrainGen;
         private void Awake()
@@ -27,6 +28,11 @@ namespace ProcWorld
 
 
             generator.EOnFinished += OnTerrainFinished;
+            generator.EInitialChunksCreated += OnInitialChunksCreated;
+        }
+        void OnInitialChunksCreated()
+        {
+            EInitialChunksCreated?.Invoke();
         }
         void OnTerrainFinished()
         {
@@ -68,10 +74,12 @@ namespace ProcWorld
         {
             return m_terrainGen.GetRoadForwardAtPos(_yPos);
         }
-        public Vector2 GetPointOnRoadWithDistance(int _yFrom, float _dist){
+        public Vector2 GetPointOnRoadWithDistance(int _yFrom, float _dist)
+        {
             return m_terrainGen.GetPointOnRoadWithDistance(_yFrom, _dist);
         }
-        public float GetPlayableAreaWidth(){
+        public float GetPlayableAreaWidth()
+        {
             return m_terrainGen.GetPlayableAreaWidth();
         }
     }

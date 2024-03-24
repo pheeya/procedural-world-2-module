@@ -2,9 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
-using UnityEditor.UIElements;
 using UnityEngine;
-using UnityEngine.AI;
 
 namespace ProcWorld
 {
@@ -31,7 +29,7 @@ namespace ProcWorld
         public float _heightScale;
         [field: SerializeField, Range(0, 6)] public int DefaultLOD { get; private set; }
         [field: SerializeField] public bool Normalize { get; private set; }
-        public static int _drawDistance = 700;
+        public static int _drawDistance = 500;
         public TerrainType[] terrainTypes;
         [field: SerializeField] public RoadNoiseConfig RoadConfig { get; private set; }
         [field: SerializeField] public float RoadNoiseMaxHeight { get; private set; }
@@ -62,6 +60,7 @@ namespace ProcWorld
 
         public TerrainGeneratorEvent EOnFinished;
         public TerrainChunkEvent EChunkCreated;
+        public TerrainGeneratorEvent EInitialChunksCreated;
 
         public Vector2 GetFinalTerrainSize()
         {
@@ -157,8 +156,6 @@ namespace ProcWorld
         int logs = 0;
         float[,] AddRoadNoise(float _ofstX, float _ofstY, float[,] _noise)
         {
-            System.Diagnostics.Stopwatch roadSw = new();
-            roadSw.Start();
             float[,] roadNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2, RoadConfig, _ofstX, _ofstY, RoadHorizontalPerlinConfig, RoadVerticalPerlinConfig);
             float[,] verticality = NoiseGenerator.GenerateSingleAxisNoiseMap(RoadVerticalPerlinConfig, VertsPerSide() + 2, VertsPerSide() + 2, _offsetX, _offsetY);
             for (int i = 0; i < roadNoise.GetLength(1); i++)
@@ -192,14 +189,10 @@ namespace ProcWorld
             //     }
             // }
 
-            Debug.Log("Generated road , took: " + roadSw.Elapsed.TotalMilliseconds + " ms");
             return _noise;
         }
         float[,] CreateValleyAroundRoad(float _ofstX, float _ofstY, float[,] _noise)
         {
-            logs = 0;
-            System.Diagnostics.Stopwatch valleySw = new();
-            valleySw.Start();
             float[,] valleyNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2, ValleyConfig, _ofstX, _ofstY, ValleyPerlinConfig, RoadVerticalPerlinConfig);
             float[,] verticality = NoiseGenerator.GenerateSingleAxisNoiseMap(RoadVerticalPerlinConfig, VertsPerSide() + 2, VertsPerSide() + 2, _offsetX, _offsetY);
             for (int i = 0; i < valleyNoise.GetLength(1); i++)
@@ -215,18 +208,12 @@ namespace ProcWorld
 
                     _noise[i, j] = Mathf.Lerp(_noise[i, j], PerlinConfig.standardMaxValue + ValleyNoiseExtrusion, Mathf.Clamp01((1 - valleyNoise[i, j])) * ValleyNoiseBlend);
 
-                    if (logs < maxLogs && _noise[i, j] > 5)
-                    {
-                        logs++;
-                        Debug.Log(_noise[i, j]);
 
-                    }
                 }
             }
 
 
 
-            Debug.Log("Generated valley , took: " + valleySw.Elapsed.TotalMilliseconds + " ms");
             return _noise;
         }
         float[,] GetRoadNoise(float _ofstX, float _ofstY, float[,] _noise)
@@ -323,9 +310,6 @@ namespace ProcWorld
         {
             //float[,] heightmap = NoiseGenerator.GenerateNoiseMap(_seed, VertsPerSide(), VertsPerSide(), _noiseScale, _octaves, _persistance, _lacunarity, _offsetX, _offsetY);
 
-            System.Diagnostics.Stopwatch masterSw = new();
-            masterSw.Start();
-            System.Diagnostics.Stopwatch sw = new();
 
             List<MapData> MapDatas = new();
             List<Color[]> colorMaps = new();
@@ -335,7 +319,6 @@ namespace ProcWorld
 
 
 
-            sw.Start();
             for (int y = 0; y < m_neighboursY; y++)
             {
                 for (int x = 0; x < m_neighboursX; x++)
@@ -369,11 +352,8 @@ namespace ProcWorld
                     noises.Add(no);
                 }
             }
-            sw.Stop();
-            Debug.Log("Generated terrain base shape, took: " + sw.Elapsed.TotalMilliseconds + " ms");
             if (Normalize)
             {
-                sw.Start();
                 noises = NoiseGenerator.Normalize(noises, VertsPerSide() + 2, VertsPerSide() + 2);
                 for (int y = 0; y < m_neighboursY; y++)
                 {
@@ -399,12 +379,9 @@ namespace ProcWorld
                         MapDatas.Add(md);
                     }
                 }
-                sw.Stop();
-                Debug.Log("Normalized terrain, took: " + sw.Elapsed.TotalMilliseconds + " ms");
             }
 
 
-            sw.Start();
             for (int y = 0; y < m_neighboursY; y++)
             {
                 for (int x = 0; x < m_neighboursX; x++)
@@ -419,8 +396,6 @@ namespace ProcWorld
                     chunk.SetVisibility(true);
                 }
             }
-            sw.Stop();
-            Debug.Log("Generated terrain mesh, took: " + sw.Elapsed.TotalMilliseconds + " ms");
 
             // Texture tex = TextureGenerator.TextureFromMap(mapdata.colormap, VertsPerSide(), VertsPerSide());
             // TerrainChunk terrain = new TerrainChunk(m_chunkSize, new HeightMap(m_chunkSize, m_chunkSize, mapdata.GetHeightMap().Values), mapdata.GetColorMap(), _heightScale, _heightCurve, Vector2.zero, _terrainMat, tex, transform);
@@ -433,12 +408,6 @@ namespace ProcWorld
 
 
 
-            masterSw.Stop();
-
-
-            Debug.Log("Finished generating terrain, took: " + masterSw.Elapsed.TotalMilliseconds + " ms");
-            Debug.Log("Finished generating terrain, took: " + masterSw.Elapsed.TotalSeconds + " s");
-
 
             EOnFinished?.Invoke();
         }
@@ -446,7 +415,8 @@ namespace ProcWorld
 
 
 
-
+        bool m_endlessInit = false;
+        int m_initialEndlessChunks = 0;
 
         private void GenerateEndlessTerrain()
         {
@@ -458,6 +428,8 @@ namespace ProcWorld
 
             int currentChunkCoordX = Mathf.RoundToInt(playerPos.x / m_chunkSize);
             int currentChunkCoordY = Mathf.RoundToInt(playerPos.y / m_chunkSize);
+
+
             for (int yOffset = -maxChunksVisible; yOffset <= maxChunksVisible; yOffset++)
             {
                 for (int xOffset = -maxChunksVisible; xOffset <= maxChunksVisible; xOffset++)
@@ -475,8 +447,6 @@ namespace ProcWorld
                     else
                     {
 
-                        System.Diagnostics.Stopwatch sw = new();
-                        sw.Start();
                         float ofstX = _offsetX + viewedChunkCoord.x * m_chunkSize;
                         float ofstY = _offsetY + viewedChunkCoord.y * m_chunkSize;
                         // float[,] no = NoiseGenerator.GenerateNoiseMap(PerlinConfig, VertsPerSide() + 2, VertsPerSide() + 2, ofstX, ofstY);
@@ -490,18 +460,16 @@ namespace ProcWorld
 
                         TerrainChunk chunk = new TerrainChunk(m_chunkSize, _heightScale, _heightCurve, viewedChunkCoord, _terrainMat, m_chunksParent, DefaultLOD);
                         terrainChunks.Add(viewedChunkCoord, chunk);
+                        if (!m_endlessInit)
+                        {
+                            m_initialEndlessChunks++;
+                        }
 
-                        EChunkCreated?.Invoke(chunk);
-
-                        sw.Stop();
-
-                        Debug.Log("Finished generating chunk, took: " + sw.Elapsed.TotalMilliseconds + " ms");
                     }
                 }
             }
 
-
-
+            m_endlessInit = true;
         }
 
         static TerrainGenerator _instance;
@@ -521,19 +489,35 @@ namespace ProcWorld
         {
 
             maxChunksVisible = Mathf.RoundToInt(_drawDistance / m_chunkSize);
+            playerPos = new Vector2(_player.transform.position.x, _player.transform.position.z);
             if (Mode == TerrainMode.Static)
             {
                 GenerateTerrain();
 
             }
         }
-        private void Update()
+        private void FixedUpdate()
         {
             playerPos = new Vector2(_player.transform.position.x, _player.transform.position.z);
             if (Mode == TerrainMode.Endless)
             {
                 GenerateEndlessTerrain();
             }
+        }
+        int m_chunksFinished = 0;
+        public void OnChunkCreated(TerrainChunk _c)
+        {
+            EChunkCreated?.Invoke(_c);
+
+            m_chunksFinished++;
+
+            if (m_chunksFinished == m_initialEndlessChunks)
+            {
+            Debug.Log("Chunks created: " + m_chunksFinished);
+                EInitialChunksCreated?.Invoke();
+            }
+
+
         }
 
         public class TerrainChunk
@@ -617,7 +601,6 @@ namespace ProcWorld
             {
                 // mesh from data
                 // set collider           
-                Debug.Log("hello from mesh data!");
                 meshFilter.mesh = _data.CreateMesh();
 
                 ThreadPool.QueueUserWorkItem(BakeMeshForCollision, meshFilter.mesh.GetInstanceID());
@@ -637,8 +620,9 @@ namespace ProcWorld
 
             void OnMeshBakedForCollision()
             {
-                Debug.Log("Mesh baked for collision, adding");
                 meshCollider.sharedMesh = meshFilter.mesh;
+                TerrainGenerator.Instance.OnChunkCreated(this);
+
             }
 
             public HeightMap GetHeightMap()

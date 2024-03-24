@@ -19,9 +19,7 @@ namespace ProcWorld
         private void Update()
         {
 
-            if(actionQueue.Count>0){
-                Debug.Log("Got action");
-            }
+    
             // Execute queued actions on the main thread
             lock (actionQueue)
             {
