@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 3314144022405146678}
   - component: {fileID: 6131098863559810031}
   - component: {fileID: 7622778287149279648}
+  - component: {fileID: 4604378020155984071}
   m_Layer: 0
   m_Name: ProcWorld
   m_TagString: Untagged
@@ -93,6 +94,7 @@ MonoBehaviour:
     m_PostInfinity: 2
     m_RotationOrder: 4
   _player: {fileID: 0}
+  Mode: 0
   m_chunksParent: {fileID: 4991065311066778598}
   _heightScale: 70
   <DefaultLOD>k__BackingField: 0
@@ -198,7 +200,7 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-  <ValleyNoiseMaxHeight>k__BackingField: 1.5
+  <ValleyNoiseExtrusion>k__BackingField: 0
   <ValleyNoiseBlend>k__BackingField: 1
   m_chunkSize: 238
   m_neighboursX: 3
@@ -209,24 +211,28 @@ MonoBehaviour:
     octaves: 3
     persistance: 0.126
     lacunarity: 3.92
+    standardMaxValue: 0
   <RoadHorizontalPerlinConfig>k__BackingField:
     seed: 5
     scale: 600
     octaves: 1
     persistance: 0.01
     lacunarity: 1
+    standardMaxValue: 0
   <RoadVerticalPerlinConfig>k__BackingField:
     seed: 1
     scale: 150
     octaves: 1
     persistance: 0.01
     lacunarity: 1
+    standardMaxValue: 0
   <ValleyPerlinConfig>k__BackingField:
     seed: 5
     scale: 600
     octaves: 2
     persistance: 0.5
     lacunarity: 2.5
+    standardMaxValue: 0
   _offsetX: 0
   _offsetY: 0
   testX: 0
@@ -260,6 +266,18 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 512
   m_terrainGen: {fileID: 3314144022405146678}
+--- !u!114 &4604378020155984071
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 371271285687471738}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8a5c816356f66b499705aa866ca9114, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1756790704923694779
 GameObject:
   m_ObjectHideFlags: 0

@@ -24,7 +24,7 @@ namespace ProcWorld
 
                     map[x, y] = GetPerlinValue(_config, x, y, octaveOffsets, -halfWidth, -halfHeight);
 
-               
+
                 }
             }
 
@@ -146,7 +146,8 @@ namespace ProcWorld
 
         public static float[,] GenerateLongitudinalSinNoise(int _width, int _height, RoadNoiseConfig _roadConfig, float _offsetX, float _offsetY, PerlinNoiseConfig _horizontalNoise, PerlinNoiseConfig _verticalNoise)
         {
-
+            _roadConfig.brush = new(_roadConfig.brush.keys);
+            
             if (_roadConfig.brushSpacing < 1)
             {
                 _roadConfig.brushSpacing = 1;
@@ -172,6 +173,12 @@ namespace ProcWorld
             dif /= 2;
             Vector2[] horizontalOctaveOffsets = GetOctaveOffsets(_horizontalNoise, 0, _offsetY);
             Vector2[] verticalOctaveOffsets = GetOctaveOffsets(_verticalNoise, 0, _offsetY);
+
+
+            System.Diagnostics.Stopwatch sw = new();
+            sw.Start();
+
+
             for (int y = 0; y < blurredMapWidth; y += _roadConfig.brushSpacing)
             {
                 int xPosLocal = blurredMapWidth / 2;
@@ -228,7 +235,8 @@ namespace ProcWorld
 
             }
 
-
+            sw.Stop();
+            Debug.Log("Stampped long noise , took: " + sw.Elapsed.TotalMilliseconds + " ms");
             blurredMap = ApplyBlur(blurredMap, _roadConfig.blurAmount);
 
             for (int y = dif; y < blurredMapWidth - dif; y++)
@@ -302,6 +310,13 @@ namespace ProcWorld
         static int logs = 0;
         public static float[,] StampCircle(float[,] _noise, int _centerX, int _centerY, int _radius, AnimationCurve _brush)
         {
+
+            Vector2 pos;
+            float dist;
+            float radiusSquared = _radius * _radius;
+
+
+
             for (int y = _centerY - _radius; y < _centerY + _radius; y++)
             {
                 if (y < 0 || y > _noise.GetLength(0) - 1) continue;
@@ -310,35 +325,36 @@ namespace ProcWorld
                 {
                     if (x < 0 || x > _noise.GetLength(0) - 1) continue;
 
+                    int dx = x - _centerX;
+                    int dy = y - _centerY;
+                    int distanceSquared = dx * dx + dy * dy;
 
+                    if (distanceSquared <= radiusSquared)
+                    {
+                        pos = new Vector2(x, y);
 
-                    Vector2 pos = new Vector2(x, y);
-
-                    // circle shape
-                    float dist = (pos - new Vector2(_centerX, _centerY)).magnitude / _radius;
-                    dist = Mathf.Clamp01(dist);
-
-
-
-
-                    // box shape 
-                    // dist = (pos - new Vector2(_centerX, pos.y)).magnitude / _radius;
-                    // dist = Mathf.Clamp01(dist);
+                        // circle shape
+                        dist = (pos - new Vector2(_centerX, _centerY)).magnitude / _radius;
+                        dist = Mathf.Clamp01(dist);
 
 
 
 
+                        // box shape 
+                        // dist = (pos - new Vector2(_centerX, pos.y)).magnitude / _radius;
+                        // dist = Mathf.Clamp01(dist);
 
 
+                        dist = 1 - dist;
+                        // _noise[x, y] += dist > 0 ? 1 : 0;
+                        _noise[x, y] += _brush.Evaluate(dist);
 
-                    dist = 1 - dist;
-                    // _noise[x, y] += dist > 0 ? 1 : 0;
-                    _noise[x, y] += _brush.Evaluate(dist);
 
-
-                    _noise[x, y] = Mathf.Clamp01(_noise[x, y]);
+                        _noise[x, y] = Mathf.Clamp01(_noise[x, y]);
+                    }
                 }
             }
+
 
             return _noise;
         }

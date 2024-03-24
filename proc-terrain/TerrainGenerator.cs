@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.AI;
@@ -30,7 +31,7 @@ namespace ProcWorld
         public float _heightScale;
         [field: SerializeField, Range(0, 6)] public int DefaultLOD { get; private set; }
         [field: SerializeField] public bool Normalize { get; private set; }
-        public static int _drawDistance = 480;
+        public static int _drawDistance = 700;
         public TerrainType[] terrainTypes;
         [field: SerializeField] public RoadNoiseConfig RoadConfig { get; private set; }
         [field: SerializeField] public float RoadNoiseMaxHeight { get; private set; }
@@ -212,7 +213,7 @@ namespace ProcWorld
 
 
 
-                    _noise[i, j] = Mathf.Lerp(_noise[i, j], ValleyNoiseExtrusion, Mathf.Clamp01((1 - valleyNoise[i, j])) * ValleyNoiseBlend);
+                    _noise[i, j] = Mathf.Lerp(_noise[i, j], PerlinConfig.standardMaxValue + ValleyNoiseExtrusion, Mathf.Clamp01((1 - valleyNoise[i, j])) * ValleyNoiseBlend);
 
                     if (logs < maxLogs && _noise[i, j] > 5)
                     {
@@ -412,7 +413,7 @@ namespace ProcWorld
                     int index = x + y * m_neighboursX;
                     MapData mapdata = MapDatas[index];
                     Texture tex = TextureGenerator.TextureFromMap(mapdata.colormap, VertsPerSide() + 2, VertsPerSide() + 2);
-                    TerrainChunk chunk = new TerrainChunk(m_chunkSize, mapdata.GetHeightMap(), mapdata.GetColorMap(), _heightScale, _heightCurve, pos, _terrainMat, tex, m_chunksParent, DefaultLOD);
+                    TerrainChunk chunk = new TerrainChunk(m_chunkSize, _heightScale, _heightCurve, pos, _terrainMat, m_chunksParent, DefaultLOD);
                     // chunk.SetMesh(MeshGenerator.GenerateMeshFromHeightMap(mapdata.GetHeightMap(), _heightScale, _heightCurve, DefaultLOD).mesh);
                     terrainChunks.Add(pos, chunk);
                     chunk.SetVisibility(true);
@@ -449,7 +450,6 @@ namespace ProcWorld
 
         private void GenerateEndlessTerrain()
         {
-
             for (int i = 0; i < terrainChunksVisibleLastFrame.Count; i++)
             {
                 terrainChunksVisibleLastFrame[i].SetVisibility(false);
@@ -474,21 +474,28 @@ namespace ProcWorld
                     }
                     else
                     {
-                    
+
+                        System.Diagnostics.Stopwatch sw = new();
+                        sw.Start();
                         float ofstX = _offsetX + viewedChunkCoord.x * m_chunkSize;
                         float ofstY = _offsetY + viewedChunkCoord.y * m_chunkSize;
-                        float[,] no = NoiseGenerator.GenerateNoiseMap(PerlinConfig, VertsPerSide() + 2, VertsPerSide() + 2, ofstX, ofstY);
-                        no = AddRoadNoise(ofstX, ofstY, no);
-                        no = CreateValleyAroundRoad(ofstX, ofstY, no);
-                        no = NoiseGenerator.NormalizeGlobally(no, VertsPerSide() + 2, VertsPerSide() + 2, PerlinConfig.standardMaxValue + ValleyNoiseExtrusion);
-                        HeightMap hm = HeightMap.FromNoise(no, 1);
-                        MapData mapdata = new(hm, ColorMapFromHeight(hm), VertsPerSide() + 2, VertsPerSide() + 2);
-                        Texture tex = TextureGenerator.TextureFromMap(mapdata.colormap, VertsPerSide() + 2, VertsPerSide() + 2);
+                        // float[,] no = NoiseGenerator.GenerateNoiseMap(PerlinConfig, VertsPerSide() + 2, VertsPerSide() + 2, ofstX, ofstY);
+                        // no = AddRoadNoise(ofstX, ofstY, no);
+                        // no = CreateValleyAroundRoad(ofstX, ofstY, no);
+                        // no = NoiseGenerator.NormalizeGlobally(no, VertsPerSide() + 2, VertsPerSide() + 2, PerlinConfig.standardMaxValue + ValleyNoiseExtrusion);
+                        // HeightMap hm = HeightMap.FromNoise(no, 1);
+                        // MapData mapdata = new(hm, ColorMapFromHeight(hm), VertsPerSide() + 2, VertsPerSide() + 2);
 
-                        TerrainChunk chunk = new TerrainChunk(m_chunkSize, mapdata.GetHeightMap(), mapdata.GetColorMap(), _heightScale, _heightCurve, viewedChunkCoord, _terrainMat, tex, m_chunksParent, DefaultLOD);
+                        // Texture tex = TextureGenerator.TextureFromMap(mapdata.colormap, VertsPerSide() + 2, VertsPerSide() + 2);
+
+                        TerrainChunk chunk = new TerrainChunk(m_chunkSize, _heightScale, _heightCurve, viewedChunkCoord, _terrainMat, m_chunksParent, DefaultLOD);
                         terrainChunks.Add(viewedChunkCoord, chunk);
 
                         EChunkCreated?.Invoke(chunk);
+
+                        sw.Stop();
+
+                        Debug.Log("Finished generating chunk, took: " + sw.Elapsed.TotalMilliseconds + " ms");
                     }
                 }
             }
@@ -512,6 +519,7 @@ namespace ProcWorld
 
         private void Start()
         {
+
             maxChunksVisible = Mathf.RoundToInt(_drawDistance / m_chunkSize);
             if (Mode == TerrainMode.Static)
             {
@@ -539,31 +547,98 @@ namespace ProcWorld
             Bounds bounds;
             MeshCollider meshCollider;
 
-            public TerrainChunk(int _size, HeightMap _heightMap, Color[] _colorMap, float _heightScale, AnimationCurve _heightCurve, Vector2 _coord, Material _mat, Texture _tex, Transform _parent, int _defaultLOD)
+
+            Vector3 m_worldPos;
+            float m_heightScale;
+            AnimationCurve m_heightCurve;
+            int m_defaultLOD;
+            public TerrainChunk(int _size, float _heightScale, AnimationCurve _heightCurve, Vector2 _coord, Material _mat, Transform _parent, int _defaultLOD)
             {
+
                 position = _coord * _size;
                 bounds = new Bounds(position, Vector2.one * _size);
                 Vector3 positionV3 = new Vector3(position.x, 0, position.y);
 
                 chunkObj = new GameObject("Chunk");
                 meshRenderer = chunkObj.AddComponent<MeshRenderer>();
-                meshFilter = chunkObj.AddComponent<MeshFilter>();
                 meshCollider = chunkObj.AddComponent<MeshCollider>();
+                meshFilter = chunkObj.AddComponent<MeshFilter>();
                 meshRenderer.material = _mat;
                 // meshRenderer.material.mainTexture = _tex;
+                m_worldPos = positionV3;
                 chunkObj.transform.position = positionV3;
                 // chunkObj.transform.localScale = Vector3.one * _size / 10f;
                 chunkObj.transform.parent = _parent;
                 chunkObj.transform.gameObject.layer = _parent.gameObject.layer;
 
-                m_heightMap = _heightMap;
-                m_colorMap = _colorMap;
-                meshFilter.mesh = MeshGenerator.GenerateMeshFromHeightMap(m_heightMap, _heightScale, _heightCurve, _defaultLOD).mesh;
-                meshCollider.sharedMesh = meshFilter.mesh;
+
+                m_heightScale = _heightScale;
+                m_heightCurve = _heightCurve;
+
+
                 SetVisibility(false);
+                m_defaultLOD = _defaultLOD;
+
+                TerrainGenerator gen = TerrainGenerator.Instance;
+                ThreadPool.QueueUserWorkItem(CreateMapData, gen);
+            }
+            void CreateMapData(object _obj)
+            {
+                TerrainGenerator gen = (TerrainGenerator)_obj;
+
+                float ofstX = gen._offsetX + m_worldPos.x;
+                float ofstY = gen._offsetY + m_worldPos.z;
+
+                float[,] no = NoiseGenerator.GenerateNoiseMap(gen.PerlinConfig, gen.VertsPerSide() + 2, gen.VertsPerSide() + 2, ofstX, ofstY);
+
+                no = gen.AddRoadNoise(ofstX, ofstY, no);
+                no = gen.CreateValleyAroundRoad(ofstX, ofstY, no);
+                no = NoiseGenerator.NormalizeGlobally(no, gen.VertsPerSide() + 2, gen.VertsPerSide() + 2, gen.PerlinConfig.standardMaxValue + gen.ValleyNoiseExtrusion);
+
+                HeightMap hm = HeightMap.FromNoise(no, 1);
+                MapData mapdata = new(hm, gen.ColorMapFromHeight(hm), gen.VertsPerSide() + 2, gen.VertsPerSide() + 2);
 
 
-                // generate LODS
+                OnMapDataCreated(mapdata);
+            }
+            void OnMapDataCreated(MapData _data)
+            {
+                // create mesh data
+                MeshData md = MeshGenerator.GenerateMeshFromHeightMap(_data.GetHeightMap(), m_heightScale, m_heightCurve, m_defaultLOD);
+
+
+                MainThreadDispatcher.Instance.Enqueue(() =>
+           {
+               OnMeshdataCreated(md);
+           });
+
+            }
+            void OnMeshdataCreated(MeshData _data)
+            {
+                // mesh from data
+                // set collider           
+                Debug.Log("hello from mesh data!");
+                meshFilter.mesh = _data.CreateMesh();
+
+                ThreadPool.QueueUserWorkItem(BakeMeshForCollision, meshFilter.mesh.GetInstanceID());
+
+
+
+            }
+
+            void BakeMeshForCollision(object _obj)
+            {
+                Physics.BakeMesh((int)_obj, false);
+                MainThreadDispatcher.Instance.Enqueue(() =>
+                  {
+                      OnMeshBakedForCollision();
+                  });
+            }
+
+            void OnMeshBakedForCollision()
+            {
+                Debug.Log("Mesh baked for collision, adding");
+                meshCollider.sharedMesh = meshFilter.mesh;
             }
 
             public HeightMap GetHeightMap()
