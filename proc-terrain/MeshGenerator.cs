@@ -251,10 +251,11 @@ namespace ProcWorld
         public Mesh CreateMesh()
         {
             mesh = new Mesh();
-            mesh.vertices = vertices.ToArray();
-            mesh.triangles = triangles.ToArray();
-            mesh.uv = uvs;
-            mesh.normals = normals;
+            mesh.name = "Terrain Chunk Mesh";
+            mesh.SetVertices(vertices);
+            mesh.SetTriangles(triangles, 0);
+            mesh.SetNormals(normals);
+            mesh.SetUVs(0, uvs);
 
             return mesh;
         }

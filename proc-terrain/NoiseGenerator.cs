@@ -428,8 +428,6 @@ namespace ProcWorld
 
                 workers.Add(t);
                 count++;
-
-
             }
 
             for (int i = 0; i < workers.Count; i++)

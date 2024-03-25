@@ -53,7 +53,7 @@ namespace ProcWorld
         public float testY;
 
         Dictionary<Vector2, TerrainChunk> terrainChunks = new Dictionary<Vector2, TerrainChunk>();
-        private List<TerrainChunk> terrainChunksVisibleLastFrame = new List<TerrainChunk>();
+        private List<TerrainChunk> m_visibleChunks = new List<TerrainChunk>();
 
         public delegate void TerrainGeneratorEvent();
         public delegate void TerrainChunkEvent(TerrainChunk _chunk);
@@ -61,6 +61,9 @@ namespace ProcWorld
         public TerrainGeneratorEvent EOnFinished;
         public TerrainChunkEvent EChunkCreated;
         public TerrainGeneratorEvent EInitialChunksCreated;
+
+
+        public List<Collider> PhysicsColliders { get; private set; } = new();
 
         public Vector2 GetFinalTerrainSize()
         {
@@ -390,7 +393,8 @@ namespace ProcWorld
                     int index = x + y * m_neighboursX;
                     MapData mapdata = MapDatas[index];
                     Texture tex = TextureGenerator.TextureFromMap(mapdata.colormap, VertsPerSide() + 2, VertsPerSide() + 2);
-                    TerrainChunk chunk = new TerrainChunk(m_chunkSize, _heightScale, _heightCurve, pos, _terrainMat, m_chunksParent, DefaultLOD);
+                    Debug.Log("Creating new chunk");
+                    TerrainChunk chunk = new TerrainChunk(true, m_chunkSize, _heightScale, _heightCurve, pos, _terrainMat, m_chunksParent, DefaultLOD);
                     // chunk.SetMesh(MeshGenerator.GenerateMeshFromHeightMap(mapdata.GetHeightMap(), _heightScale, _heightCurve, DefaultLOD).mesh);
                     terrainChunks.Add(pos, chunk);
                     chunk.SetVisibility(true);
@@ -420,11 +424,11 @@ namespace ProcWorld
 
         private void GenerateEndlessTerrain()
         {
-            for (int i = 0; i < terrainChunksVisibleLastFrame.Count; i++)
+            for (int i = 0; i < m_visibleChunks.Count; i++)
             {
-                terrainChunksVisibleLastFrame[i].SetVisibility(false);
+                m_visibleChunks[i].SetVisibility(false);
             }
-            terrainChunksVisibleLastFrame.Clear();
+            m_visibleChunks.Clear();
 
             int currentChunkCoordX = Mathf.RoundToInt(playerPos.x / m_chunkSize);
             int currentChunkCoordY = Mathf.RoundToInt(playerPos.y / m_chunkSize);
@@ -441,7 +445,7 @@ namespace ProcWorld
                         terrainChunks[viewedChunkCoord].UpdateChunk();
                         if (terrainChunks[viewedChunkCoord].isVisible())
                         {
-                            terrainChunksVisibleLastFrame.Add(terrainChunks[viewedChunkCoord]);
+                            m_visibleChunks.Add(terrainChunks[viewedChunkCoord]);
                         }
                     }
                     else
@@ -457,18 +461,22 @@ namespace ProcWorld
                         // MapData mapdata = new(hm, ColorMapFromHeight(hm), VertsPerSide() + 2, VertsPerSide() + 2);
 
                         // Texture tex = TextureGenerator.TextureFromMap(mapdata.colormap, VertsPerSide() + 2, VertsPerSide() + 2);
-
-                        TerrainChunk chunk = new TerrainChunk(m_chunkSize, _heightScale, _heightCurve, viewedChunkCoord, _terrainMat, m_chunksParent, DefaultLOD);
-                        terrainChunks.Add(viewedChunkCoord, chunk);
+                        bool initial = false;
                         if (!m_endlessInit)
                         {
                             m_initialEndlessChunks++;
+                            initial = true;
                         }
+                        TerrainChunk chunk = new TerrainChunk(initial, m_chunkSize, _heightScale, _heightCurve, viewedChunkCoord, _terrainMat, m_chunksParent, DefaultLOD);
+                        terrainChunks.Add(viewedChunkCoord, chunk);
 
+
+                        m_visibleChunks.Add(chunk);
+                        chunk.SetVisibility(true);
                     }
                 }
             }
-
+        
             m_endlessInit = true;
         }
 
@@ -507,15 +515,17 @@ namespace ProcWorld
         int m_chunksFinished = 0;
         public void OnChunkCreated(TerrainChunk _c)
         {
-            EChunkCreated?.Invoke(_c);
 
             m_chunksFinished++;
 
+            PhysicsColliders.Add(_c.Col);
+
             if (m_chunksFinished == m_initialEndlessChunks)
             {
-            Debug.Log("Chunks created: " + m_chunksFinished);
+                Debug.Log("Chunks created: " + m_chunksFinished);
                 EInitialChunksCreated?.Invoke();
             }
+            EChunkCreated?.Invoke(_c);
 
 
         }
@@ -536,9 +546,12 @@ namespace ProcWorld
             float m_heightScale;
             AnimationCurve m_heightCurve;
             int m_defaultLOD;
-            public TerrainChunk(int _size, float _heightScale, AnimationCurve _heightCurve, Vector2 _coord, Material _mat, Transform _parent, int _defaultLOD)
-            {
+            public bool Initial { get; private set; }
 
+            public Collider Col { get { return meshCollider; } }
+            public TerrainChunk(bool _initial, int _size, float _heightScale, AnimationCurve _heightCurve, Vector2 _coord, Material _mat, Transform _parent, int _defaultLOD)
+            {
+                Initial = _initial;
                 position = _coord * _size;
                 bounds = new Bounds(position, Vector2.one * _size);
                 Vector3 positionV3 = new Vector3(position.x, 0, position.y);
@@ -564,8 +577,13 @@ namespace ProcWorld
                 m_defaultLOD = _defaultLOD;
 
                 TerrainGenerator gen = TerrainGenerator.Instance;
-                ThreadPool.QueueUserWorkItem(CreateMapData, gen);
+                // ThreadPool.QueueUserWorkItem(CreateMapData, gen);
+
+                Thread th = new Thread(new ParameterizedThreadStart(CreateMapData));
+
+                th.Start(gen);
             }
+            public Mesh GetMesh() { return meshFilter.mesh; }
             void CreateMapData(object _obj)
             {
                 TerrainGenerator gen = (TerrainGenerator)_obj;
@@ -597,13 +615,22 @@ namespace ProcWorld
            });
 
             }
+
+            
             void OnMeshdataCreated(MeshData _data)
             {
                 // mesh from data
                 // set collider           
                 meshFilter.mesh = _data.CreateMesh();
+             
+                // create phys on separate thread
+                // ThreadPool.QueueUserWorkItem(BakeMeshForCollision, meshFilter.mesh.GetInstanceID());
 
-                ThreadPool.QueueUserWorkItem(BakeMeshForCollision, meshFilter.mesh.GetInstanceID());
+                Thread th = new Thread(new ParameterizedThreadStart(BakeMeshForCollision));
+                th.Start(meshFilter.mesh.GetInstanceID());
+                // create phys on main thread
+                // meshCollider.sharedMesh = meshFilter.mesh;
+                // TerrainGenerator.Instance.OnChunkCreated(this);
 
 
 
@@ -611,7 +638,7 @@ namespace ProcWorld
 
             void BakeMeshForCollision(object _obj)
             {
-                Physics.BakeMesh((int)_obj, false);
+                // Physics.BakeMesh((int)_obj, false);
                 MainThreadDispatcher.Instance.Enqueue(() =>
                   {
                       OnMeshBakedForCollision();
@@ -633,6 +660,7 @@ namespace ProcWorld
             {
                 float closestDist = Mathf.Sqrt(bounds.SqrDistance(playerPos));
                 bool isVisible = closestDist <= _drawDistance;
+
                 SetVisibility(isVisible);
             }
 

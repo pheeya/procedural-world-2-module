@@ -82,5 +82,6 @@ namespace ProcWorld
         {
             return m_terrainGen.GetPlayableAreaWidth();
         }
+        public List<Collider> PhysicsColliders { get { return m_terrainGen.PhysicsColliders; } }
     }
 }
