@@ -56,7 +56,6 @@ namespace ProcWorld
             sample.y = m_terrainGen._heightScale + 10f; ;
             bool hit = Physics.Raycast(sample, Vector3.down, out RaycastHit hitInfo, m_terrainGen._heightScale + 20f, m_terrainHeightSampleLayerMask);
 
-
             if (!hit)
             {
                 return false;

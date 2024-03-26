@@ -29,7 +29,7 @@ namespace ProcWorld
         public float _heightScale;
         [field: SerializeField, Range(0, 6)] public int DefaultLOD { get; private set; }
         [field: SerializeField] public bool Normalize { get; private set; }
-        public static int _drawDistance = 500;
+        public static int _drawDistance = 600;
         public TerrainType[] terrainTypes;
         [field: SerializeField] public RoadNoiseConfig RoadConfig { get; private set; }
         [field: SerializeField] public float RoadNoiseMaxHeight { get; private set; }
@@ -64,6 +64,8 @@ namespace ProcWorld
 
 
         public List<Collider> PhysicsColliders { get; private set; } = new();
+
+        List<TerrainChunk> m_chunkpool = new();
 
         public Vector2 GetFinalTerrainSize()
         {
@@ -313,7 +315,6 @@ namespace ProcWorld
         {
             //float[,] heightmap = NoiseGenerator.GenerateNoiseMap(_seed, VertsPerSide(), VertsPerSide(), _noiseScale, _octaves, _persistance, _lacunarity, _offsetX, _offsetY);
 
-
             List<MapData> MapDatas = new();
             List<Color[]> colorMaps = new();
             List<float[,]> noises = new();
@@ -393,7 +394,6 @@ namespace ProcWorld
                     int index = x + y * m_neighboursX;
                     MapData mapdata = MapDatas[index];
                     Texture tex = TextureGenerator.TextureFromMap(mapdata.colormap, VertsPerSide() + 2, VertsPerSide() + 2);
-                    Debug.Log("Creating new chunk");
                     TerrainChunk chunk = new TerrainChunk(true, m_chunkSize, _heightScale, _heightCurve, pos, _terrainMat, m_chunksParent, DefaultLOD);
                     // chunk.SetMesh(MeshGenerator.GenerateMeshFromHeightMap(mapdata.GetHeightMap(), _heightScale, _heightCurve, DefaultLOD).mesh);
                     terrainChunks.Add(pos, chunk);
@@ -421,6 +421,8 @@ namespace ProcWorld
 
         bool m_endlessInit = false;
         int m_initialEndlessChunks = 0;
+
+
 
         private void GenerateEndlessTerrain()
         {
@@ -451,33 +453,15 @@ namespace ProcWorld
                     else
                     {
 
-                        float ofstX = _offsetX + viewedChunkCoord.x * m_chunkSize;
-                        float ofstY = _offsetY + viewedChunkCoord.y * m_chunkSize;
-                        // float[,] no = NoiseGenerator.GenerateNoiseMap(PerlinConfig, VertsPerSide() + 2, VertsPerSide() + 2, ofstX, ofstY);
-                        // no = AddRoadNoise(ofstX, ofstY, no);
-                        // no = CreateValleyAroundRoad(ofstX, ofstY, no);
-                        // no = NoiseGenerator.NormalizeGlobally(no, VertsPerSide() + 2, VertsPerSide() + 2, PerlinConfig.standardMaxValue + ValleyNoiseExtrusion);
-                        // HeightMap hm = HeightMap.FromNoise(no, 1);
-                        // MapData mapdata = new(hm, ColorMapFromHeight(hm), VertsPerSide() + 2, VertsPerSide() + 2);
-
-                        // Texture tex = TextureGenerator.TextureFromMap(mapdata.colormap, VertsPerSide() + 2, VertsPerSide() + 2);
-                        bool initial = false;
-                        if (!m_endlessInit)
-                        {
-                            m_initialEndlessChunks++;
-                            initial = true;
-                        }
-                        TerrainChunk chunk = new TerrainChunk(initial, m_chunkSize, _heightScale, _heightCurve, viewedChunkCoord, _terrainMat, m_chunksParent, DefaultLOD);
+                        TerrainChunk chunk = new TerrainChunk(false, m_chunkSize, _heightScale, _heightCurve, viewedChunkCoord, _terrainMat, m_chunksParent, DefaultLOD);
                         terrainChunks.Add(viewedChunkCoord, chunk);
-
 
                         m_visibleChunks.Add(chunk);
                         chunk.SetVisibility(true);
                     }
                 }
             }
-        
-            m_endlessInit = true;
+
         }
 
         static TerrainGenerator _instance;
@@ -496,13 +480,66 @@ namespace ProcWorld
         private void Start()
         {
 
+            Init();
+
+        }
+
+
+        void Init()
+        {
             maxChunksVisible = Mathf.RoundToInt(_drawDistance / m_chunkSize);
+
             playerPos = new Vector2(_player.transform.position.x, _player.transform.position.z);
+
             if (Mode == TerrainMode.Static)
             {
                 GenerateTerrain();
 
             }
+            else
+            {
+                CreateChunkPool();
+            }
+        }
+
+        void CreateChunkPool()
+        {
+
+            int extraChunks = 2;
+            m_initialEndlessChunks = (maxChunksVisible+extraChunks) * (maxChunksVisible+extraChunks) * 4;
+            m_initialEndlessChunks += (maxChunksVisible+extraChunks) * 4 + 1;
+
+
+
+            int currentChunkCoordX = Mathf.RoundToInt(playerPos.x / m_chunkSize);
+            int currentChunkCoordY = Mathf.RoundToInt(playerPos.y / m_chunkSize);
+
+            int created = 0;
+
+            Debug.Log("Pool count: " + m_initialEndlessChunks);
+            for (int yOffset = -(maxChunksVisible+extraChunks); yOffset <= (maxChunksVisible+extraChunks); yOffset++)
+            {
+                for (int xOffset = -(maxChunksVisible+extraChunks); xOffset <= (maxChunksVisible+extraChunks); xOffset++)
+                {
+                    Vector2 viewedChunkCoord = new Vector2(currentChunkCoordX + xOffset, currentChunkCoordY + yOffset);
+
+                    TerrainChunk chunk = new TerrainChunk(true, m_chunkSize, _heightScale, _heightCurve, viewedChunkCoord, _terrainMat, m_chunksParent, DefaultLOD);
+                    terrainChunks.Add(viewedChunkCoord, chunk);
+
+                    chunk.UpdateChunk();
+                    if (chunk.isVisible())
+                    {
+                        m_visibleChunks.Add(terrainChunks[viewedChunkCoord]);
+                    }
+                    created++;
+                    m_chunkpool.Add(chunk);
+                }
+            }
+            if (m_initialEndlessChunks != created)
+            {
+                Debug.Log("Created chunks: " + created + " not equal to expected amount: " + m_initialEndlessChunks);
+            }
+
         }
         private void FixedUpdate()
         {
@@ -519,7 +556,6 @@ namespace ProcWorld
             m_chunksFinished++;
 
             PhysicsColliders.Add(_c.Col);
-
             if (m_chunksFinished == m_initialEndlessChunks)
             {
                 Debug.Log("Chunks created: " + m_chunksFinished);
@@ -551,6 +587,7 @@ namespace ProcWorld
             public Collider Col { get { return meshCollider; } }
             public TerrainChunk(bool _initial, int _size, float _heightScale, AnimationCurve _heightCurve, Vector2 _coord, Material _mat, Transform _parent, int _defaultLOD)
             {
+
                 Initial = _initial;
                 position = _coord * _size;
                 bounds = new Bounds(position, Vector2.one * _size);
@@ -616,13 +653,13 @@ namespace ProcWorld
 
             }
 
-            
+
             void OnMeshdataCreated(MeshData _data)
             {
                 // mesh from data
                 // set collider           
                 meshFilter.mesh = _data.CreateMesh();
-             
+
                 // create phys on separate thread
                 // ThreadPool.QueueUserWorkItem(BakeMeshForCollision, meshFilter.mesh.GetInstanceID());
 
@@ -638,7 +675,7 @@ namespace ProcWorld
 
             void BakeMeshForCollision(object _obj)
             {
-                // Physics.BakeMesh((int)_obj, false);
+                Physics.BakeMesh((int)_obj, false);
                 MainThreadDispatcher.Instance.Enqueue(() =>
                   {
                       OnMeshBakedForCollision();
