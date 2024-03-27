@@ -27,9 +27,25 @@ namespace ProcWorld
 
                 }
             }
-
             return map;
         }
+        public static void GenerateNoiseMapNonAlloc(float[,] map, PerlinNoiseConfig _config, int _width, int _height, float _offsetX, float _offsetY)
+        {
+            Vector2[] octaveOffsets = GetOctaveOffsets(_config, _offsetX, _offsetY);
+            float halfWidth = _width / 2f;
+            float halfHeight = _height / 2f;
+
+
+            for (int y = 0; y < _height; y++)
+            {
+                for (int x = 0; x < _width; x++)
+                {
+
+                    map[x, y] = GetPerlinValue(_config, x, y, octaveOffsets, -halfWidth, -halfHeight);
+                }
+            }
+        }
+
 
         public static float[,] NormalizeGlobally(float[,] map, int _height, int _width, float _maxValue)
         {
@@ -45,6 +61,19 @@ namespace ProcWorld
             }
 
             return map;
+        }
+        public static void NormalizeGloballyNonAlloc(float[,] map, int _height, int _width, float _maxValue)
+        {
+            for (int y = 0; y < _height; y++)
+            {
+                for (int x = 0; x < _width; x++)
+                {
+                    float normH = (map[x, y] + 1) / 2f;
+                    normH /= _maxValue * .5f;
+
+                    map[x, y] = normH;
+                }
+            }
         }
         public static float[,] GenerateSingleAxisNoiseMap(PerlinNoiseConfig _config, int _width, int _height, float _offsetX, float _offsetY)
         {
@@ -173,9 +202,6 @@ namespace ProcWorld
             Vector2[] horizontalOctaveOffsets = GetOctaveOffsets(_horizontalNoise, 0, _offsetY);
             Vector2[] verticalOctaveOffsets = GetOctaveOffsets(_verticalNoise, 0, _offsetY);
 
-
-
-
             for (int y = 0; y < blurredMapWidth; y += _roadConfig.brushSpacing)
             {
                 int xPosLocal = blurredMapWidth / 2;
@@ -246,6 +272,104 @@ namespace ProcWorld
 
 
             return map;
+        }
+
+        public static void GenerateLongitudinalSinNoiseNonAlloc(float[,] generatedMap, float[,] generatedBlurredMap, int _width, int _height, RoadNoiseConfig _roadConfig, float _offsetX, float _offsetY, PerlinNoiseConfig _horizontalNoise, PerlinNoiseConfig _verticalNoise)
+        {
+            _roadConfig.brush = new(_roadConfig.brush.keys);
+
+            if (_roadConfig.brushSpacing < 1)
+            {
+                _roadConfig.brushSpacing = 1;
+            }
+
+
+
+            int blurredMapWidth = _width + _roadConfig.blurPadding;
+
+
+
+
+
+            Vector2 previousPos = Vector2.zero;
+
+
+            int startingYPos = 0;
+
+            int dif = blurredMapWidth - _width;
+            dif /= 2;
+            Vector2[] horizontalOctaveOffsets = GetOctaveOffsets(_horizontalNoise, 0, _offsetY);
+            Vector2[] verticalOctaveOffsets = GetOctaveOffsets(_verticalNoise, 0, _offsetY);
+
+            for (int y = 0; y < blurredMapWidth; y += _roadConfig.brushSpacing)
+            {
+                int xPosLocal = blurredMapWidth / 2;
+
+                float hw = blurredMapWidth / 2f;
+                float hh = blurredMapWidth / 2f;
+
+
+
+                int worldYPos = startingYPos - y + (int)_offsetY + (int)(blurredMapWidth) / 2;
+
+                // only happens once at the start, after that y is always a factor of _brushSpacing
+                if (y == 0)
+                {
+                    int mod = worldYPos % _roadConfig.brushSpacing;
+                    if (mod != 0)
+                    {
+                        startingYPos -= mod;
+                        worldYPos = startingYPos - y + (int)_offsetY + (int)(blurredMapWidth) / 2;
+
+                    }
+                }
+
+
+
+
+
+                // float perlin = Mathf.RoundToInt(GetPerlinValue(_horizontalNoise, xPosLocal, y - startingYPos, horizontalOctaveOffsets, -hw, -hh) * _roadConfig.amplitude * ((_width - 2) / 2.0f)); ;
+                // xPosLocal += Mathf.RoundToInt(perlin);
+                xPosLocal = GetPointOnLongNoise(horizontalOctaveOffsets, y - startingYPos, _width, _horizontalNoise, _roadConfig, _offsetY);
+                xPosLocal -= (int)_offsetX;
+
+                Vector2 currentPos = new(xPosLocal, y - startingYPos);
+
+
+                if (y > 0)
+                {
+                    float dist = (currentPos - previousPos).magnitude;
+                    if (dist > _roadConfig.brushSpacing)
+                    {
+                        int strokes = Mathf.FloorToInt(dist / _roadConfig.brushSpacing);
+                        for (float t = 0; t < 1; t += (1f / strokes))
+                        {
+                            Vector2 pos = Vector2.Lerp(previousPos, currentPos, t);
+                            StampCircleNonAlloc(generatedBlurredMap, Mathf.RoundToInt(pos.x), Mathf.RoundToInt(pos.y), _roadConfig.brushRadius, _roadConfig.brush);
+
+                        }
+
+                    }
+                }
+
+                StampCircleNonAlloc(generatedBlurredMap, xPosLocal, y - startingYPos, _roadConfig.brushRadius, _roadConfig.brush);
+                previousPos = currentPos;
+
+            }
+
+            generatedBlurredMap = ApplyBlur(generatedBlurredMap, _roadConfig.blurAmount);
+
+            for (int y = dif; y < blurredMapWidth - dif; y++)
+            {
+                for (int x = dif; x < blurredMapWidth - dif; x++)
+                {
+                    float val = generatedBlurredMap[x, y];
+                    generatedMap[x - dif, y - dif] = val;
+                }
+            }
+
+
+
         }
         public static int GetPointOnLongNoise(int _y, int _width, PerlinNoiseConfig _horizontalNoise, RoadNoiseConfig _roadConfig, float _offsetY)
         {
@@ -353,12 +477,64 @@ namespace ProcWorld
 
             return _noise;
         }
+
+        public static void StampCircleNonAlloc(float[,] _noise, int _centerX, int _centerY, int _radius, AnimationCurve _brush)
+        {
+
+            Vector2 pos;
+            float dist;
+            float radiusSquared = _radius * _radius;
+
+
+
+            for (int y = _centerY - _radius; y < _centerY + _radius; y++)
+            {
+                if (y < 0 || y > _noise.GetLength(0) - 1) continue;
+
+                for (int x = _centerX - _radius; x < _centerX + _radius; x++)
+                {
+                    if (x < 0 || x > _noise.GetLength(0) - 1) continue;
+
+                    int dx = x - _centerX;
+                    int dy = y - _centerY;
+                    int distanceSquared = dx * dx + dy * dy;
+
+                    if (distanceSquared <= radiusSquared)
+                    {
+                        pos = new Vector2(x, y);
+
+                        // circle shape
+                        dist = (pos - new Vector2(_centerX, _centerY)).magnitude / _radius;
+                        dist = Mathf.Clamp01(dist);
+
+
+
+
+                        // box shape 
+                        // dist = (pos - new Vector2(_centerX, pos.y)).magnitude / _radius;
+                        // dist = Mathf.Clamp01(dist);
+
+
+                        dist = 1 - dist;
+                        // _noise[x, y] += dist > 0 ? 1 : 0;
+                        _noise[x, y] += _brush.Evaluate(dist);
+
+
+                        _noise[x, y] = Mathf.Clamp01(_noise[x, y]);
+                    }
+                }
+            }
+
+        }
+
         delegate void BlurParamThreadStart(int _lineIndex, int _lineNum);
         struct BlurParams
         {
             public int lineIndex;
             public int lineCount;
         }
+
+        // find a way to make this non allocating
         public static float[,] ApplyBlur(float[,] inputArray, int blurSize)
         {
             int width = inputArray.GetLength(0);
@@ -387,7 +563,7 @@ namespace ProcWorld
                                 count++;
                             }
                         }
-               
+
                         resultArray[x, y] = sum / count;
 
                     }
