@@ -175,7 +175,6 @@ namespace ProcWorld
 
         public static float[,] GenerateLongitudinalSinNoise(int _width, int _height, RoadNoiseConfig _roadConfig, float _offsetX, float _offsetY, PerlinNoiseConfig _horizontalNoise, PerlinNoiseConfig _verticalNoise)
         {
-            _roadConfig.brush = new(_roadConfig.brush.keys);
 
             if (_roadConfig.brushSpacing < 1)
             {
@@ -276,7 +275,6 @@ namespace ProcWorld
 
         public static void GenerateLongitudinalSinNoiseNonAlloc(float[,] generatedMap, float[,] generatedBlurredMap, int _width, int _height, RoadNoiseConfig _roadConfig, float _offsetX, float _offsetY, PerlinNoiseConfig _horizontalNoise, PerlinNoiseConfig _verticalNoise)
         {
-            _roadConfig.brush = new(_roadConfig.brush.keys);
 
             if (_roadConfig.brushSpacing < 1)
             {

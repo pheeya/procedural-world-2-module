@@ -24,6 +24,10 @@ namespace ProcWorld
             return new(_noise.GetLength(0), _noise.GetLength(1), _borderSize, _noise);
         }
 
+        public void UpdateNoise(float[,] _noise){
+            Values = _noise;
+        }
+
     }
 
 }

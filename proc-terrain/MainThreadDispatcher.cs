@@ -18,17 +18,17 @@ namespace ProcWorld
 
         private void Update()
         {
-
+            
 
             // Execute queued actions on the main thread
-            // lock (actionQueue)
-            // {
-            while (actionQueue.Count > 0)
+            lock (actionQueue)
             {
-                Action action = actionQueue.Dequeue();
-                action.Invoke();
+                while (actionQueue.Count > 0)
+                {
+                    Action action = actionQueue.Dequeue();
+                    action.Invoke();
+                }
             }
-            // }
         }
 
         // Enqueue an action to execute on the main thread

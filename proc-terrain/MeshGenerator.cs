@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 namespace ProcWorld
 {
@@ -9,7 +10,8 @@ namespace ProcWorld
         public static MeshData GenerateMeshFromHeightMap(HeightMap _heightmap, float _heightScale, AnimationCurve _heightCurve, int _lod)
         {
 
-            _heightCurve = new(_heightCurve.keys);
+
+            Profiler.BeginThreadProfiling("Terrain Background Thread", "Terrain Thread");
 
 
             int increment = _lod == 0 ? 1 : _lod * 2;
@@ -136,6 +138,7 @@ namespace ProcWorld
 
             meshData.normals = CalculateNormals(meshData.vertices, meshData.triangles, borderVertices, borderTriangles);
 
+Profiler.EndThreadProfiling();
 
 
             return meshData;
@@ -219,7 +222,6 @@ namespace ProcWorld
 
         public Vector3[] normals;
 
-        private Mesh mesh;
 
         public MeshData(int _meshWidth, int _meshHeight)
         {
@@ -250,7 +252,7 @@ namespace ProcWorld
 
         public Mesh CreateMesh()
         {
-            mesh = new Mesh();
+            Mesh mesh = new Mesh();
             mesh.name = "Terrain Chunk Mesh";
             mesh.SetVertices(vertices);
             mesh.SetTriangles(triangles, 0);
