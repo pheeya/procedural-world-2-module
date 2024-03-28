@@ -17,10 +17,12 @@ namespace ProcWorld
             Endless
         }
 
+        [Header("Background Processing")]
+        [SerializeField] int m_timeStepMS;
+        [SerializeField] int m_numBackgroundThreads;
+
 
         [Header("Components")]
-        [SerializeField] TerrainBackgroundProcessor m_backgroundProcessor1;
-        [SerializeField] TerrainBackgroundProcessor m_backgroundProcessor2;
         public FeatureGenerator _featureGenerator;
         public Material _terrainMat;
         public AnimationCurve _heightCurve;
@@ -73,8 +75,29 @@ namespace ProcWorld
         List<TerrainChunk> m_chunkpool = new();
 
 
+        List<TerrainBackgroundProcessor> m_processors = new();
+
 
         Thread m_terrainGenerationThread;
+
+        int m_nextProcessor = 0;
+        public TerrainBackgroundProcessor GetNextProcessor()
+        {
+
+
+            // round robin
+            // give tasks to processors in a sequence one by one
+            // probably not ideal but good enough
+            // could choose processors that are free instead or have fewer tasks remaining.
+            TerrainBackgroundProcessor pr = m_processors[m_nextProcessor];
+            m_nextProcessor++;
+            m_nextProcessor %= m_processors.Count;
+
+            return pr;
+
+
+
+        }
         public Vector2 GetFinalTerrainSize()
         {
             return new Vector2(m_chunkSize * m_neighboursX, m_chunkSize * m_neighboursY);
@@ -188,9 +211,12 @@ namespace ProcWorld
 
             return _noise;
         }
-        public void AddRoadNoiseNonAlloc(float[,] to, float[,] roadNoise, float[,] blurredRoadNoise, float _ofstX, float _ofstY)
+
+        // pass _config separately here instead of using the global TerrainGenerator.RoadConfig because 
+        // animation curves don't work well with multi threading, RoadConfig stores brush as animation curve
+        public void AddRoadNoiseNonAlloc(float[,] to, RoadNoiseConfig _config, float[,] roadNoise, float[,] blurredRoadNoise, float _ofstX, float _ofstY)
         {
-            NoiseGenerator.GenerateLongitudinalSinNoiseNonAlloc(roadNoise, blurredRoadNoise, VertsPerSide() + 2, VertsPerSide() + 2, RoadConfig, _ofstX, _ofstY, RoadHorizontalPerlinConfig, RoadVerticalPerlinConfig);
+            NoiseGenerator.GenerateLongitudinalSinNoiseNonAlloc(roadNoise, blurredRoadNoise, VertsPerSide() + 2, VertsPerSide() + 2, _config, _ofstX, _ofstY, RoadHorizontalPerlinConfig, RoadVerticalPerlinConfig);
             for (int i = 0; i < roadNoise.GetLength(1); i++)
             {
                 for (int j = 0; j < roadNoise.GetLength(0); j++)
@@ -228,9 +254,9 @@ namespace ProcWorld
             }
             return _noise;
         }
-        public void CreateValleyAroundRoadNonAlloc(float[,] _noise, float[,] generatedRoadNoise, float[,] generatedBlurredNoise, float _ofstX, float _ofstY)
+        public void CreateValleyAroundRoadNonAlloc(float[,] _noise,RoadNoiseConfig _valleyConfig, float[,] generatedRoadNoise, float[,] generatedBlurredNoise, float _ofstX, float _ofstY)
         {
-            NoiseGenerator.GenerateLongitudinalSinNoiseNonAlloc(generatedRoadNoise, generatedBlurredNoise, VertsPerSide() + 2, VertsPerSide() + 2, ValleyConfig, _ofstX, _ofstY, ValleyPerlinConfig, RoadVerticalPerlinConfig);
+            NoiseGenerator.GenerateLongitudinalSinNoiseNonAlloc(generatedRoadNoise, generatedBlurredNoise, VertsPerSide() + 2, VertsPerSide() + 2, _valleyConfig, _ofstX, _ofstY, ValleyPerlinConfig, RoadVerticalPerlinConfig);
             for (int i = 0; i < generatedRoadNoise.GetLength(1); i++)
             {
                 for (int j = 0; j < generatedRoadNoise.GetLength(0); j++)
@@ -470,9 +496,6 @@ namespace ProcWorld
             int currentChunkCoordY = Mathf.RoundToInt(playerPos.y / m_chunkSize);
             foreach (var _ch in terrainChunks)
             {
-                Profiler.BeginSample("Update Chunk");
-                _ch.Value.UpdateChunk();
-                Profiler.EndSample();
 
                 Profiler.BeginSample("Set Visibility");
                 if (Mathf.Abs(_ch.Value.ChunkCoordinate.x - currentChunkCoordX) > Mathf.Abs(maxChunksVisible) || Mathf.Abs(_ch.Value.ChunkCoordinate.y - currentChunkCoordY) > Mathf.Abs(maxChunksVisible))
@@ -529,7 +552,7 @@ namespace ProcWorld
                     Profiler.EndSample();
 
                     Profiler.BeginSample("enqueue");
-                    m_backgroundProcessor1.EnqueueChunk(chunk);
+                    GetNextProcessor().EnqueueChunk(chunk);
                     Profiler.EndSample();
 
 
@@ -581,6 +604,26 @@ namespace ProcWorld
 
         void Init()
         {
+
+            if (m_timeStepMS < 10)
+            {
+                m_timeStepMS = 10;
+                Debug.Log("Timestep too small, changing to 10");
+            }
+            if (m_numBackgroundThreads == 0)
+            {
+                Debug.Log("Processors set to 0, not allowed. Changing to 1.");
+                m_numBackgroundThreads = 1;
+            }
+
+
+            m_processors = new(m_numBackgroundThreads);
+
+            for (int i = 0; i < m_numBackgroundThreads; i++)
+            {
+                m_processors.Add(new(m_timeStepMS));
+            }
+
             maxChunksVisible = Mathf.RoundToInt(_drawDistance / m_chunkSize);
 
             playerPos = new Vector2(_player.transform.position.x, _player.transform.position.z);
@@ -623,8 +666,8 @@ namespace ProcWorld
                     terrainChunks.Add(viewedChunkCoord, chunk);
                     chunk.SetVisibility(true);
 
-                    m_backgroundProcessor1.EnqueueChunk(chunk);
 
+                    GetNextProcessor().EnqueueChunk(chunk);
                     // chunk.UpdateChunk();
                     // if (chunk.isVisible())
                     // {
@@ -657,7 +700,7 @@ namespace ProcWorld
 
             m_chunksFinished++;
 
-m_backgroundProcessor1.EnqueuePhysics(_c);
+            GetNextProcessor().EnqueuePhysics(_c);
             if (m_chunksFinished == m_initialEndlessChunks)
             {
                 Debug.Log("Chunks created: " + m_chunksFinished);
