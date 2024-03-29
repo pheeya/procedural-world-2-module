@@ -594,9 +594,10 @@ namespace ProcWorld
             }
         }
 
+System.Diagnostics.Stopwatch m_chunkCreationStopwatch = new();
         private void Start()
         {
-
+            m_chunkCreationStopwatch.Start();
             Init();
 
         }
@@ -653,7 +654,6 @@ namespace ProcWorld
 
             int created = 0;
 
-            Debug.Log("Pool count: " + m_initialEndlessChunks);
             for (int yOffset = -(maxChunksVisible + extraChunks); yOffset <= (maxChunksVisible + extraChunks); yOffset++)
             {
                 for (int xOffset = -(maxChunksVisible + extraChunks); xOffset <= (maxChunksVisible + extraChunks); xOffset++)
@@ -704,7 +704,13 @@ namespace ProcWorld
             if (m_chunksFinished == m_initialEndlessChunks)
             {
                 Debug.Log("Chunks created: " + m_chunksFinished);
+                
+                m_chunkCreationStopwatch.Stop();
+                Debug.Log("Initial chunks created, took: " + m_chunkCreationStopwatch.ElapsedMilliseconds/1000f + " seconds");
+
+                
                 EInitialChunksCreated?.Invoke();
+
             }
             EChunkCreated?.Invoke(_c);
 
