@@ -35,7 +35,7 @@ namespace ProcWorld
         public float _heightScale;
         [field: SerializeField, Range(0, 6)] public int DefaultLOD { get; private set; }
         [field: SerializeField] public bool Normalize { get; private set; }
-        public static int _drawDistance = 600;
+        public static int _drawDistance = 700;
         public TerrainType[] terrainTypes;
         [field: SerializeField] public RoadNoiseConfig RoadConfig { get; private set; }
         [field: SerializeField] public float RoadNoiseMaxHeight { get; private set; }
@@ -254,7 +254,7 @@ namespace ProcWorld
             }
             return _noise;
         }
-        public void CreateValleyAroundRoadNonAlloc(float[,] _noise,RoadNoiseConfig _valleyConfig, float[,] generatedRoadNoise, float[,] generatedBlurredNoise, float _ofstX, float _ofstY)
+        public void CreateValleyAroundRoadNonAlloc(float[,] _noise, RoadNoiseConfig _valleyConfig, float[,] generatedRoadNoise, float[,] generatedBlurredNoise, float _ofstX, float _ofstY)
         {
             NoiseGenerator.GenerateLongitudinalSinNoiseNonAlloc(generatedRoadNoise, generatedBlurredNoise, VertsPerSide() + 2, VertsPerSide() + 2, _valleyConfig, _ofstX, _ofstY, ValleyPerlinConfig, RoadVerticalPerlinConfig);
             for (int i = 0; i < generatedRoadNoise.GetLength(1); i++)
@@ -477,6 +477,22 @@ namespace ProcWorld
 
         List<Vector2> m_toRemove = new();
 
+
+        bool GetFreeChunkFromPool(out TerrainChunk ch, out int _index)
+        {
+            for (int i = 0; i < m_chunkpool.Count; i++)
+            {
+                if (!m_chunkpool[i].Processing)
+                {
+                    ch = m_chunkpool[i];
+                    _index = i;
+                    return true;
+                };
+            }
+            ch = null;
+            _index = 0;
+            return false;
+        }
         private void GenerateEndlessTerrain()
         {
 
@@ -530,26 +546,13 @@ namespace ProcWorld
 
                     if (m_chunkpool.Count == 0) continue;
 
-                    Profiler.BeginSample("get from pool");
-                    TerrainChunk chunk = m_chunkpool[m_chunkpool.Count - 1];
-                    chunk.UpdateCoord(viewedChunkCoord);
-                    m_chunkpool.RemoveAt(m_chunkpool.Count - 1);
-                    terrainChunks.Add(viewedChunkCoord, chunk);
-                    // Debug.Log("stsarting new thread");
-                    // new Thread(new ThreadStart(() =>
-                    //       {
-                    //           Debug.Log("Processing important things");
-                    //           Thread.Sleep(4 * 1000);
-                    //           Debug.Log("Done");
-                    //       })).Start();
+                    bool found = GetFreeChunkFromPool(out TerrainChunk chunk, out int _index);
+                    if(!found) continue;
 
-                    // new Thread(new ThreadStart(() =>
-                    //                   {
-                    //                       Debug.Log("Processing important things");
-                    //                       Thread.Sleep(1 * 1000);
-                    //                       Debug.Log("Done");
-                    //                   })).Start();
-                    Profiler.EndSample();
+                    chunk.UpdateCoord(viewedChunkCoord);
+                    m_chunkpool.RemoveAt(_index);
+                    terrainChunks.Add(viewedChunkCoord, chunk);
+
 
                     Profiler.BeginSample("enqueue");
                     GetNextProcessor().EnqueueChunk(chunk);
@@ -594,7 +597,7 @@ namespace ProcWorld
             }
         }
 
-System.Diagnostics.Stopwatch m_chunkCreationStopwatch = new();
+        System.Diagnostics.Stopwatch m_chunkCreationStopwatch = new();
         private void Start()
         {
             m_chunkCreationStopwatch.Start();
@@ -704,11 +707,11 @@ System.Diagnostics.Stopwatch m_chunkCreationStopwatch = new();
             if (m_chunksFinished == m_initialEndlessChunks)
             {
                 Debug.Log("Chunks created: " + m_chunksFinished);
-                
-                m_chunkCreationStopwatch.Stop();
-                Debug.Log("Initial chunks created, took: " + m_chunkCreationStopwatch.ElapsedMilliseconds/1000f + " seconds");
 
-                
+                m_chunkCreationStopwatch.Stop();
+                Debug.Log("Initial chunks created, took: " + m_chunkCreationStopwatch.ElapsedMilliseconds / 1000f + " seconds");
+
+
                 EInitialChunksCreated?.Invoke();
 
             }
