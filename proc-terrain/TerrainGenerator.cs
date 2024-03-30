@@ -58,7 +58,7 @@ namespace ProcWorld
         public float testX;
         public float testY;
 
-        Dictionary<Vector2, TerrainChunk> terrainChunks = new Dictionary<Vector2, TerrainChunk>();
+        public Dictionary<Vector2, TerrainChunk> terrainChunks  {get;private set;}= new Dictionary<Vector2, TerrainChunk>();
         private List<TerrainChunk> m_visibleChunks = new List<TerrainChunk>();
 
         public delegate void TerrainGeneratorEvent();
@@ -704,6 +704,7 @@ namespace ProcWorld
             m_chunksFinished++;
 
             GetNextProcessor().EnqueuePhysics(_c);
+            EChunkCreated?.Invoke(_c);
             if (m_chunksFinished == m_initialEndlessChunks)
             {
                 Debug.Log("Chunks created: " + m_chunksFinished);
@@ -715,7 +716,6 @@ namespace ProcWorld
                 EInitialChunksCreated?.Invoke();
 
             }
-            EChunkCreated?.Invoke(_c);
 
 
         }
