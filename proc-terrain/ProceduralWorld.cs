@@ -77,6 +77,20 @@ namespace ProcWorld
         {
             return m_terrainGen.GetPointOnRoadWithDistance(_yFrom, _dist);
         }
+        public Vector3 GetPointOnRoadWithDistance(Vector3 _currentCellPos,float _distance, out Vector3 _forward)
+        {
+            Vector2 point =GetPointOnRoadWithDistance((int)_currentCellPos.z, _distance);
+            Vector3 pos;
+            pos.x = point.x;
+            pos.y = 0;
+            pos.z = point.y;
+
+            Vector2 f = GetRoadForwardAtPos((int)point.y);
+            _forward = new(-f.x, 0, f.y);
+
+
+            return pos;
+        }
         public float GetPlayableAreaWidth()
         {
             return m_terrainGen.GetPlayableAreaWidth();
