@@ -31,6 +31,8 @@ namespace ProcWorld
         }
         public static void GenerateNoiseMapNonAlloc(float[,] map, PerlinNoiseConfig _config, int _width, int _height, float _offsetX, float _offsetY)
         {
+
+
             Vector2[] octaveOffsets = GetOctaveOffsets(_config, _offsetX, _offsetY);
             float halfWidth = _width / 2f;
             float halfHeight = _height / 2f;
@@ -273,6 +275,52 @@ namespace ProcWorld
             return map;
         }
 
+        public static void GenerateCurveNonAlloc(float[,] generatedMap, float[,] generatedBlurredMap, int _width, int _height, RoadNoiseConfig _config)
+        {
+
+            int blurredMapWidth = _width + _config.blurPadding;
+
+
+
+
+            // instead of generating a blur map (which we don't need anymore in this function)
+            // generate a 1d Vector2 array of points.
+            for (int y = 0; y < blurredMapWidth; y++)
+            {
+                int x = (blurredMapWidth / 2) + (int)(Mathf.Sin(y / 50f) * _config.amplitude);
+                generatedBlurredMap[x, y] = 1;
+            }
+
+            for (int y = 0; y < _width; y++)
+            {
+                for (int x = 0; x < _width; x++)
+                {
+                    float closestDistance = float.MaxValue;
+
+                    for (int i = 0; i < blurredMapWidth; i++)
+                    {
+                        int testx = (blurredMapWidth / 2) + (int)(Mathf.Sin(i / 25f) * _config.amplitude * _width) - _config.blurPadding / 2;
+                        Vector2 target = new(testx, i);
+                        Vector2 point = new(x, y);
+
+                        float dist = (target - point).magnitude;
+                        if (dist < closestDistance)
+                        {
+                            closestDistance = dist;
+                        }
+
+                        if (closestDistance > 0)
+                        {
+                            generatedMap[x, y] = 0;
+                        }
+                        else
+                        {
+                            generatedMap[x, y] = 1;
+                        }
+                    }
+                }
+            }
+        }
         public static void GenerateLongitudinalSinNoiseNonAlloc(float[,] generatedMap, float[,] generatedBlurredMap, int _width, int _height, RoadNoiseConfig _roadConfig, float _offsetX, float _offsetY, PerlinNoiseConfig _horizontalNoise, PerlinNoiseConfig _verticalNoise)
         {
 
@@ -280,7 +328,8 @@ namespace ProcWorld
             {
                 _roadConfig.brushSpacing = 1;
             }
-
+            // animation curve still not working correctly it seems even though only one thread should be accessing it at a time
+            // _roadConfig.brush = new(_roadConfig.brush.keys);
 
 
             int blurredMapWidth = _width + _roadConfig.blurPadding;
@@ -427,6 +476,7 @@ namespace ProcWorld
         static int logs = 0;
         public static float[,] StampCircle(float[,] _noise, int _centerX, int _centerY, int _radius, AnimationCurve _brush)
         {
+
 
             Vector2 pos;
             float dist;
@@ -706,5 +756,13 @@ namespace ProcWorld
         public AnimationCurve brush;
 
     }
+    [System.Serializable]
+    public struct CurveConfig
+    {
+        public float amplitude;
+        public float frequency;
+        public float padding;
+        public AnimationCurve distanceModifier;
 
+    }
 }

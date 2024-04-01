@@ -13,7 +13,6 @@ namespace ProcWorld
 
             Profiler.BeginThreadProfiling("Terrain Background Thread", "Terrain Thread");
 
-
             int increment = _lod == 0 ? 1 : _lod * 2;
             int width = _heightmap.Width;
             int height = _heightmap.Height;
@@ -138,7 +137,7 @@ namespace ProcWorld
 
             meshData.normals = CalculateNormals(meshData.vertices, meshData.triangles, borderVertices, borderTriangles);
 
-Profiler.EndThreadProfiling();
+            Profiler.EndThreadProfiling();
 
 
             return meshData;

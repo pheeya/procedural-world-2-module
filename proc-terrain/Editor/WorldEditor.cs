@@ -16,6 +16,9 @@ namespace ProcWorld
         Texture2D roadVerticallityMap = null;
         Texture2D valleyMap = null;
 
+
+        Texture2D testTexture = null;
+
         public override void OnInspectorGUI()
         {
 
@@ -59,6 +62,14 @@ namespace ProcWorld
 
                 valleyMap = TextureGenerator.TextureFromMap(valleyNoise.Values);
 
+
+                float[,] generatedTestMap = new float[hm.Width, hm.Height];
+                float[,] generatedTestBlurMap = new float[hm.Width + terrainGenerator.RoadConfig.blurPadding, hm.Height + terrainGenerator.RoadConfig.blurPadding];
+                NoiseGenerator.GenerateCurveNonAlloc(generatedTestMap, generatedTestBlurMap, hm.Width, hm.Height, terrainGenerator.RoadConfig);
+                HeightMap testmap = HeightMap.FromNoise(generatedTestMap,0);
+
+                testTexture = TextureGenerator.TextureFromMap(testmap.Values);
+
                 debugTerrain.GenerateMesh(terrainGenerator.GenerateTestMeshData().CreateMesh(), colormap);
 
 
@@ -70,6 +81,7 @@ namespace ProcWorld
             GUILayout.Label(colormap);
             GUILayout.Label(roadMap);
             GUILayout.Label(roadVerticallityMap);
+            GUILayout.Label(testTexture);
             EditorGUILayout.EndVertical();
         }
 

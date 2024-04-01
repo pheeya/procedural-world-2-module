@@ -58,7 +58,7 @@ namespace ProcWorld
         public float testX;
         public float testY;
 
-        public Dictionary<Vector2, TerrainChunk> terrainChunks  {get;private set;}= new Dictionary<Vector2, TerrainChunk>();
+        public Dictionary<Vector2, TerrainChunk> terrainChunks { get; private set; } = new Dictionary<Vector2, TerrainChunk>();
         private List<TerrainChunk> m_visibleChunks = new List<TerrainChunk>();
 
         public delegate void TerrainGeneratorEvent();
@@ -547,7 +547,7 @@ namespace ProcWorld
                     if (m_chunkpool.Count == 0) continue;
 
                     bool found = GetFreeChunkFromPool(out TerrainChunk chunk, out int _index);
-                    if(!found) continue;
+                    if (!found) continue;
 
                     chunk.UpdateCoord(viewedChunkCoord);
                     m_chunkpool.RemoveAt(_index);
@@ -701,21 +701,10 @@ namespace ProcWorld
         public void OnChunkCreated(TerrainChunk _c)
         {
 
-            m_chunksFinished++;
 
             GetNextProcessor().EnqueuePhysics(_c);
             EChunkCreated?.Invoke(_c);
-            if (m_chunksFinished == m_initialEndlessChunks)
-            {
-                Debug.Log("Chunks created: " + m_chunksFinished);
 
-                m_chunkCreationStopwatch.Stop();
-                Debug.Log("Initial chunks created, took: " + m_chunkCreationStopwatch.ElapsedMilliseconds / 1000f + " seconds");
-
-
-                EInitialChunksCreated?.Invoke();
-
-            }
 
 
         }
@@ -727,8 +716,18 @@ namespace ProcWorld
 
             PhysicsColliders.Add(_c.Col);
 
+            m_chunksFinished++;
             EChunkPhysicsCreated?.Invoke(_c);
+            if (m_chunksFinished == m_initialEndlessChunks)
+            {
+                Debug.Log("Chunks created: " + m_chunksFinished);
 
+                m_chunkCreationStopwatch.Stop();
+                Debug.Log("Initial chunks created, took: " + m_chunkCreationStopwatch.ElapsedMilliseconds / 1000f + " seconds");
+
+                EInitialChunksCreated?.Invoke();
+
+            }
 
         }
 
