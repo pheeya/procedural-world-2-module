@@ -82,7 +82,7 @@ namespace ProcWorld
             // allocate memory only once
             m_noise = new float[_noiseMapSize, _noiseMapSize];
             m_roadNoise = new float[_noiseMapSize, _noiseMapSize];
-            m_roadNoiseBlurred = new float[_noiseMapSize + m_roadConfig.blurPadding, _noiseMapSize + m_roadConfig.blurPadding];
+            m_roadNoiseBlurred = new float[_noiseMapSize + gen.RoadConfig.blurPadding, _noiseMapSize + gen.RoadConfig.blurPadding];
             m_valleyNoiseBlurred = new float[_noiseMapSize + m_valleyConfig.blurPadding, _noiseMapSize + m_valleyConfig.blurPadding];
             m_heightMap = new(_noiseMapSize, _noiseMapSize, 1, m_noise);
             // Regenerate();
@@ -134,7 +134,7 @@ namespace ProcWorld
             Helpers.Reset2DArray(m_roadNoise);
 
 
-            gen.CreateValleyAroundRoadNonAlloc(m_noise, m_valleyConfig, m_roadNoise, m_valleyNoiseBlurred, ofstX, ofstY);
+            // gen.CreateValleyAroundRoadNonAlloc(m_noise, m_valleyConfig, m_roadNoise, m_valleyNoiseBlurred, ofstX, ofstY);
             NoiseGenerator.NormalizeGloballyNonAlloc(m_noise, gen.VertsPerSide() + 2, gen.VertsPerSide() + 2, gen.PerlinConfig.standardMaxValue + gen.ValleyNoiseExtrusion);
 
             m_heightMap.UpdateNoise(m_noise);

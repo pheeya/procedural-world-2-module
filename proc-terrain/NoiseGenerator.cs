@@ -275,20 +275,49 @@ namespace ProcWorld
             return map;
         }
 
-        public static void GenerateCurveNonAlloc(float[,] generatedMap, float[,] generatedBlurredMap, int _width, int _height, RoadNoiseConfig _config)
+        public static void GenerateCurveNonAlloc(float[,] generatedMap, float[,] generatedBlurredMap, int _width, int _height, CurveConfig _config, float _offsetX, float _offsetY)
         {
 
-            int blurredMapWidth = _width + _config.blurPadding;
+            int blurredMapWidth = _width + _config.padding;
+            _config.distanceModifier = new(_config.distanceModifier.keys);
 
 
-
+            List<Vector2> curve = new();
 
             // instead of generating a blur map (which we don't need anymore in this function)
             // generate a 1d Vector2 array of points.
+            Vector2 previous = Vector3.zero;
             for (int y = 0; y < blurredMapWidth; y++)
             {
-                int x = (blurredMapWidth / 2) + (int)(Mathf.Sin(y / 50f) * _config.amplitude);
-                generatedBlurredMap[x, y] = 1;
+                int x = (blurredMapWidth / 2) + (int)(Mathf.Sin(y / _config.perlinConfig.scale) * _config.amplitude * _width) - _config.padding / 2;
+                // generatedBlurredMap[x, y] = 1;
+
+                x = GetPointOnLongNoise(y, _width, _config, _offsetY);
+                x -= (int)_offsetX;
+                Vector2 point = new(x, y);
+                if (y > 0)
+                {
+                    previous = curve[curve.Count - 1];
+                    Vector2 dif = (point - previous);
+
+                    // for (int i = 0; i < dif.magnitude; i++)
+                    // {
+                    //     Vector2 fillPoint = Vector2.Lerp(previous, point, i / dif.magnitude);
+                    //     curve.Add(fillPoint); 
+                    //     dif = point - fillPoint; 
+                    //     previous = fillPoint;
+                    // }
+                    while (dif.magnitude > 1)
+                    {
+
+                        Vector2 fillPoint = previous + dif.normalized;
+                        curve.Add(fillPoint);
+                        dif = point - fillPoint;
+                        previous = fillPoint;
+                    }
+
+                }
+                curve.Add(new(x, y));
             }
 
             for (int y = 0; y < _width; y++)
@@ -297,29 +326,72 @@ namespace ProcWorld
                 {
                     float closestDistance = float.MaxValue;
 
-                    for (int i = 0; i < blurredMapWidth; i++)
+                    // for (int i = 0; i < blurredMapWidth; i++)
+                    // {
+                    //     int testx = (blurredMapWidth / 2) + (int)(Mathf.Sin(i / _config.perlinConfig.scale) * _config.amplitude * _width) - _config.padding / 2;
+                    //     Vector2 target = new(testx, i);
+                    //     Vector2 point = new(x, y);
+
+                    //     float dist = (target - point).magnitude;
+                    //     if (dist < closestDistance)
+                    //     {
+                    //         closestDistance = dist;
+                    //     }
+
+                    //     float normalizedDist = closestDistance / _config.width;
+                    //     normalizedDist = Mathf.Clamp01(normalizedDist);
+
+                    //     if (_config.invert)
+                    //     {
+                    //         generatedMap[x, y] = 1 - _config.distanceModifier.Evaluate(1 - normalizedDist);
+
+                    //     }
+                    //     else
+                    //     {
+
+                    //         generatedMap[x, y] = _config.distanceModifier.Evaluate(1 - normalizedDist);
+                    //     }
+
+                    // }
+                    for (int i = 0; i < curve.Count; i++)
                     {
-                        int testx = (blurredMapWidth / 2) + (int)(Mathf.Sin(i / 25f) * _config.amplitude * _width) - _config.blurPadding / 2;
-                        Vector2 target = new(testx, i);
+                        Vector2 target = curve[i];
+                        // offset by padding/2 to bring it to the middle of the actual noise map
+                        target.x -= _config.padding / 2;
+                        target.y -= _config.padding / 2;
+
                         Vector2 point = new(x, y);
 
-                        float dist = (target - point).magnitude;
+                        float dist = Vector2.Distance(target, point);
                         if (dist < closestDistance)
                         {
                             closestDistance = dist;
                         }
-
-                        if (closestDistance > 0)
-                        {
-                            generatedMap[x, y] = 0;
-                        }
-                        else
-                        {
-                            generatedMap[x, y] = 1;
-                        }
                     }
+                    float normalizedDist = closestDistance / _config.width;
+                    // normalizedDist = Mathf.Clamp01(normalizedDist);
+                    // generatedMap[x, y] = (1 - normalizedDist);
+                    generatedMap[x, y] = (Mathf.Clamp(((closestDistance-5)/15f),0,1));
+                    // if (_config.invert)
+                    // {
+                    //     generatedMap[x, y] = 1 - _config.distanceModifier.Evaluate(1 - normalizedDist);
+
+                    // }
+                    // else
+                    // {
+
+                    //     generatedMap[x, y] = _config.distanceModifier.Evaluate(1 - normalizedDist);
+                    // }
                 }
+
             }
+            //  for(int i=0;i<curve.Count;i++){
+            //     Vector2 point = curve[i];
+
+            //     if(point.y > _config.padding && point.y < _width){
+            //         generatedMap[(int)point.x, (int)point.y] = 1;
+            //     }
+            //  }
         }
         public static void GenerateLongitudinalSinNoiseNonAlloc(float[,] generatedMap, float[,] generatedBlurredMap, int _width, int _height, RoadNoiseConfig _roadConfig, float _offsetX, float _offsetY, PerlinNoiseConfig _horizontalNoise, PerlinNoiseConfig _verticalNoise)
         {
@@ -425,6 +497,24 @@ namespace ProcWorld
             return GetPointOnLongNoise(horizontalOctaveOffsets, _y, _width, _horizontalNoise, _roadConfig, _offsetY);
         }
 
+        public static int GetPointOnLongNoise(int _y, int _width, CurveConfig _config, float _offsetY)
+        {
+
+            Vector2[] horizontalOctaveOffsets = GetOctaveOffsets(_config.perlinConfig, 0, _offsetY);
+            return GetPointOnLongNoise(horizontalOctaveOffsets, _y, _width, _config, _offsetY);
+        }
+        public static int GetPointOnLongNoise(Vector2[] _horizontalOctaveOffsets, int _y, int _width, CurveConfig _config, float _offsetY)
+        {
+
+            int blurredMapWidth = _width + _config.padding;
+            float hw = blurredMapWidth / 2f;
+            float hh = blurredMapWidth / 2f;
+
+            int xPosLocal = blurredMapWidth / 2;
+            float perlin = Mathf.RoundToInt(GetPerlinValue(_config.perlinConfig, xPosLocal, _y, _horizontalOctaveOffsets, -hw, -hh) * _config.amplitude * ((_width - 2) / 2.0f)); ;
+            xPosLocal += Mathf.RoundToInt(perlin);
+            return xPosLocal;
+        }
         public static int GetPointOnLongNoise(Vector2[] _horizontalOctaveOffsets, int _y, int _width, PerlinNoiseConfig _horizontalNoise, RoadNoiseConfig _roadConfig, float _offsetY)
         {
 
@@ -760,9 +850,11 @@ namespace ProcWorld
     public struct CurveConfig
     {
         public float amplitude;
-        public float frequency;
-        public float padding;
+        public int padding;
+        public int width;
         public AnimationCurve distanceModifier;
+        public bool invert;
+        public PerlinNoiseConfig perlinConfig;
 
     }
 }

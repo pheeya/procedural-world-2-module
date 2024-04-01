@@ -38,6 +38,7 @@ namespace ProcWorld
         public static int _drawDistance = 700;
         public TerrainType[] terrainTypes;
         [field: SerializeField] public RoadNoiseConfig RoadConfig { get; private set; }
+        [field: SerializeField] public CurveConfig RoadCurveConfig { get; private set; }
         [field: SerializeField] public float RoadNoiseMaxHeight { get; private set; }
         [field: SerializeField] public float RoadNoiseBlend { get; private set; }
         [field: SerializeField] public RoadNoiseConfig ValleyConfig { get; private set; }
@@ -216,7 +217,9 @@ namespace ProcWorld
         // animation curves don't work well with multi threading, RoadConfig stores brush as animation curve
         public void AddRoadNoiseNonAlloc(float[,] to, RoadNoiseConfig _config, float[,] roadNoise, float[,] blurredRoadNoise, float _ofstX, float _ofstY)
         {
-            NoiseGenerator.GenerateLongitudinalSinNoiseNonAlloc(roadNoise, blurredRoadNoise, VertsPerSide() + 2, VertsPerSide() + 2, _config, _ofstX, _ofstY, RoadHorizontalPerlinConfig, RoadVerticalPerlinConfig);
+            // NoiseGenerator.GenerateLongitudinalSinNoiseNonAlloc(roadNoise, blurredRoadNoise, VertsPerSide() + 2, VertsPerSide() + 2, _config, _ofstX, _ofstY, RoadHorizontalPerlinConfig, RoadVerticalPerlinConfig);
+           NoiseGenerator.GenerateCurveNonAlloc(roadNoise,blurredRoadNoise, VertsPerSide() + 2, VertsPerSide() + 2, RoadCurveConfig, _ofstX, _ofstY);
+           
             for (int i = 0; i < roadNoise.GetLength(1); i++)
             {
                 for (int j = 0; j < roadNoise.GetLength(0); j++)

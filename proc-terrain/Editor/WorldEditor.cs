@@ -64,9 +64,9 @@ namespace ProcWorld
 
 
                 float[,] generatedTestMap = new float[hm.Width, hm.Height];
-                float[,] generatedTestBlurMap = new float[hm.Width + terrainGenerator.RoadConfig.blurPadding, hm.Height + terrainGenerator.RoadConfig.blurPadding];
-                NoiseGenerator.GenerateCurveNonAlloc(generatedTestMap, generatedTestBlurMap, hm.Width, hm.Height, terrainGenerator.RoadConfig);
-                HeightMap testmap = HeightMap.FromNoise(generatedTestMap,0);
+                float[,] generatedTestBlurMap = new float[hm.Width + terrainGenerator.RoadCurveConfig.padding, hm.Height + terrainGenerator.RoadCurveConfig.padding];
+                NoiseGenerator.GenerateCurveNonAlloc(generatedTestMap, generatedTestBlurMap, hm.Width, hm.Height, terrainGenerator.RoadCurveConfig, terrainGenerator.testX, terrainGenerator.testY);
+                HeightMap testmap = HeightMap.FromNoise(generatedTestMap, 0);
 
                 testTexture = TextureGenerator.TextureFromMap(testmap.Values);
 
@@ -76,12 +76,18 @@ namespace ProcWorld
             }
 
             EditorGUILayout.BeginVertical();
+
+            EditorGUILayout.BeginHorizontal();
             GUILayout.Label(valleyMap);
             GUILayout.Label(heightmap);
             GUILayout.Label(colormap);
+            EditorGUILayout.EndHorizontal();
+
+            EditorGUILayout.BeginHorizontal();
             GUILayout.Label(roadMap);
             GUILayout.Label(roadVerticallityMap);
             GUILayout.Label(testTexture);
+            EditorGUILayout.EndHorizontal();
             EditorGUILayout.EndVertical();
         }
 
