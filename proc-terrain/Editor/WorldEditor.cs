@@ -17,7 +17,8 @@ namespace ProcWorld
         Texture2D valleyMap = null;
 
 
-        Texture2D testTexture = null;
+        Texture2D roadCurveTexture = null;
+        Texture2D valleyCurveTexture = null;
 
         public override void OnInspectorGUI()
         {
@@ -63,12 +64,19 @@ namespace ProcWorld
                 valleyMap = TextureGenerator.TextureFromMap(valleyNoise.Values);
 
 
-                float[,] generatedTestMap = new float[hm.Width, hm.Height];
-                float[,] generatedTestBlurMap = new float[hm.Width + terrainGenerator.RoadCurveConfig.padding, hm.Height + terrainGenerator.RoadCurveConfig.padding];
-                NoiseGenerator.GenerateCurveNonAlloc(generatedTestMap, generatedTestBlurMap, hm.Width, hm.Height, terrainGenerator.RoadCurveConfig, terrainGenerator.testX, terrainGenerator.testY);
-                HeightMap testmap = HeightMap.FromNoise(generatedTestMap, 0);
+                float[,] generatedRoadCurve= new float[hm.Width, hm.Height];
+                NoiseGenerator.GenerateCurveNonAlloc(generatedRoadCurve, hm.Width, hm.Height, terrainGenerator.RoadCurveConfig, terrainGenerator.testX, terrainGenerator.testY);
+                HeightMap RoadCurve = HeightMap.FromNoise(generatedRoadCurve, 0);
+                roadCurveTexture = TextureGenerator.TextureFromMap(RoadCurve.Values);
 
-                testTexture = TextureGenerator.TextureFromMap(testmap.Values);
+
+                float[,] generatedValleyNoise= new float[hm.Width, hm.Height];
+                NoiseGenerator.GenerateCurveNonAlloc(generatedValleyNoise, hm.Width, hm.Height, terrainGenerator.ValleyCurveConfig, terrainGenerator.testX, terrainGenerator.testY);
+                HeightMap VallleyCurve = HeightMap.FromNoise(generatedValleyNoise, 0);
+                valleyCurveTexture = TextureGenerator.TextureFromMap(VallleyCurve.Values);
+
+
+
 
                 debugTerrain.GenerateMesh(terrainGenerator.GenerateTestMeshData().CreateMesh(), colormap);
 
@@ -86,7 +94,8 @@ namespace ProcWorld
             EditorGUILayout.BeginHorizontal();
             GUILayout.Label(roadMap);
             GUILayout.Label(roadVerticallityMap);
-            GUILayout.Label(testTexture);
+            GUILayout.Label(roadCurveTexture);
+            GUILayout.Label(valleyCurveTexture);
             EditorGUILayout.EndHorizontal();
             EditorGUILayout.EndVertical();
         }

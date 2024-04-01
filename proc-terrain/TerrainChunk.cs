@@ -88,6 +88,8 @@ namespace ProcWorld
             // Regenerate();
 
         }
+
+        System.Diagnostics.Stopwatch sw = new();
         public void Regenerate()
         {
             // ThreadPool.QueueUserWorkItem(CreateMapData, gen);
@@ -96,6 +98,11 @@ namespace ProcWorld
             // th.Start();
 
             Processing = true;
+
+            if (Initial)
+            {
+                sw.Start();
+            }
             CreateMapData();
 
         }
@@ -134,7 +141,7 @@ namespace ProcWorld
             Helpers.Reset2DArray(m_roadNoise);
 
 
-            // gen.CreateValleyAroundRoadNonAlloc(m_noise, m_valleyConfig, m_roadNoise, m_valleyNoiseBlurred, ofstX, ofstY);
+            gen.CreateValleyAroundRoadNonAlloc(m_noise, m_valleyConfig, m_roadNoise, m_valleyNoiseBlurred, ofstX, ofstY);
             NoiseGenerator.NormalizeGloballyNonAlloc(m_noise, gen.VertsPerSide() + 2, gen.VertsPerSide() + 2, gen.PerlinConfig.standardMaxValue + gen.ValleyNoiseExtrusion);
 
             m_heightMap.UpdateNoise(m_noise);
@@ -148,10 +155,12 @@ namespace ProcWorld
         {
             // create mesh data
             MeshData md = MeshGenerator.GenerateMeshFromHeightMap(_data.GetHeightMap(), m_heightScale, m_heightCurve, m_defaultLOD);
+            sw.Stop();
 
-
+            double elapsed = sw.Elapsed.TotalMilliseconds / 1000f;
             MainThreadDispatcher.Instance.Enqueue(() =>
        {
+           Debug.Log("Chunk created, took: " + elapsed + " seconds");
            OnMeshdataCreated(md);
        });
 

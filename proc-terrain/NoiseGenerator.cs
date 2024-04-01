@@ -275,123 +275,108 @@ namespace ProcWorld
             return map;
         }
 
-        public static void GenerateCurveNonAlloc(float[,] generatedMap, float[,] generatedBlurredMap, int _width, int _height, CurveConfig _config, float _offsetX, float _offsetY)
+        public static void GenerateCurveNonAlloc(float[,] generatedMap, int _width, int _height, CurveConfig _config, float _offsetX, float _offsetY)
         {
+
+            System.Diagnostics.Stopwatch sw = new();
 
             int blurredMapWidth = _width + _config.padding;
             _config.distanceModifier = new(_config.distanceModifier.keys);
 
 
-            List<Vector2> curve = new();
 
             // instead of generating a blur map (which we don't need anymore in this function)
             // generate a 1d Vector2 array of points.
             Vector2 previous = Vector3.zero;
-            for (int y = 0; y < blurredMapWidth; y++)
+            Vector2[] curve = new Vector2[blurredMapWidth * 4];
+
+            int curveCount = 0;
+
+            int xCoord;
+
+            Vector2 point = Vector2.zero;
+            Vector2[] horizontalOctaveOffsets = GetOctaveOffsets(_config.perlinConfig, 0, _offsetY);
+            int yCoord = 0;
+            while (yCoord < blurredMapWidth)
             {
-                int x = (blurredMapWidth / 2) + (int)(Mathf.Sin(y / _config.perlinConfig.scale) * _config.amplitude * _width) - _config.padding / 2;
-                // generatedBlurredMap[x, y] = 1;
 
-                x = GetPointOnLongNoise(y, _width, _config, _offsetY);
-                x -= (int)_offsetX;
-                Vector2 point = new(x, y);
-                if (y > 0)
+                xCoord = GetPointOnLongNoise(horizontalOctaveOffsets, yCoord, _width, _config, _offsetY);
+                xCoord -= (int)_offsetX;
+                point.x = xCoord;
+                point.y = yCoord;
+                if (yCoord > 0)
                 {
-                    previous = curve[curve.Count - 1];
+                    previous = curve[curveCount - 1];
                     Vector2 dif = (point - previous);
-
-                    // for (int i = 0; i < dif.magnitude; i++)
-                    // {
-                    //     Vector2 fillPoint = Vector2.Lerp(previous, point, i / dif.magnitude);
-                    //     curve.Add(fillPoint); 
-                    //     dif = point - fillPoint; 
-                    //     previous = fillPoint;
-                    // }
                     while (dif.magnitude > 1)
                     {
 
                         Vector2 fillPoint = previous + dif.normalized;
-                        curve.Add(fillPoint);
+                        curve[curveCount] = (fillPoint);
                         dif = point - fillPoint;
                         previous = fillPoint;
+
+                        curveCount++;
                     }
 
                 }
-                curve.Add(new(x, y));
+                curve[curveCount] = point;
+
+                curveCount++;
+
+                yCoord++;
             }
 
+
+
+      
+
+            Vector2 target;
+            float normalizedDist;
+            float dist;
             for (int y = 0; y < _width; y++)
             {
                 for (int x = 0; x < _width; x++)
                 {
                     float closestDistance = float.MaxValue;
 
-                    // for (int i = 0; i < blurredMapWidth; i++)
-                    // {
-                    //     int testx = (blurredMapWidth / 2) + (int)(Mathf.Sin(i / _config.perlinConfig.scale) * _config.amplitude * _width) - _config.padding / 2;
-                    //     Vector2 target = new(testx, i);
-                    //     Vector2 point = new(x, y);
 
-                    //     float dist = (target - point).magnitude;
-                    //     if (dist < closestDistance)
-                    //     {
-                    //         closestDistance = dist;
-                    //     }
-
-                    //     float normalizedDist = closestDistance / _config.width;
-                    //     normalizedDist = Mathf.Clamp01(normalizedDist);
-
-                    //     if (_config.invert)
-                    //     {
-                    //         generatedMap[x, y] = 1 - _config.distanceModifier.Evaluate(1 - normalizedDist);
-
-                    //     }
-                    //     else
-                    //     {
-
-                    //         generatedMap[x, y] = _config.distanceModifier.Evaluate(1 - normalizedDist);
-                    //     }
-
-                    // }
-                    for (int i = 0; i < curve.Count; i++)
+                    for (int i = 0; i < curveCount; i++)
                     {
-                        Vector2 target = curve[i];
+                        target = curve[i];
                         // offset by padding/2 to bring it to the middle of the actual noise map
                         target.x -= _config.padding / 2;
                         target.y -= _config.padding / 2;
 
-                        Vector2 point = new(x, y);
+                        point = new(x, y);
 
-                        float dist = Vector2.Distance(target, point);
+                        dist = Vector2.Distance(target, point);
                         if (dist < closestDistance)
                         {
                             closestDistance = dist;
                         }
                     }
-                    float normalizedDist = closestDistance / _config.width;
-                    // normalizedDist = Mathf.Clamp01(normalizedDist);
-                    // generatedMap[x, y] = (1 - normalizedDist);
-                    generatedMap[x, y] = (Mathf.Clamp(((closestDistance-5)/15f),0,1));
-                    // if (_config.invert)
-                    // {
-                    //     generatedMap[x, y] = 1 - _config.distanceModifier.Evaluate(1 - normalizedDist);
 
-                    // }
-                    // else
-                    // {
+                    normalizedDist = closestDistance / _config.width;
+                    normalizedDist = Mathf.Clamp01(normalizedDist);
+                    if (_config.invert)
+                    {
+                        generatedMap[x, y] = 1 - _config.distanceModifier.Evaluate(1 - normalizedDist);
 
-                    //     generatedMap[x, y] = _config.distanceModifier.Evaluate(1 - normalizedDist);
-                    // }
+                    }
+                    else
+                    {
+
+                        generatedMap[x, y] = _config.distanceModifier.Evaluate(1 - normalizedDist);
+                    }
                 }
 
             }
-            //  for(int i=0;i<curve.Count;i++){
-            //     Vector2 point = curve[i];
 
-            //     if(point.y > _config.padding && point.y < _width){
-            //         generatedMap[(int)point.x, (int)point.y] = 1;
-            //     }
-            //  }
+
+       
+
+
         }
         public static void GenerateLongitudinalSinNoiseNonAlloc(float[,] generatedMap, float[,] generatedBlurredMap, int _width, int _height, RoadNoiseConfig _roadConfig, float _offsetX, float _offsetY, PerlinNoiseConfig _horizontalNoise, PerlinNoiseConfig _verticalNoise)
         {

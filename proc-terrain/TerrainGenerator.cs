@@ -39,6 +39,7 @@ namespace ProcWorld
         public TerrainType[] terrainTypes;
         [field: SerializeField] public RoadNoiseConfig RoadConfig { get; private set; }
         [field: SerializeField] public CurveConfig RoadCurveConfig { get; private set; }
+        [field: SerializeField] public CurveConfig ValleyCurveConfig { get; private set; }
         [field: SerializeField] public float RoadNoiseMaxHeight { get; private set; }
         [field: SerializeField] public float RoadNoiseBlend { get; private set; }
         [field: SerializeField] public RoadNoiseConfig ValleyConfig { get; private set; }
@@ -176,7 +177,9 @@ namespace ProcWorld
                 noise = NoiseGenerator.NormalizeGlobally(noise, VertsPerSide() + 2, VertsPerSide() + 2, PerlinConfig.standardMaxValue + ValleyNoiseExtrusion);
             }
 
-            noise = AddRoadNoise(0, 0, noise);
+            float[,] road = new float[VertsPerSide()+2, VertsPerSide()+2];
+            float[,] roadBlurred = new float[VertsPerSide()+2 + RoadConfig.blurPadding, VertsPerSide()+2 +RoadConfig.blurPadding];
+            AddRoadNoiseNonAlloc(noise,RoadConfig, road, roadBlurred, testX, testY);
 
             return HeightMap.FromNoise(noise, 1);
         }
@@ -217,9 +220,10 @@ namespace ProcWorld
         // animation curves don't work well with multi threading, RoadConfig stores brush as animation curve
         public void AddRoadNoiseNonAlloc(float[,] to, RoadNoiseConfig _config, float[,] roadNoise, float[,] blurredRoadNoise, float _ofstX, float _ofstY)
         {
+
             // NoiseGenerator.GenerateLongitudinalSinNoiseNonAlloc(roadNoise, blurredRoadNoise, VertsPerSide() + 2, VertsPerSide() + 2, _config, _ofstX, _ofstY, RoadHorizontalPerlinConfig, RoadVerticalPerlinConfig);
-           NoiseGenerator.GenerateCurveNonAlloc(roadNoise,blurredRoadNoise, VertsPerSide() + 2, VertsPerSide() + 2, RoadCurveConfig, _ofstX, _ofstY);
-           
+            NoiseGenerator.GenerateCurveNonAlloc(roadNoise, VertsPerSide() + 2, VertsPerSide() + 2, RoadCurveConfig, _ofstX, _ofstY);
+
             for (int i = 0; i < roadNoise.GetLength(1); i++)
             {
                 for (int j = 0; j < roadNoise.GetLength(0); j++)
@@ -259,7 +263,8 @@ namespace ProcWorld
         }
         public void CreateValleyAroundRoadNonAlloc(float[,] _noise, RoadNoiseConfig _valleyConfig, float[,] generatedRoadNoise, float[,] generatedBlurredNoise, float _ofstX, float _ofstY)
         {
-            NoiseGenerator.GenerateLongitudinalSinNoiseNonAlloc(generatedRoadNoise, generatedBlurredNoise, VertsPerSide() + 2, VertsPerSide() + 2, _valleyConfig, _ofstX, _ofstY, ValleyPerlinConfig, RoadVerticalPerlinConfig);
+            // NoiseGenerator.GenerateLongitudinalSinNoiseNonAlloc(generatedRoadNoise, generatedBlurredNoise, VertsPerSide() + 2, VertsPerSide() + 2, _valleyConfig, _ofstX, _ofstY, ValleyPerlinConfig, RoadVerticalPerlinConfig);
+            NoiseGenerator.GenerateCurveNonAlloc(generatedRoadNoise, VertsPerSide() + 2, VertsPerSide() + 2, ValleyCurveConfig, _ofstX, _ofstY);
             for (int i = 0; i < generatedRoadNoise.GetLength(1); i++)
             {
                 for (int j = 0; j < generatedRoadNoise.GetLength(0); j++)
@@ -269,7 +274,13 @@ namespace ProcWorld
                     // vert = Mathf.Clamp01(vert);
 
 
-                    _noise[i, j] = Mathf.Lerp(_noise[i, j], PerlinConfig.standardMaxValue + ValleyNoiseExtrusion, Mathf.Clamp01((1 - generatedRoadNoise[i, j])) * ValleyNoiseBlend);
+
+                    // for stamp noise
+                    // _noise[i, j] = Mathf.Lerp(_noise[i, j], PerlinConfig.standardMaxValue + ValleyNoiseExtrusion, Mathf.Clamp01((1 - generatedRoadNoise[i, j])) * ValleyNoiseBlend);
+
+
+                    // for curve noise
+                    _noise[i, j] = Mathf.Lerp(_noise[i, j], PerlinConfig.standardMaxValue + ValleyNoiseExtrusion, Mathf.Clamp01((generatedRoadNoise[i, j])) * ValleyNoiseBlend);
 
 
                 }
