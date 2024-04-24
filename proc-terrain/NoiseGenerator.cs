@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Unity.Mathematics;
 using UnityEngine;
 using System.Threading;
+using UnityEngine.AI;
 namespace ProcWorld
 {
     public class NoiseGenerator
@@ -44,6 +45,8 @@ namespace ProcWorld
                 {
 
                     map[x, y] = GetPerlinValue(_config, x, y, octaveOffsets, -halfWidth, -halfHeight);
+                    map[x, y] += 1;
+                    map[x, y] /= 2;
                 }
             }
         }
@@ -70,8 +73,42 @@ namespace ProcWorld
             {
                 for (int x = 0; x < _width; x++)
                 {
-                    float normH = (map[x, y] + 1) / 2f;
+                    float normH = (map[x, y]);
                     normH /= _maxValue * .5f;
+
+                    map[x, y] = normH;
+                }
+            }
+        }
+        public static void NormalizeGloballyNonAlloc(PerlinNoiseConfig _noise, float[,] map, int _height, int _width, float _mul)
+        {
+
+            float amplitude = 1;
+            float value = 0;
+            for (int o = 0; o < _noise.octaves; o++)
+            {
+
+
+                // figure out why we are changing this range from 01 to -1 1
+                // then make sure returned value is 0-1
+                // road noise works fine with perlin -1 to 1
+                // not sure why but it doesn't work properly if we don't do this
+
+                value += amplitude;
+
+
+                amplitude *= _noise.persistance;
+            }
+
+
+
+
+            for (int y = 0; y < _height; y++)
+            {
+                for (int x = 0; x < _width; x++)
+                {
+                    float normH = map[x, y] + .05f; // add a small number to keep all values above 0, Mathf.perlin can return values slightly smaller than 0 and larger than
+                    normH /= value * _mul;
 
                     map[x, y] = normH;
                 }
@@ -329,35 +366,50 @@ namespace ProcWorld
 
 
 
-      
+
 
             Vector2 target;
             float normalizedDist;
-            float dist;
+            Vector2 dist;
+            float distSquared;
+            float widthSquared = _config.width * _config.width;
+            float halfPadding = _config.padding / 2;
             for (int y = 0; y < _width; y++)
             {
                 for (int x = 0; x < _width; x++)
                 {
                     float closestDistance = float.MaxValue;
+                    point.x = x;
+                    point.y = y;
 
 
-                    for (int i = 0; i < curveCount; i++)
+                    int i = 0;
+
+
+                    while (i < curveCount)
                     {
+
                         target = curve[i];
+
+
                         // offset by padding/2 to bring it to the middle of the actual noise map
-                        target.x -= _config.padding / 2;
-                        target.y -= _config.padding / 2;
+                        dist.x = target.x - point.x - halfPadding;
+                        dist.y = target.y - point.y - halfPadding;
 
-                        point = new(x, y);
 
-                        dist = Vector2.Distance(target, point);
-                        if (dist < closestDistance)
+                        distSquared = dist.x * dist.x + dist.y * dist.y;
+
+
+                        if (distSquared < closestDistance)
                         {
-                            closestDistance = dist;
+                            closestDistance = distSquared;
                         }
+
+
+                        i++;
                     }
 
-                    normalizedDist = closestDistance / _config.width;
+                    normalizedDist = Mathf.Sqrt(closestDistance) / _config.width;
                     normalizedDist = Mathf.Clamp01(normalizedDist);
                     if (_config.invert)
                     {
@@ -370,11 +422,10 @@ namespace ProcWorld
                         generatedMap[x, y] = _config.distanceModifier.Evaluate(1 - normalizedDist);
                     }
                 }
-
             }
 
 
-       
+
 
 
         }
@@ -404,6 +455,10 @@ namespace ProcWorld
             dif /= 2;
             Vector2[] horizontalOctaveOffsets = GetOctaveOffsets(_horizontalNoise, 0, _offsetY);
             Vector2[] verticalOctaveOffsets = GetOctaveOffsets(_verticalNoise, 0, _offsetY);
+
+
+            // find a way to not have to allocate memory every time
+            AnimationCurve brush = new(_roadConfig.brush.keys);
 
             for (int y = 0; y < blurredMapWidth; y += _roadConfig.brushSpacing)
             {
@@ -449,14 +504,14 @@ namespace ProcWorld
                         for (float t = 0; t < 1; t += (1f / strokes))
                         {
                             Vector2 pos = Vector2.Lerp(previousPos, currentPos, t);
-                            StampCircleNonAlloc(generatedBlurredMap, Mathf.RoundToInt(pos.x), Mathf.RoundToInt(pos.y), _roadConfig.brushRadius, _roadConfig.brush);
+                            StampCircleNonAlloc(generatedBlurredMap, Mathf.RoundToInt(pos.x), Mathf.RoundToInt(pos.y), _roadConfig.brushRadius, brush);
 
                         }
 
                     }
                 }
 
-                StampCircleNonAlloc(generatedBlurredMap, xPosLocal, y - startingYPos, _roadConfig.brushRadius, _roadConfig.brush);
+                StampCircleNonAlloc(generatedBlurredMap, xPosLocal, y - startingYPos, _roadConfig.brushRadius, brush);
                 previousPos = currentPos;
 
             }
@@ -663,76 +718,110 @@ namespace ProcWorld
             int width = inputArray.GetLength(0);
             int height = inputArray.GetLength(1);
             float[,] resultArray = new float[width, height];
-            void blur(object _params)
-            {
-                int _lineIndex = ((BlurParams)_params).lineIndex;
-                int _lineNum = ((BlurParams)_params).lineCount;
-                for (int x = 0; x < width; x++)
-                {
-                    for (int y = _lineIndex; y < _lineIndex + _lineNum; y++)
-                    {
-                        float sum = 0;
-                        int count = 0;
 
-                        // Apply blur kernel
-                        for (int i = -blurSize; i <= blurSize; i++)
-                        {
-                            for (int j = -blurSize; j <= blurSize; j++)
-                            {
-                                int newX = Mathf.Clamp(x + i, 0, width - 1);
-                                int newY = Mathf.Clamp(y + j, 0, height - 1);
 
-                                sum += inputArray[newX, newY];
-                                count++;
-                            }
-                        }
 
-                        resultArray[x, y] = sum / count;
+            // void blur(object _params)
+            // {
+            //     int _lineIndex = ((BlurParams)_params).lineIndex;
+            //     int _lineNum = ((BlurParams)_params).lineCount;
+            //     for (int x = 0; x < width; x++)
+            //     {
+            //         for (int y = _lineIndex; y < _lineIndex + _lineNum; y++)
+            //         {
+            //             float sum = 0;
+            //             int count = 0;
 
-                    }
-                }
-            }
+            //             // Apply blur kernel
+            //             for (int i = -blurSize; i <= blurSize; i++)
+            //             {
+            //                 for (int j = -blurSize; j <= blurSize; j++)
+            //                 {
+            //                     int newX = Mathf.Clamp(x + i, 0, width - 1);
+            //                     int newY = Mathf.Clamp(y + j, 0, height - 1);
+
+            //                     sum += inputArray[newX, newY];
+            //                     count++;
+            //                 }
+            //             }
+
+            //             resultArray[x, y] = sum / count;
+
+            //         }
+            //     }
+            // }
 
 
 
             // this is slow, should be much faster probably and should be able to make lines per thread smaller
             // but this is not the case, likely due to overhead from threads being created here instead of using a pool
 
-            int lines = height;
-            int linesPerThread = 15;
+            // int lines = height;
+            // int linesPerThread = 15;
 
-            linesPerThread = lines;
 
-            List<Thread> workers = new();
-            int count = 0;
+            // List<Thread> workers = new();
+            // int count = 0;
 
-            for (int i = 0; i < height; i += linesPerThread)
+            // for (int i = 0; i < height; i += linesPerThread)
+            // {
+
+            //     int lineNum = linesPerThread;
+
+            //     if (i + lineNum > (height - 1))
+            //     {
+            //         lineNum = height - i;
+            //     }
+
+
+            //     Thread t = new Thread(new ParameterizedThreadStart(blur));
+
+
+            //     BlurParams p;
+            //     p.lineCount = lineNum;
+            //     p.lineIndex = i;
+            //     t.Start(p);
+
+            //     workers.Add(t);
+            //     count++;
+            // }
+
+            // for (int i = 0; i < workers.Count; i++)
+            // {
+            //     workers[i].Join();
+            // }
+
+
+
+            // main thread
+
+            float sum;
+            int count;
+
+            for (int x = 0; x < width; x++)
             {
-
-                int lineNum = linesPerThread;
-
-                if (i + lineNum > (height - 1))
+                for (int y = 0; y < height; y++)
                 {
-                    lineNum = height - i;
+                    sum = 0;
+                    count = 0;
+                    // Apply blur kernel
+                    for (int i = -blurSize; i <= blurSize; i++)
+                    {
+                        for (int j = -blurSize; j <= blurSize; j++)
+                        {
+                            int newX = Mathf.Clamp(x + i, 0, width - 1);
+                            int newY = Mathf.Clamp(y + j, 0, height - 1);
+
+                            sum += inputArray[newX, newY];
+                            count++;
+                        }
+                    }
+
+                    resultArray[x, y] = sum / count;
                 }
-
-
-                Thread t = new Thread(new ParameterizedThreadStart(blur));
-
-
-                BlurParams p;
-                p.lineCount = lineNum;
-                p.lineIndex = i;
-                t.Start(p);
-
-                workers.Add(t);
-                count++;
             }
 
-            for (int i = 0; i < workers.Count; i++)
-            {
-                workers[i].Join();
-            }
+
 
             // for (int x = 0; x < width; x++)
             // {

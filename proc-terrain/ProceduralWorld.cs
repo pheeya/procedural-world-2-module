@@ -44,6 +44,18 @@ namespace ProcWorld
 
             EOnCreated?.Invoke();
         }
+        bool m_started = false;
+        public void Begin()
+        {
+            m_started = true;
+
+            generator.Init();
+        }
+
+        public void Stop(){
+            m_started = false;
+            generator.Stop();
+        }
 
         public Vector2 GetMapSize()
         {
@@ -77,9 +89,9 @@ namespace ProcWorld
         {
             return m_terrainGen.GetPointOnRoadWithDistance(_yFrom, _dist);
         }
-        public Vector3 GetPointOnRoadWithDistance(Vector3 _currentCellPos,float _distance, out Vector3 _forward)
+        public Vector3 GetPointOnRoadWithDistance(Vector3 _currentCellPos, float _distance, out Vector3 _forward)
         {
-            Vector2 point =GetPointOnRoadWithDistance((int)_currentCellPos.z, _distance);
+            Vector2 point = GetPointOnRoadWithDistance((int)_currentCellPos.z, _distance);
             Vector3 pos;
             pos.x = point.x;
             pos.y = 0;

@@ -24,6 +24,7 @@ namespace ProcWorld
 
         [Header("Components")]
         public FeatureGenerator _featureGenerator;
+        [field: SerializeField] public NoiseFunction noiseFunction { get; private set; }
         public Material _terrainMat;
         public AnimationCurve _heightCurve;
         public Transform _player;
@@ -35,7 +36,7 @@ namespace ProcWorld
         public float _heightScale;
         [field: SerializeField, Range(0, 6)] public int DefaultLOD { get; private set; }
         [field: SerializeField] public bool Normalize { get; private set; }
-        public static int _drawDistance = 700;
+        public static int _drawDistance = 250;
         public TerrainType[] terrainTypes;
         [field: SerializeField] public RoadNoiseConfig RoadConfig { get; private set; }
         [field: SerializeField] public CurveConfig RoadCurveConfig { get; private set; }
@@ -70,6 +71,7 @@ namespace ProcWorld
         public TerrainChunkEvent EChunkCreated;
         public TerrainChunkEvent EChunkPhysicsCreated;
         public TerrainGeneratorEvent EInitialChunksCreated;
+        public TerrainChunkEvent EChunkGameObjectCreated;
 
 
         public List<Collider> PhysicsColliders { get; private set; } = new();
@@ -177,9 +179,9 @@ namespace ProcWorld
                 noise = NoiseGenerator.NormalizeGlobally(noise, VertsPerSide() + 2, VertsPerSide() + 2, PerlinConfig.standardMaxValue + ValleyNoiseExtrusion);
             }
 
-            float[,] road = new float[VertsPerSide()+2, VertsPerSide()+2];
-            float[,] roadBlurred = new float[VertsPerSide()+2 + RoadConfig.blurPadding, VertsPerSide()+2 +RoadConfig.blurPadding];
-            AddRoadNoiseNonAlloc(noise,RoadConfig, road, roadBlurred, testX, testY);
+            float[,] road = new float[VertsPerSide() + 2, VertsPerSide() + 2];
+            float[,] roadBlurred = new float[VertsPerSide() + 2 + RoadConfig.blurPadding, VertsPerSide() + 2 + RoadConfig.blurPadding];
+            AddRoadNoiseNonAlloc(noise, RoadConfig, road, roadBlurred, testX, testY);
 
             return HeightMap.FromNoise(noise, 1);
         }
@@ -218,27 +220,7 @@ namespace ProcWorld
 
         // pass _config separately here instead of using the global TerrainGenerator.RoadConfig because 
         // animation curves don't work well with multi threading, RoadConfig stores brush as animation curve
-        public void AddRoadNoiseNonAlloc(float[,] to, RoadNoiseConfig _config, float[,] roadNoise, float[,] blurredRoadNoise, float _ofstX, float _ofstY)
-        {
 
-            // NoiseGenerator.GenerateLongitudinalSinNoiseNonAlloc(roadNoise, blurredRoadNoise, VertsPerSide() + 2, VertsPerSide() + 2, _config, _ofstX, _ofstY, RoadHorizontalPerlinConfig, RoadVerticalPerlinConfig);
-            NoiseGenerator.GenerateCurveNonAlloc(roadNoise, VertsPerSide() + 2, VertsPerSide() + 2, RoadCurveConfig, _ofstX, _ofstY);
-
-            for (int i = 0; i < roadNoise.GetLength(1); i++)
-            {
-                for (int j = 0; j < roadNoise.GetLength(0); j++)
-                {
-                    // float vert = verticality[0,i];
-                    // vert += RoadNoiseMaxHeight;
-                    // vert = Mathf.Clamp01(vert);
-
-
-
-                    // figure out why this blending doesn't work properly
-                    to[i, j] = Mathf.Lerp(to[i, j], RoadNoiseMaxHeight, roadNoise[i, j] * RoadNoiseBlend);
-                }
-            }
-        }
         public float[,] CreateValleyAroundRoad(float _ofstX, float _ofstY, float[,] _noise)
         {
             float[,] valleyNoise = NoiseGenerator.GenerateLongitudinalSinNoise(VertsPerSide() + 2, VertsPerSide() + 2, ValleyConfig, _ofstX, _ofstY, ValleyPerlinConfig, RoadVerticalPerlinConfig);
@@ -261,10 +243,32 @@ namespace ProcWorld
             }
             return _noise;
         }
+
+        public void AddRoadNoiseNonAlloc(float[,] to, RoadNoiseConfig _config, float[,] roadNoise, float[,] blurredRoadNoise, float _ofstX, float _ofstY)
+        {
+
+            NoiseGenerator.GenerateLongitudinalSinNoiseNonAlloc(roadNoise, blurredRoadNoise, VertsPerSide() + 2, VertsPerSide() + 2, _config, _ofstX, _ofstY, RoadHorizontalPerlinConfig, RoadVerticalPerlinConfig);
+            // NoiseGenerator.GenerateCurveNonAlloc(roadNoise, VertsPerSide() + 2, VertsPerSide() + 2, RoadCurveConfig, _ofstX, _ofstY);
+
+            for (int i = 0; i < roadNoise.GetLength(1); i++)
+            {
+                for (int j = 0; j < roadNoise.GetLength(0); j++)
+                {
+                    // float vert = verticality[0,i];
+                    // vert += RoadNoiseMaxHeight;
+                    // vert = Mathf.Clamp01(vert);
+
+
+
+                    // figure out why this blending doesn't work properly
+                    to[i, j] = Mathf.Lerp(to[i, j], RoadNoiseMaxHeight, roadNoise[i, j] * RoadNoiseBlend);
+                }
+            }
+        }
         public void CreateValleyAroundRoadNonAlloc(float[,] _noise, RoadNoiseConfig _valleyConfig, float[,] generatedRoadNoise, float[,] generatedBlurredNoise, float _ofstX, float _ofstY)
         {
-            // NoiseGenerator.GenerateLongitudinalSinNoiseNonAlloc(generatedRoadNoise, generatedBlurredNoise, VertsPerSide() + 2, VertsPerSide() + 2, _valleyConfig, _ofstX, _ofstY, ValleyPerlinConfig, RoadVerticalPerlinConfig);
-            NoiseGenerator.GenerateCurveNonAlloc(generatedRoadNoise, VertsPerSide() + 2, VertsPerSide() + 2, ValleyCurveConfig, _ofstX, _ofstY);
+            NoiseGenerator.GenerateLongitudinalSinNoiseNonAlloc(generatedRoadNoise, generatedBlurredNoise, VertsPerSide() + 2, VertsPerSide() + 2, _valleyConfig, _ofstX, _ofstY, ValleyPerlinConfig, RoadVerticalPerlinConfig);
+            // NoiseGenerator.GenerateCurveNonAlloc(generatedRoadNoise, VertsPerSide() + 2, VertsPerSide() + 2, ValleyCurveConfig, _ofstX, _ofstY);
             for (int i = 0; i < generatedRoadNoise.GetLength(1); i++)
             {
                 for (int j = 0; j < generatedRoadNoise.GetLength(0); j++)
@@ -276,11 +280,11 @@ namespace ProcWorld
 
 
                     // for stamp noise
-                    // _noise[i, j] = Mathf.Lerp(_noise[i, j], PerlinConfig.standardMaxValue + ValleyNoiseExtrusion, Mathf.Clamp01((1 - generatedRoadNoise[i, j])) * ValleyNoiseBlend);
+                    _noise[i, j] = Mathf.Lerp(_noise[i, j], PerlinConfig.standardMaxValue + ValleyNoiseExtrusion, Mathf.Clamp01((1 - generatedRoadNoise[i, j])) * ValleyNoiseBlend);
 
 
                     // for curve noise
-                    _noise[i, j] = Mathf.Lerp(_noise[i, j], PerlinConfig.standardMaxValue + ValleyNoiseExtrusion, Mathf.Clamp01((generatedRoadNoise[i, j])) * ValleyNoiseBlend);
+                    // _noise[i, j] = Mathf.Lerp(_noise[i, j], PerlinConfig.standardMaxValue + ValleyNoiseExtrusion, Mathf.Clamp01((generatedRoadNoise[i, j])) * ValleyNoiseBlend);
 
 
                 }
@@ -490,7 +494,9 @@ namespace ProcWorld
 
 
         List<Vector2> m_toRemove = new();
+        int m_chunksFinished = 0;
 
+        bool m_initialChunksCreated = false;
 
         bool GetFreeChunkFromPool(out TerrainChunk ch, out int _index)
         {
@@ -611,17 +617,18 @@ namespace ProcWorld
             }
         }
 
+
+        bool m_started = false;
         System.Diagnostics.Stopwatch m_chunkCreationStopwatch = new();
-        private void Start()
+
+
+        public void Stop()
+        {
+            m_started = false;
+        }
+        public void Init()
         {
             m_chunkCreationStopwatch.Start();
-            Init();
-
-        }
-
-
-        void Init()
-        {
 
             if (m_timeStepMS < 10)
             {
@@ -655,6 +662,9 @@ namespace ProcWorld
             {
                 CreateChunkPool();
             }
+
+            m_started = true;
+
         }
 
         void CreateChunkPool()
@@ -682,7 +692,7 @@ namespace ProcWorld
 
                     terrainChunks.Add(viewedChunkCoord, chunk);
                     chunk.SetVisibility(true);
-
+                    EChunkGameObjectCreated?.Invoke(chunk);
 
                     GetNextProcessor().EnqueueChunk(chunk);
                     // chunk.UpdateChunk();
@@ -702,13 +712,15 @@ namespace ProcWorld
         }
         private void FixedUpdate()
         {
+
+            if (!m_initialChunksCreated) return;
+            if (!m_started) return;
             playerPos = new Vector2(_player.transform.position.x, _player.transform.position.z);
             if (Mode == TerrainMode.Endless)
             {
                 GenerateEndlessTerrain();
             }
         }
-        int m_chunksFinished = 0;
 
 
 
@@ -740,6 +752,8 @@ namespace ProcWorld
                 Debug.Log("Initial chunks created, took: " + m_chunkCreationStopwatch.ElapsedMilliseconds / 1000f + " seconds");
 
                 EInitialChunksCreated?.Invoke();
+
+                m_initialChunksCreated = true;
 
             }
 

@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.Profiling;
 using System.Threading;
+using System.Collections.Generic;
 namespace ProcWorld
 {
     public class TerrainChunk
@@ -15,7 +16,7 @@ namespace ProcWorld
         MeshCollider meshCollider;
 
 
-        Vector3 m_worldPos;
+        public Vector3 m_worldPos;
         float m_heightScale;
         AnimationCurve m_heightCurve;
         int m_defaultLOD;
@@ -26,7 +27,7 @@ namespace ProcWorld
         int m_size;
         public Vector2 ChunkCoordinate { get; private set; }
 
-        float[,] m_noise;
+        public float[,] m_noise;
         float[,] m_roadNoise;
         float[,] m_roadNoiseBlurred;
         float[,] m_valleyNoiseBlurred;
@@ -41,6 +42,10 @@ namespace ProcWorld
 
         RoadNoiseConfig m_roadConfig;
         RoadNoiseConfig m_valleyConfig;
+
+
+        public List<float[,]> PreAllocatedNoise;
+        
         public TerrainChunk(bool _initial, int _noiseMapSize, int _size, float _heightScale, AnimationCurve _heightCurve, Vector2 _coord, Material _mat, Transform _parent, int _defaultLOD)
         {
             gen = TerrainGenerator.Instance;
@@ -81,11 +86,15 @@ namespace ProcWorld
 
             // allocate memory only once
             m_noise = new float[_noiseMapSize, _noiseMapSize];
-            m_roadNoise = new float[_noiseMapSize, _noiseMapSize];
-            m_roadNoiseBlurred = new float[_noiseMapSize + gen.RoadConfig.blurPadding, _noiseMapSize + gen.RoadConfig.blurPadding];
-            m_valleyNoiseBlurred = new float[_noiseMapSize + m_valleyConfig.blurPadding, _noiseMapSize + m_valleyConfig.blurPadding];
+           
+            // m_roadNoise = new float[_noiseMapSize, _noiseMapSize];
+            // m_roadNoiseBlurred = new float[_noiseMapSize + gen.RoadConfig.blurPadding, _noiseMapSize + gen.RoadConfig.blurPadding];
+            // m_valleyNoiseBlurred = new float[_noiseMapSize + m_valleyConfig.blurPadding, _noiseMapSize + m_valleyConfig.blurPadding];
+           
             m_heightMap = new(_noiseMapSize, _noiseMapSize, 1, m_noise);
             // Regenerate();
+
+
 
         }
 
@@ -123,26 +132,28 @@ namespace ProcWorld
         {
 
 
-            Helpers.Reset2DArray(m_noise);
-            Helpers.Reset2DArray(m_roadNoise);
-            Helpers.Reset2DArray(m_roadNoiseBlurred);
-            Helpers.Reset2DArray(m_valleyNoiseBlurred);
+            // Helpers.Reset2DArray(m_noise);
+            // Helpers.Reset2DArray(m_roadNoise);
+            // Helpers.Reset2DArray(m_roadNoiseBlurred);
+            // Helpers.Reset2DArray(m_valleyNoiseBlurred);
 
 
 
-            float ofstX = gen._offsetX + m_worldPos.x;
-            float ofstY = gen._offsetY + m_worldPos.z;
+            // float ofstX = gen._offsetX + m_worldPos.x;
+            // float ofstY = gen._offsetY + m_worldPos.z;
 
-            NoiseGenerator.GenerateNoiseMapNonAlloc(m_noise, gen.PerlinConfig, gen.VertsPerSide() + 2, gen.VertsPerSide() + 2, ofstX, ofstY);
+            // NoiseGenerator.GenerateNoiseMapNonAlloc(m_noise, gen.PerlinConfig, gen.VertsPerSide() + 2, gen.VertsPerSide() + 2, ofstX, ofstY);
 
-            gen.AddRoadNoiseNonAlloc(m_noise, m_roadConfig, m_roadNoise, m_roadNoiseBlurred, ofstX, ofstY);
+            // gen.AddRoadNoiseNonAlloc(m_noise, m_roadConfig, m_roadNoise, m_roadNoiseBlurred, ofstX, ofstY);
 
-            // reuse m_roadNoise for valleyNoise, don't need its values again
-            Helpers.Reset2DArray(m_roadNoise);
+            // // reuse m_roadNoise for valleyNoise, don't need its values again
+            // Helpers.Reset2DArray(m_roadNoise);
 
 
-            gen.CreateValleyAroundRoadNonAlloc(m_noise, m_valleyConfig, m_roadNoise, m_valleyNoiseBlurred, ofstX, ofstY);
-            NoiseGenerator.NormalizeGloballyNonAlloc(m_noise, gen.VertsPerSide() + 2, gen.VertsPerSide() + 2, gen.PerlinConfig.standardMaxValue + gen.ValleyNoiseExtrusion);
+            // gen.CreateValleyAroundRoadNonAlloc(m_noise, m_valleyConfig, m_roadNoise, m_valleyNoiseBlurred, ofstX, ofstY);
+            // NoiseGenerator.NormalizeGloballyNonAlloc(m_noise, gen.VertsPerSide() + 2, gen.VertsPerSide() + 2, gen.PerlinConfig.standardMaxValue + gen.ValleyNoiseExtrusion);
+
+            gen.noiseFunction.GenerateNonAlloc(this);
 
             m_heightMap.UpdateNoise(m_noise);
             // no colormap so null instead of gen.ColorMapFromNoise
@@ -160,7 +171,6 @@ namespace ProcWorld
             double elapsed = sw.Elapsed.TotalMilliseconds / 1000f;
             MainThreadDispatcher.Instance.Enqueue(() =>
        {
-           Debug.Log("Chunk created, took: " + elapsed + " seconds");
            OnMeshdataCreated(md);
        });
 
