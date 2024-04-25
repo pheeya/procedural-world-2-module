@@ -429,6 +429,64 @@ namespace ProcWorld
 
 
         }
+
+
+        public static void FlattenRectangle(float[,] _map, float _targetNormalizedHeight, float _blend, Vector2 _rectWorldCenter, Vector2 _rectSize, AnimationCurve _fallOff, float _fallOffSize, float _offsetX, float _offsetY)
+        {
+
+            float halfWidth = _map.GetLength(0) / 2f;
+            float halfHeight = _map.GetLength(1) / 2f;
+
+            // chunk not within rectangle bounds
+            if (Mathf.Abs(_offsetX - _rectWorldCenter.x) > Mathf.Abs(_rectSize.x / 2f + halfWidth + _fallOffSize) || Mathf.Abs(_offsetY - _rectWorldCenter.y) > Mathf.Abs(_rectSize.y / 2f + halfWidth + _fallOffSize))
+            {
+                return;
+            };
+
+
+
+            Vector2 topLeft = new(_rectWorldCenter.x - _rectSize.x / 2f, _rectWorldCenter.y + _rectSize.y / 2f);
+            Vector2 topRight = new(_rectWorldCenter.x + _rectSize.x / 2f, _rectWorldCenter.y + _rectSize.y / 2f);
+
+
+
+
+            // Y is same for left or right pos
+            Vector2 bottomLeft = new(_rectWorldCenter.x - _rectSize.x / 2f, _rectWorldCenter.y - _rectSize.y / 2f);
+
+
+            float rectMag = _rectSize.magnitude;
+
+
+            AnimationCurve _threadSafe = new(_fallOff.keys);
+
+            for (int y = 0; y < _map.GetLength(1); y++)
+            {
+                for (int x = 0; x < _map.GetLength(0); x++)
+                {
+
+
+
+                    // https://stackoverflow.com/questions/5254838/calculating-distance-between-a-point-and-a-rectangular-box-nearest-point
+                    // distance to rectangle
+
+                    float xWorld = x + _offsetX - halfWidth;
+                    float yWorld = y - _offsetY - halfHeight;
+
+                    float dx = Mathf.Max(topLeft.x - xWorld, 0, xWorld - topRight.x);
+                    float dy = Mathf.Max(bottomLeft.y - yWorld, 0, yWorld - topLeft.y);
+                    float dist = Mathf.Sqrt(dx * dx + dy * dy) / _fallOffSize;
+                    dist = 1 - dist;
+                    dist = Mathf.Clamp01(dist);
+
+                    dist = _threadSafe.Evaluate(dist);
+
+                    _map[x, y] = Mathf.Lerp(_map[x, y], _targetNormalizedHeight, dist * _blend);
+
+                }
+            }
+
+        }
         public static void GenerateLongitudinalSinNoiseNonAlloc(float[,] generatedMap, float[,] generatedBlurredMap, int _width, int _height, RoadNoiseConfig _roadConfig, float _offsetX, float _offsetY, PerlinNoiseConfig _horizontalNoise, PerlinNoiseConfig _verticalNoise)
         {
 
