@@ -20,6 +20,21 @@ namespace ProcWorld
         public ProceduralWorldEvent EInitialChunksCreated;
 
         [SerializeField] TerrainGenerator m_terrainGen;
+
+
+        static ProceduralWorld _instance;
+        public static ProceduralWorld Instance
+        {
+            get
+            {
+                if (_instance == null)
+                {
+                    _instance = FindObjectOfType<ProceduralWorld>();
+                }
+
+                return _instance;
+            }
+        }
         private void Awake()
         {
             FindObjectOfType<DebugTerrain>().transform.gameObject.SetActive(false);
@@ -52,7 +67,8 @@ namespace ProcWorld
             generator.Init();
         }
 
-        public void Stop(){
+        public void Stop()
+        {
             m_started = false;
             generator.Stop();
         }
@@ -70,11 +86,18 @@ namespace ProcWorld
 
             if (!hit)
             {
+                Debug.Log("couldn't find height");
                 return false;
             }
 
             _height = hitInfo.point.y;
             return true;
+        }
+
+        public float GetNoiseAt(int x, int y)
+        {
+            return m_terrainGen.GetNoiseAt(x,y);
+        
         }
 
         public int GetRoadCenterAtPos(int _yPos)

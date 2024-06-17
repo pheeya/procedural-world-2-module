@@ -71,7 +71,7 @@ namespace ProcWorld
             meshRenderer.material = _mat;
             // meshRenderer.material.mainTexture = _tex;
             m_worldPos = positionV3;
-            chunkObj.transform.position = positionV3;
+            chunkObj.transform.localPosition = positionV3;
             // chunkObj.transform.localScale = Vector3.one * _size / 10f;
             chunkObj.transform.parent = _parent;
             chunkObj.transform.gameObject.layer = _parent.gameObject.layer;
@@ -195,7 +195,7 @@ namespace ProcWorld
             {
                 meshFilter.mesh = _data.CreateMesh();
             }
-            chunkObj.transform.position = m_worldPos;
+            chunkObj.transform.localPosition = m_worldPos;
             m_meshInstanceId = meshFilter.mesh.GetInstanceID();
 
             Profiler.EndSample();

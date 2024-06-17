@@ -488,7 +488,6 @@ namespace ProcWorld
 
 
 
-        bool m_endlessInit = false;
         int m_initialEndlessChunks = 0;
 
 
@@ -600,7 +599,6 @@ namespace ProcWorld
                     // }
                 }
             }
-
             Profiler.EndSample();
         }
 
@@ -651,7 +649,6 @@ namespace ProcWorld
 
             maxChunksVisible = Mathf.RoundToInt(_drawDistance / m_chunkSize);
 
-            playerPos = new Vector2(_player.transform.position.x, _player.transform.position.z);
 
             if (Mode == TerrainMode.Static)
             {
@@ -710,12 +707,41 @@ namespace ProcWorld
             }
 
         }
+
+
+        public void SetPlayerPos(Vector3 _pos)
+        {
+            playerPos = new Vector2(_pos.x, _pos.z);
+
+
+        }
+
+
+        public float GetNoiseAt(int x, int y)
+        {
+            int border_offset = 1;
+            x += border_offset;
+            y -= border_offset;
+
+            float z = 0;
+            int currentChunkCoordX = Mathf.RoundToInt(x / (float)m_chunkSize);
+            int currentChunkCoordY = Mathf.RoundToInt(y / (float)m_chunkSize);
+            TerrainChunk chunk = terrainChunks[new(currentChunkCoordX, currentChunkCoordY)];
+
+            int sampleX = x - (currentChunkCoordX * m_chunkSize) + m_chunkSize / 2;
+            int sampleY = m_chunkSize / 2 + (y - (currentChunkCoordY * m_chunkSize)) * -1;
+            z = chunk.m_noise[sampleX, sampleY];
+            return z;
+        }
+        public float GetScaledNoiseAt(int x, int y)
+        {
+            return _heightCurve.Evaluate(GetNoiseAt(x, y)) * _heightScale;
+        }
         private void FixedUpdate()
         {
 
             if (!m_initialChunksCreated) return;
             if (!m_started) return;
-            playerPos = new Vector2(_player.transform.position.x, _player.transform.position.z);
             if (Mode == TerrainMode.Endless)
             {
                 GenerateEndlessTerrain();
