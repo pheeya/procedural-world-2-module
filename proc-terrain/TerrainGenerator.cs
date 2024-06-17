@@ -22,13 +22,13 @@ namespace ProcWorld
         [SerializeField] int m_numBackgroundThreads;
 
 
+
         [Header("Components")]
         public FeatureGenerator _featureGenerator;
         [field: SerializeField] public NoiseFunction noiseFunction { get; private set; }
         public Material _terrainMat;
         public AnimationCurve _heightCurve;
-        public Transform _player;
-        public static Vector2 playerPos { get; private set; }
+        public static Vector2 PlayerPosV2 { get; private set; }
 
         [Header("Terrain Config")]
         [field: SerializeField] TerrainMode Mode;
@@ -88,7 +88,6 @@ namespace ProcWorld
         public TerrainBackgroundProcessor GetNextProcessor()
         {
 
-
             // round robin
             // give tasks to processors in a sequence one by one
             // probably not ideal but good enough
@@ -98,8 +97,6 @@ namespace ProcWorld
             m_nextProcessor %= m_processors.Count;
 
             return pr;
-
-
 
         }
         public Vector2 GetFinalTerrainSize()
@@ -527,8 +524,8 @@ namespace ProcWorld
             Profiler.BeginSample("Generate endless terrain");
 
             m_toRemove.Clear();
-            int currentChunkCoordX = Mathf.RoundToInt(playerPos.x / m_chunkSize);
-            int currentChunkCoordY = Mathf.RoundToInt(playerPos.y / m_chunkSize);
+            int currentChunkCoordX = Mathf.RoundToInt(PlayerPosV2.x / m_chunkSize);
+            int currentChunkCoordY = Mathf.RoundToInt(PlayerPosV2.y / m_chunkSize);
             foreach (var _ch in terrainChunks)
             {
 
@@ -673,8 +670,8 @@ namespace ProcWorld
 
 
 
-            int currentChunkCoordX = Mathf.RoundToInt(playerPos.x / m_chunkSize);
-            int currentChunkCoordY = Mathf.RoundToInt(playerPos.y / m_chunkSize);
+            int currentChunkCoordX = Mathf.RoundToInt(PlayerPosV2.x / m_chunkSize);
+            int currentChunkCoordY = Mathf.RoundToInt(PlayerPosV2.y / m_chunkSize);
 
             int created = 0;
 
@@ -708,10 +705,13 @@ namespace ProcWorld
 
         }
 
+        public static Vector3 PlayerPosV3 { get; private set; }
 
-        public void SetPlayerPos(Vector3 _pos)
+        public void SetPlayerPosV2(Vector3 _pos)
         {
-            playerPos = new Vector2(_pos.x, _pos.z);
+            PlayerPosV3 = _pos;
+
+            PlayerPosV2 = new Vector2(_pos.x, _pos.z);
 
 
         }

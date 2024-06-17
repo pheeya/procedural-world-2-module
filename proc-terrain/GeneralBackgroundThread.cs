@@ -3,11 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Threading;
 using UnityEngine;
-using UnityEngine.Profiling;
 
 namespace ProcWorld
 {
-    public class TerrainBackgroundProcessor
+    public class GeneralBackgroundThread
     {
 
 
@@ -17,12 +16,9 @@ namespace ProcWorld
 
 
 
+        private readonly Queue<Action> actionQueue = new Queue<Action>();
 
-
-        void Init()
-        {
-        }
-        public TerrainBackgroundProcessor(int _ts)
+        public GeneralBackgroundThread(int _ts)
         {
             m_timeStepMs = _ts;
             m_main = new Thread(new ThreadStart(() => Loop()));
@@ -44,8 +40,6 @@ namespace ProcWorld
 
 
 
-        Queue<TerrainChunk> Queue = new();
-        Queue<TerrainChunk> PhysicsQueue = new();
         void Loop()
         {
             // careful when passing values to main thread: 
@@ -54,7 +48,6 @@ namespace ProcWorld
 
 
 
-            sw.Start();
             while (!exit)
             {
 
@@ -67,60 +60,32 @@ namespace ProcWorld
                 Process();
 
 
-                sw.Restart();
 
             }
-            sw.Stop();
         }
 
-        public void EnqueueChunk(TerrainChunk _chunk)
+        public void Enqueue(Action _action)
         {
-            Profiler.BeginSample("Enqueue Chunk");
-            lock (Queue)
+            lock (actionQueue)
             {
-                Profiler.BeginSample("Enqueue locked");
-                Queue.Enqueue(_chunk);
-                Profiler.EndSample();
-            }
-            Profiler.EndSample();
-        }
-        public void EnqueuePhysics(TerrainChunk _chunk)
-        {
-            lock (PhysicsQueue)
-            {
-                PhysicsQueue.Enqueue(_chunk);
+                actionQueue.Enqueue(_action);
             }
         }
+
 
         public bool Processing { get; private set; }
         void Process()
         {
-            Profiler.BeginThreadProfiling("Terrain Background Thread", m_main.Name);
             Processing = false;
-            while (Queue.Count > 0)
+            while (actionQueue.Count > 0)
             {
                 Processing = true;
-                TerrainChunk chunk = Queue.Dequeue();
-                chunk.Regenerate();
+                Action ac = actionQueue.Dequeue();
+                ac();
             }
 
-            while (PhysicsQueue.Count > 0)
-            {
-                Processing = true;
-                TerrainChunk chunk = PhysicsQueue.Dequeue();
-                chunk.BakeMeshForCollision();
-            }
+      
 
-            Profiler.EndThreadProfiling();
-
-            // lock (PhysicsQueue)
-            // {
-            //     while (PhysicsQueue.Count > 0)
-            //     {
-            //         TerrainChunk chunk = Queue.Dequeue();
-            //         chunk.BakeMeshForCollision();
-            //     }
-            // }
         }
         void Cleanup()
         {
@@ -153,11 +118,7 @@ namespace ProcWorld
             }
         }
 
-        // Update is called once per frame
-        void Update()
-        {
-
-        }
+  
     }
 
 }

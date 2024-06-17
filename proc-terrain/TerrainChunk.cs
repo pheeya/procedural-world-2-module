@@ -236,7 +236,7 @@ namespace ProcWorld
         }
         public void UpdateChunk()
         {
-            float closestDist = Mathf.Sqrt(bounds.SqrDistance(TerrainGenerator.playerPos));
+            float closestDist = Mathf.Sqrt(bounds.SqrDistance(TerrainGenerator.PlayerPosV2));
             bool isVisible = closestDist <= TerrainGenerator._drawDistance;
 
             SetVisibility(isVisible);
