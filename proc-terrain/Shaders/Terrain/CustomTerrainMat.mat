@@ -67,6 +67,6 @@ Material:
     - _QueueControl: 0
     - _QueueOffset: 0
     m_Colors:
-    - _PositionOffset: {r: -0, g: -0, b: -0, a: 0}
+    - _PositionOffset: {r: -0, g: -0, b: 79.09215, a: 0}
     - _Tiling: {r: 0.01, g: 0.01, b: 0.01, a: 0}
   m_BuildTextureStacks: []

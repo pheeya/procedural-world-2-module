@@ -22,7 +22,7 @@ namespace ProcWorld
         {
             m_timeStepMs = _ts;
             m_main = new Thread(new ThreadStart(() => Loop()));
-            m_main.Name = "Terrain Thread";
+            m_main.Name = "General Background Thread";
             m_main.IsBackground = true;
             m_main.Start();
 

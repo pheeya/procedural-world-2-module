@@ -9,7 +9,13 @@ namespace ProcWorld
     {
 
 
-        [SerializeField] int m_radius;
+        [SerializeField] bool m_randomizeYRotation;
+        [SerializeField] float m_forbiddenBandWidth;
+        [SerializeField] int m_spanX;
+        [SerializeField] int m_spanY;
+
+        [SerializeField] int m_spacingX;
+        [SerializeField] int m_spacingY;
         [SerializeField] float m_noiseSpawnThreashold;
         [SerializeField] PropPlacer m_placer;
         [SerializeField] PerlinNoiseConfig m_perlinConfig;
@@ -25,33 +31,47 @@ namespace ProcWorld
         {
 
             Vector2 origin = TerrainGenerator.PlayerPosV2;
+            int originIntx = Mathf.RoundToInt(origin.x) / m_spacingX;
+            int originInty = Mathf.RoundToInt(origin.y) / m_spacingY;
 
-            Vector2[] offsets = NoiseGenerator.GetOctaveOffsets(m_perlinConfig, Mathf.Round(origin.x), Mathf.Round(origin.y));
+            originIntx *= m_spacingX;
+            originInty *= m_spacingY;
+
+            Vector2[] offsets = NoiseGenerator.GetOctaveOffsets(m_perlinConfig, originIntx, -originInty);
+
 
 
             int i = 0;
 
-            for (int y = -m_radius / 2; y < m_radius / 2; y++)
+
+            for (int y = -m_spanY; y <= m_spanY; y += m_spacingY)
             {
-                for (int x = -m_radius / 2; x < m_radius / 2; x++)
+
+                for (int x = -m_spanX; x <= m_spanX; x += m_spacingX)
                 {
                     if (i >= data.Count) return data;
 
 
-                    float noise = NoiseGenerator.GetPerlinValue(m_perlinConfig, x, y, offsets, 0.2f, .5f);
+                    float noise = NoiseGenerator.GetPerlinValue(m_perlinConfig, x, y, offsets, 0, 0);
 
                     // conver to 0 to 1, GetPerlinValue gives -1 to 1
                     noise += 1;
                     noise /= 2;
                     PropTransformInfo info = data[i];
 
-                    if (noise < m_noiseSpawnThreashold)
+
+
+                    if (noise > m_noiseSpawnThreashold && (Mathf.Abs(originIntx + x) > m_forbiddenBandWidth))
                     {
 
 
                         info.enabled = true;
-                        info.position = new(x, TerrainGenerator.Instance.GetScaledNoiseAt(x, y), y);
-                        info.rotation = Quaternion.identity;
+                        info.position = new(originIntx + x, TerrainGenerator.Instance.GetScaledNoiseAt(originIntx + x, originInty + y), originInty + y);
+                        if (m_randomizeYRotation)
+                        {
+                            info.rotation = Quaternion.Euler(0, noise*1360, 0); // can't use unity's Random.range in separate thread, use any random thing as rotation
+                        }
+
 
                         data[i] = info;
 

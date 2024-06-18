@@ -17,6 +17,8 @@ namespace ProcWorld
 
 
         [SerializeField] GameObject m_prefab;
+
+        
         [SerializeField] float m_updateDistance;
         [field: SerializeField] public int PoolAmount;
         public List<Vector3> Positions { get; private set; }
@@ -77,15 +79,12 @@ namespace ProcWorld
         void UpdatePlacement()
         {
             m_lastUpdatePosition = TerrainGenerator.PlayerPosV2;
-            List<PropTransformInfo> data = Function();
-         
             GeneralBackgroundProcessor.instance.Enqueue(() =>
             {
                 List<PropTransformInfo> data = Function();
 
                 MainThreadDispatcher.Instance.Enqueue(() =>
                 {
-                    Debug.Log("calling bac");
                     callback(data);
                 });
             });

@@ -43,7 +43,6 @@ namespace ProcWorld
         // Enqueue an action to execute on the main thread
         public void Enqueue(Action action)
         {
-            Debug.Log("enque");
             GetNextProcessor().Enqueue(action);
         }
 
