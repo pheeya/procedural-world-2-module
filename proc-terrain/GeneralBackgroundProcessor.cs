@@ -7,7 +7,7 @@ namespace ProcWorld
     public class GeneralBackgroundProcessor
     {
         int m_timeStepMS = 20;
-        private static GeneralBackgroundProcessor instance = new();
+        public static GeneralBackgroundProcessor instance { get; private set; } = new();
 
 
         static int m_numThreads = 1;
@@ -43,10 +43,11 @@ namespace ProcWorld
         // Enqueue an action to execute on the main thread
         public void Enqueue(Action action)
         {
+            Debug.Log("enque");
             GetNextProcessor().Enqueue(action);
         }
 
         // Get the instance of GeneralBackgroundProcessor
-   
+
     }
 }

@@ -157,6 +157,23 @@ namespace ProcWorld
             MapData mapdata = new MapData(heightmap, colormap, VertsPerSide(), VertsPerSide());
             return mapdata;
         }
+
+        void OnDrawGizmos()
+        {
+            // if (!m_initialChunksCreated) return;
+
+            // Gizmos.color = Color.red;
+            // for (int y = 0; y < VertsPerSide(); y++)
+            // {
+            //     for (int x = 0; x < VertsPerSide(); x++)
+            //     {
+            //         int px = x - m_chunkSize / 2;
+            //         int py = y - m_chunkSize / 2;
+            //         Gizmos.DrawSphere(new(px , GetScaledNoiseAt(px, py), py), .1f);
+
+            //     }
+            // }
+        }
         public int VertsPerSide() { return m_chunkSize + 1; }
 
         public HeightMap GenerateTestHeightMap()
@@ -310,6 +327,11 @@ namespace ProcWorld
 
             return NoiseGenerator.GetPointOnLongNoise(localY, VertsPerSide() + 2, RoadHorizontalPerlinConfig, RoadConfig, offsetY) - (int)hw;
         }
+        // public Vector2 GetChunkOffsetAt(float x, float y)
+        // {
+        //     int currentChunkCoordX = Mathf.RoundToInt(x / m_chunkSize);
+        //     int currentChunkCoordY = Mathf.RoundToInt(y / m_chunkSize);
+        // }
         public Vector2 GetRoadForwardAtPos(int _yPos)
         {
             int blurredMapWidth = (VertsPerSide() + 1) + RoadConfig.blurPadding;
@@ -623,6 +645,7 @@ namespace ProcWorld
         }
         public void Init()
         {
+            GeneralBackgroundProcessor.instance.Init();
             m_chunkCreationStopwatch.Start();
 
             if (m_timeStepMS < 10)
@@ -707,7 +730,7 @@ namespace ProcWorld
 
         public static Vector3 PlayerPosV3 { get; private set; }
 
-        public void SetPlayerPosV2(Vector3 _pos)
+        public void SetPlayerPos(Vector3 _pos)
         {
             PlayerPosV3 = _pos;
 

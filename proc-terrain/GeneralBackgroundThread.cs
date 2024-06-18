@@ -47,6 +47,7 @@ namespace ProcWorld
             // see "Passing Data to a Thread" section
 
 
+            sw.Start();
 
             while (!exit)
             {
@@ -56,12 +57,10 @@ namespace ProcWorld
                 elapsedMs = sw.ElapsedMilliseconds;
                 dt = elapsedMs / 1000f;
                 if (elapsedMs < m_timeStepMs) continue;
-
                 Process();
-
-
-
+                sw.Restart();
             }
+            sw.Stop();
         }
 
         public void Enqueue(Action _action)
@@ -84,7 +83,7 @@ namespace ProcWorld
                 ac();
             }
 
-      
+
 
         }
         void Cleanup()
@@ -118,7 +117,7 @@ namespace ProcWorld
             }
         }
 
-  
+
     }
 
 }
