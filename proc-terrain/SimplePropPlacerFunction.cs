@@ -16,8 +16,11 @@ namespace ProcWorld
 
         [SerializeField] int m_spacingX;
         [SerializeField] int m_spacingY;
-        [SerializeField] float m_noiseSpawnThreashold;
+        [SerializeField, Range(0,1)] float m_perlinNoiseSpawnThreshold;
         [SerializeField] PropPlacer m_placer;
+        [SerializeField] bool m_usePerlin;
+        [SerializeField] int m_nonPerlinSeed;
+        [SerializeField, Range(0, 100)] int m_nonPerlinSpawnPossibility;
         [SerializeField] PerlinNoiseConfig m_perlinConfig;
 
 
@@ -52,16 +55,36 @@ namespace ProcWorld
                     if (i >= data.Count) return data;
 
 
-                    float noise = NoiseGenerator.GetPerlinValue(m_perlinConfig, x, y, offsets, 0, 0);
+                    float noise;
+                    if (m_usePerlin)
+                    {
+                        noise = NoiseGenerator.GetPerlinValue(m_perlinConfig, x, y, offsets, 0, 0);
+                        // conver to 0 to 1, GetPerlinValue gives -1 to 1
+                        noise += 1;
+                        noise /= 2;
+                    }
+                    else
+                    {
+                        noise = util.LCGRandom(Mathf.RoundToInt((originIntx + x) * 23 + (originInty + y) * 15) + m_nonPerlinSeed, 0, 100);
 
-                    // conver to 0 to 1, GetPerlinValue gives -1 to 1
-                    noise += 1;
-                    noise /= 2;
+
+                        if (noise <= m_nonPerlinSpawnPossibility)
+                        {
+                            noise = 1;
+                        }
+                        else
+                        {
+                            noise = 0;
+                        }
+                    }
+
+
+
                     PropTransformInfo info = data[i];
 
 
 
-                    if (noise > m_noiseSpawnThreashold && (Mathf.Abs(originIntx + x) > m_forbiddenBandWidth))
+                    if (noise > m_perlinNoiseSpawnThreshold && (Mathf.Abs(originIntx + x) > m_forbiddenBandWidth))
                     {
 
 
@@ -69,7 +92,7 @@ namespace ProcWorld
                         info.position = new(originIntx + x, TerrainGenerator.Instance.GetScaledNoiseAt(originIntx + x, originInty + y), originInty + y);
                         if (m_randomizeYRotation)
                         {
-                            info.rotation = Quaternion.Euler(0, noise*1360, 0); // can't use unity's Random.range in separate thread, use any random thing as rotation
+                            info.rotation = Quaternion.Euler(0, noise * 1360, 0); // can't use unity's Random.range in separate thread, use any random thing as rotation
                         }
 
 
