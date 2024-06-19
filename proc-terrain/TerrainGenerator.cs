@@ -178,26 +178,30 @@ namespace ProcWorld
 
         public HeightMap GenerateTestHeightMap()
         {
-            float[,] noise = NoiseGenerator.GenerateNoiseMap(PerlinConfig, VertsPerSide() + 2, VertsPerSide() + 2, _offsetX, _offsetY);
-            List<float[,]> maps = new(1);
-            maps.Add(noise);
+            // float[,] noise = NoiseGenerator.GenerateNoiseMap(PerlinConfig, VertsPerSide() + 2, VertsPerSide() + 2, _offsetX, _offsetY);
+            // List<float[,]> maps = new(1);
+            // maps.Add(noise);
 
-            // add valley before normalization, so that it's the highest point
-            noise = CreateValleyAroundRoad(0, 0, noise);
-            if (Normalize)
-            {
-                noise = NoiseGenerator.Normalize(maps, VertsPerSide() + 2, VertsPerSide() + 2)[0];
-            }
-            else
-            {
-                noise = NoiseGenerator.NormalizeGlobally(noise, VertsPerSide() + 2, VertsPerSide() + 2, PerlinConfig.standardMaxValue + ValleyNoiseExtrusion);
-            }
+            // // add valley before normalization, so that it's the highest point
+            // noise = CreateValleyAroundRoad(0, 0, noise);
+            // if (Normalize)
+            // {
+            //     noise = NoiseGenerator.Normalize(maps, VertsPerSide() + 2, VertsPerSide() + 2)[0];
+            // }
+            // else
+            // {
+            //     noise = NoiseGenerator.NormalizeGlobally(noise, VertsPerSide() + 2, VertsPerSide() + 2, PerlinConfig.standardMaxValue + ValleyNoiseExtrusion);
+            // }
 
-            float[,] road = new float[VertsPerSide() + 2, VertsPerSide() + 2];
-            float[,] roadBlurred = new float[VertsPerSide() + 2 + RoadConfig.blurPadding, VertsPerSide() + 2 + RoadConfig.blurPadding];
-            AddRoadNoiseNonAlloc(noise, RoadConfig, road, roadBlurred, testX, testY);
+            // float[,] road = new float[VertsPerSide() + 2, VertsPerSide() + 2];
+            // float[,] roadBlurred = new float[VertsPerSide() + 2 + RoadConfig.blurPadding, VertsPerSide() + 2 + RoadConfig.blurPadding];
+            // AddRoadNoiseNonAlloc(noise, RoadConfig, road, roadBlurred, testX, testY);
 
-            return HeightMap.FromNoise(noise, 1);
+            // return HeightMap.FromNoise(noise, 1);
+
+            float[,] noise = new float[VertsPerSide() + 2, VertsPerSide() + 2];
+            noiseFunction.GenerateTestNoiseNonAlloc(noise);
+            return HeightMap.FromNoise(noise,1);
         }
         public MeshData GenerateTestMeshData()
         {

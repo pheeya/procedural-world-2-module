@@ -11,6 +11,7 @@ namespace ProcWorld
         public Vector3 position;
         public Quaternion rotation;
         public bool enabled;
+        public Vector2 addedOffset;
     }
     [System.Serializable]
     public struct PropVariant
@@ -138,7 +139,8 @@ namespace ProcWorld
                 }
                 cumilativeStartingRange += Mathf.RoundToInt(m_variants[i].probability * 100);
             }
-            if(!found){
+            if (!found)
+            {
                 index = -1;
             }
 
@@ -164,12 +166,16 @@ namespace ProcWorld
                 }
 
                 Vector3 pos = _data[i].position;
-                int random = util.LCGRandom(Mathf.RoundToInt(pos.x * 23 + pos.y + 25 + pos.z * 12) + m_varianceSeedOffset, 0, 100);
+                //+ pos.y * 12
+                // not adding pos.y in the LCG Random equation anymore
+                // because when we add offset in the prop placement function, we cause a difference in the y value as well which comes from
+                // the offsets causing a change in elevation. Figure it out if we ever need to have Y offset in the functions
+                int random = util.LCGRandom(Mathf.RoundToInt((pos.x - _data[i].addedOffset.x) * 23 + (pos.z - _data[i].addedOffset.y) + 25) + m_varianceSeedOffset, 0, 100);
 
 
                 int chosen = ChooseRandomWithProbability(random);
 
- 
+
 
                 if (chosen == -1)
                 {

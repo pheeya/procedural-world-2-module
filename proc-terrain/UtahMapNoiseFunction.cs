@@ -117,7 +117,15 @@ namespace ProcWorld
             return true;
         }
 
+        public override List<NoiseMapPart> GetDebugNoiseMapParts()
+        {
+            throw new System.NotImplementedException();
+        }
 
+        public override void GenerateTestNoiseNonAlloc(float[,] n)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 
 }

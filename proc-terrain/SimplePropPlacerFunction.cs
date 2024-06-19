@@ -10,13 +10,14 @@ namespace ProcWorld
 
 
         [SerializeField] bool m_randomizeYRotation;
+        [SerializeField] Vector2 m_offset;
         [SerializeField] float m_forbiddenBandWidth;
         [SerializeField] int m_spanX;
         [SerializeField] int m_spanY;
 
         [SerializeField] int m_spacingX;
         [SerializeField] int m_spacingY;
-        [SerializeField, Range(0,1)] float m_perlinNoiseSpawnThreshold;
+        [SerializeField, Range(0, 1)] float m_perlinNoiseSpawnThreshold;
         [SerializeField] PropPlacer m_placer;
         [SerializeField] bool m_usePerlin;
         [SerializeField] int m_nonPerlinSeed;
@@ -55,10 +56,14 @@ namespace ProcWorld
                     if (i >= data.Count) return data;
 
 
+                    int xVal, yVal;
+                    xVal = x + (int)m_offset.x;
+                    yVal = y + (int)m_offset.y;
+
                     float noise;
                     if (m_usePerlin)
                     {
-                        noise = NoiseGenerator.GetPerlinValue(m_perlinConfig, x, y, offsets, 0, 0);
+                        noise = NoiseGenerator.GetPerlinValue(m_perlinConfig, x,y, offsets, 0, 0);
                         // conver to 0 to 1, GetPerlinValue gives -1 to 1
                         noise += 1;
                         noise /= 2;
@@ -84,12 +89,12 @@ namespace ProcWorld
 
 
 
-                    if (noise > m_perlinNoiseSpawnThreshold && (Mathf.Abs(originIntx + x) > m_forbiddenBandWidth))
+                    if (noise > m_perlinNoiseSpawnThreshold && (Mathf.Abs(originIntx + xVal) > m_forbiddenBandWidth))
                     {
 
 
                         info.enabled = true;
-                        info.position = new(originIntx + x, TerrainGenerator.Instance.GetScaledNoiseAt(originIntx + x, originInty + y), originInty + y);
+                        info.position = new(originIntx + xVal, TerrainGenerator.Instance.GetScaledNoiseAt(originIntx + xVal, originInty + yVal), originInty + yVal);
                         if (m_randomizeYRotation)
                         {
                             info.rotation = Quaternion.Euler(0, noise * 1360, 0); // can't use unity's Random.range in separate thread, use any random thing as rotation
@@ -123,6 +128,7 @@ namespace ProcWorld
                 inf.position = Vector3.zero;
                 inf.rotation = Quaternion.identity;
                 inf.enabled = false;
+                inf.addedOffset = m_offset;
                 data.Add(inf);
             }
             m_placer.SetFunction(Process);
