@@ -4,17 +4,65 @@ using System.Threading;
 using System.Collections.Generic;
 namespace ProcWorld
 {
+
+
+    class TerrainChunkLOD
+    {
+        public MeshRenderer meshRenderer;
+        public MeshFilter meshFilter;
+
+        public GameObject go;
+
+        public bool Empty { get; private set; }
+        public TerrainChunkLOD(Material mat, Transform _parent, bool _empty)
+        {
+
+            Empty = _empty;
+
+            go = new GameObject("Chunk");
+            go.transform.parent = _parent;
+            go.transform.localPosition = Vector3.zero;
+            go.gameObject.layer = _parent.gameObject.layer;
+            if (Empty) return;
+
+            meshRenderer = go.AddComponent<MeshRenderer>();
+            meshFilter = go.AddComponent<MeshFilter>();
+            meshRenderer.material = mat;
+
+
+        }
+
+        public void OnMeshDataCreated(MeshData _data)
+        {
+
+            if (meshFilter.mesh != null)
+            {
+                meshFilter.mesh.SetVertices(_data.vertices);
+                meshFilter.mesh.SetTriangles(_data.triangles, 0);
+                meshFilter.mesh.SetNormals(_data.normals);
+                meshFilter.mesh.SetUVs(0, _data.uvs);
+                meshFilter.mesh.RecalculateBounds();
+            }
+            else
+            {
+                meshFilter.mesh = _data.CreateMesh();
+            }
+        }
+
+
+    }
     public class TerrainChunk
     {
         HeightMap m_heightMap;
         Color[] m_colorMap;
         GameObject chunkObj;
         Vector2 position;
-        MeshRenderer meshRenderer;
-        MeshFilter meshFilter;
-        Bounds bounds;
+        // MeshRenderer meshRenderer;
+        // MeshFilter meshFilter;
         MeshCollider meshCollider;
+        Bounds bounds;
 
+        GameObject colliderObject;
 
         public Vector3 m_worldPos;
         float m_heightScale;
@@ -45,7 +93,17 @@ namespace ProcWorld
 
 
         public List<float[,]> PreAllocatedNoise;
-        
+        const int NUM_LOD = 3;
+        const int LOD_STEP_SIZE = 2;
+        const int COLLIDER_LOD_INDEX = 0;
+        const int LOD_ENABLE_DISTANCE = 200;
+        List<MeshData> m_lodMeshData = new(NUM_LOD);
+        List<TerrainChunkLOD> m_lods = new(NUM_LOD);
+        Material m_mat;
+
+        int m_currentLOD = 0;
+
+
         public TerrainChunk(bool _initial, int _noiseMapSize, int _size, float _heightScale, AnimationCurve _heightCurve, Vector2 _coord, Material _mat, Transform _parent, int _defaultLOD)
         {
             gen = TerrainGenerator.Instance;
@@ -65,16 +123,23 @@ namespace ProcWorld
 
 
             chunkObj = new GameObject("Chunk");
-            meshRenderer = chunkObj.AddComponent<MeshRenderer>();
-            meshCollider = chunkObj.AddComponent<MeshCollider>();
-            meshFilter = chunkObj.AddComponent<MeshFilter>();
-            meshRenderer.material = _mat;
+            colliderObject = new GameObject("Collider");
+            colliderObject.transform.parent = chunkObj.transform;
+            colliderObject.transform.localPosition = Vector3.zero;
+
+            meshCollider = colliderObject.AddComponent<MeshCollider>();
+            // meshRenderer = chunkObj.AddComponent<MeshRenderer>();
+            // meshFilter = chunkObj.AddComponent<MeshFilter>();
+            // meshRenderer.material = _mat;
+
+            m_mat = _mat;
             // meshRenderer.material.mainTexture = _tex;
             m_worldPos = positionV3;
             chunkObj.transform.localPosition = positionV3;
             // chunkObj.transform.localScale = Vector3.one * _size / 10f;
             chunkObj.transform.parent = _parent;
             chunkObj.transform.gameObject.layer = _parent.gameObject.layer;
+            colliderObject.transform.gameObject.layer = _parent.gameObject.layer;
 
 
             m_heightScale = _heightScale;
@@ -86,18 +151,64 @@ namespace ProcWorld
 
             // allocate memory only once
             m_noise = new float[_noiseMapSize, _noiseMapSize];
-           
+
             // m_roadNoise = new float[_noiseMapSize, _noiseMapSize];
             // m_roadNoiseBlurred = new float[_noiseMapSize + gen.RoadConfig.blurPadding, _noiseMapSize + gen.RoadConfig.blurPadding];
             // m_valleyNoiseBlurred = new float[_noiseMapSize + m_valleyConfig.blurPadding, _noiseMapSize + m_valleyConfig.blurPadding];
-           
+
             m_heightMap = new(_noiseMapSize, _noiseMapSize, 1, m_noise);
+
+
+            CreateLODObjects();
             // Regenerate();
-
-
-
         }
 
+        void CreateLODObjects()
+        {
+            for (int i = 0; i < NUM_LOD; i++)
+            {
+                TerrainChunkLOD lod = new(m_mat, chunkObj.transform, NUM_LOD - 1 == i);
+                lod.go.gameObject.SetActive(false);
+                m_lods.Add(lod);
+            }
+            m_lods[m_currentLOD].go.SetActive(true);
+        }
+        public void OnUpdate()
+        {
+            float closestDist = Mathf.Sqrt(bounds.SqrDistance(TerrainGenerator.PlayerPosV2));
+
+
+            int index = NUM_LOD - 1;
+            for (int i = NUM_LOD - 1; i >= 0; i--)
+            {
+                float lod_distance = (i + 1) * LOD_ENABLE_DISTANCE;
+
+                if (closestDist < lod_distance)
+                {
+                    index = i;
+                }
+            }
+            if (m_currentLOD != index)
+            {
+                m_lods[m_currentLOD].go.SetActive(false);
+                m_currentLOD = index;
+                m_lods[m_currentLOD].go.SetActive(true);
+            }
+        }
+
+        void GenerateLODMeshes(MapData _data)
+        {
+            m_lodMeshData.Clear();
+            for (int i = 0; i < NUM_LOD; i++)
+            {
+                if (m_lods[i].Empty) return; // last lod is empty
+                MeshData md = MeshGenerator.GenerateMeshFromHeightMap(_data.GetHeightMap(), m_heightScale, m_heightCurve, i * LOD_STEP_SIZE);
+
+                m_lodMeshData.Add(md);
+            }
+        }
+
+        public Material GetMaterial() { return m_mat; }
         System.Diagnostics.Stopwatch sw = new();
         public void Regenerate()
         {
@@ -126,8 +237,7 @@ namespace ProcWorld
 
         }
 
-
-        public Mesh GetMesh() { return meshFilter.mesh; }
+        public Mesh GetMesh() { return m_lods[COLLIDER_LOD_INDEX].meshFilter.mesh; }
         void CreateMapData()
         {
 
@@ -166,39 +276,56 @@ namespace ProcWorld
         {
             // create mesh data
             MeshData md = MeshGenerator.GenerateMeshFromHeightMap(_data.GetHeightMap(), m_heightScale, m_heightCurve, m_defaultLOD);
+            GenerateLODMeshes(_data);
+
             sw.Stop();
 
             double elapsed = sw.Elapsed.TotalMilliseconds / 1000f;
             MainThreadDispatcher.Instance.Enqueue(() =>
        {
-           OnMeshdataCreated(md);
+           OnMeshdataCreated(m_lodMeshData);
+           //    OnMeshdataCreated(md);
        });
 
         }
 
 
-        void OnMeshdataCreated(MeshData _data)
+        void OnMeshdataCreated(List<MeshData> _lodMeshData)
         {
             // mesh from data
             // set collider           
 
             Profiler.BeginSample("Terrain chunk created, creating mesh");
-            if (meshFilter.mesh != null)
+            // if (meshFilter.mesh != null)
+            // {
+            //     meshFilter.mesh.SetVertices(_data.vertices);
+            //     meshFilter.mesh.SetTriangles(_data.triangles, 0);
+            //     meshFilter.mesh.SetNormals(_data.normals);
+            //     meshFilter.mesh.SetUVs(0, _data.uvs);
+            //     meshFilter.mesh.RecalculateBounds();
+            // }
+            // else
+            // {
+            //     meshFilter.mesh = _data.CreateMesh();
+            // }
+
+            for (int i = 0; i < NUM_LOD; i++)
             {
-                meshFilter.mesh.SetVertices(_data.vertices);
-                meshFilter.mesh.SetTriangles(_data.triangles, 0);
-                meshFilter.mesh.SetNormals(_data.normals);
-                meshFilter.mesh.SetUVs(0, _data.uvs);
-                meshFilter.mesh.RecalculateBounds();
+                if (m_lods[i].Empty) continue;
+                m_lods[i].OnMeshDataCreated(_lodMeshData[i]);
             }
-            else
-            {
-                meshFilter.mesh = _data.CreateMesh();
-            }
+
             chunkObj.transform.localPosition = m_worldPos;
-            m_meshInstanceId = meshFilter.mesh.GetInstanceID();
+            m_meshInstanceId = m_lods[COLLIDER_LOD_INDEX].meshFilter.mesh.GetInstanceID();
+
+
+
+
 
             Profiler.EndSample();
+
+
+
 
 
 
@@ -209,7 +336,7 @@ namespace ProcWorld
         }
         public void CreateCollider()
         {
-            meshCollider.sharedMesh = meshFilter.mesh;
+            meshCollider.sharedMesh = GetMesh();
         }
         public void BakeMeshForCollision()
         {
@@ -223,7 +350,7 @@ namespace ProcWorld
 
         void OnMeshBakedForCollision()
         {
-            meshCollider.sharedMesh = meshFilter.mesh;
+            meshCollider.sharedMesh = GetMesh();
             TerrainGenerator.Instance.OnChunkPhysicsCreated(this);
             SetVisibility(true);
 
@@ -234,13 +361,7 @@ namespace ProcWorld
         {
             return m_heightMap;
         }
-        public void UpdateChunk()
-        {
-            float closestDist = Mathf.Sqrt(bounds.SqrDistance(TerrainGenerator.PlayerPosV2));
-            bool isVisible = closestDist <= TerrainGenerator._drawDistance;
 
-            SetVisibility(isVisible);
-        }
 
         public void SetVisibility(bool _v)
         {
@@ -250,7 +371,7 @@ namespace ProcWorld
 
         public void SetMesh(Mesh _mesh)
         {
-            meshFilter.mesh = _mesh;
+            m_lods[COLLIDER_LOD_INDEX].meshFilter.mesh = _mesh;
         }
 
         public bool isVisible()

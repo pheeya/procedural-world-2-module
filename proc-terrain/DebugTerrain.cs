@@ -11,7 +11,8 @@ namespace ProcWorld
         public void GenerateMesh(Mesh _mesh, Texture _tex)
         {
             _meshFilter.sharedMesh = _mesh;
-            _meshRenderer.sharedMaterial.mainTexture = _tex;
+            // because of this procedural terrain material texture keeps getting set to null
+            // _meshRenderer.sharedMaterial.mainTexture = _tex;
         }
 
     }

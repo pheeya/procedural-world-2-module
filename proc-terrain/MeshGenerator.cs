@@ -41,11 +41,16 @@ namespace ProcWorld
             List<Vector3> borderVertices = new();
             int[,] vertexIndicesMap = new int[width, height];
 
+            List<int> physicalBorderVertices = new();
+
+
+
             for (int y = 0; y < height; y += increment)
             {
                 for (int x = 0; x < width; x += increment)
                 {
                     bool isBorder = y < _heightmap.BorderSize || y > (height - _heightmap.BorderSize - 1) || x < _heightmap.BorderSize || x > (width - _heightmap.BorderSize - 1); ;
+                    bool isPhysicalBorder = y == increment || y == (height - increment) || x == increment || x == width - increment;
                     if (isBorder)
                     {
 
@@ -57,6 +62,11 @@ namespace ProcWorld
 
                         vertexIndicesMap[x, y] = vertexIndex;
 
+                        if (isPhysicalBorder)
+                        {
+                            physicalBorderVertices.Add(vertexIndex);
+                        }
+
 
                         vertexIndex++;
                     }
@@ -66,6 +76,8 @@ namespace ProcWorld
 
 
             vertexIndex = 0;
+
+            int physicalBorderVertsProcessed = 0;
             for (int y = 0; y < height; y += increment)
             {
                 for (int x = 0; x < width; x += increment)
@@ -94,7 +106,22 @@ namespace ProcWorld
                     }
                     else
                     {
-                        meshData.vertices[currentIndex] = pos;
+
+                        bool isphysicalBorder = physicalBorderVertsProcessed < physicalBorderVertices.Count;
+                        if (isphysicalBorder)
+                        {
+                            isphysicalBorder = currentIndex == physicalBorderVertices[physicalBorderVertsProcessed];
+                        }
+                        if (isphysicalBorder)
+                        {
+                            meshData.vertices[currentIndex] = pos + Vector3.up * 100f;
+                            physicalBorderVertsProcessed++;
+                        }
+                        else
+                        {
+                            meshData.vertices[currentIndex] = pos;
+
+                        }
                         meshData.uvs[currentIndex] = new Vector2(x / (float)width, y / (float)height);
                     }
                     if (x < width - 1 && y < height - 1)

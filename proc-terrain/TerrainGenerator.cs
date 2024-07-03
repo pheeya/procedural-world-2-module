@@ -36,7 +36,7 @@ namespace ProcWorld
         public float _heightScale;
         [field: SerializeField, Range(0, 6)] public int DefaultLOD { get; private set; }
         [field: SerializeField] public bool Normalize { get; private set; }
-        public static int _drawDistance = 600;
+        public static int _drawDistance = 900;
         public TerrainType[] terrainTypes;
         [field: SerializeField] public RoadNoiseConfig RoadConfig { get; private set; }
         [field: SerializeField] public CurveConfig RoadCurveConfig { get; private set; }
@@ -201,7 +201,7 @@ namespace ProcWorld
 
             float[,] noise = new float[VertsPerSide() + 2, VertsPerSide() + 2];
             noiseFunction.GenerateTestNoiseNonAlloc(noise);
-            return HeightMap.FromNoise(noise,1);
+            return HeightMap.FromNoise(noise, 1);
         }
         public MeshData GenerateTestMeshData()
         {
@@ -602,6 +602,7 @@ namespace ProcWorld
 
 
 
+
                     // old
                     // if (terrainChunks.ContainsKey(viewedChunkCoord))
                     // {
@@ -621,6 +622,11 @@ namespace ProcWorld
                     //     chunk.SetVisibility(true);
                     // }
                 }
+            }
+
+            foreach (TerrainChunk chunk in terrainChunks.Values)
+            {
+                chunk.OnUpdate();
             }
             Profiler.EndSample();
         }
@@ -730,6 +736,10 @@ namespace ProcWorld
                 Debug.Log("Created chunks: " + created + " not equal to expected amount: " + m_initialEndlessChunks);
             }
 
+            foreach (TerrainChunk chunk in terrainChunks.Values)
+            {
+                chunk.OnUpdate();
+            }
         }
 
         public static Vector3 PlayerPosV3 { get; private set; }
