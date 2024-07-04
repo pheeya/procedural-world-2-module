@@ -10,6 +10,7 @@ namespace ProcWorld
 
 
         [SerializeField] bool m_randomizeYRotation;
+        [SerializeField] bool m_alignToGroundNormal;
         [SerializeField] Vector2 m_offset;
         [SerializeField] float m_forbiddenBandWidth;
         [SerializeField] int m_spanX;
@@ -63,7 +64,7 @@ namespace ProcWorld
                     float noise;
                     if (m_usePerlin)
                     {
-                        noise = NoiseGenerator.GetPerlinValue(m_perlinConfig, x,y, offsets, 0, 0);
+                        noise = NoiseGenerator.GetPerlinValue(m_perlinConfig, x, y, offsets, 0, 0);
                         // conver to 0 to 1, GetPerlinValue gives -1 to 1
                         noise += 1;
                         noise /= 2;
@@ -85,7 +86,11 @@ namespace ProcWorld
 
 
 
-                    PropTransformInfo info = data[i];
+                    PropTransformInfo info;
+                    info.enabled = data[i].enabled;
+                    info.rotation = Quaternion.identity;
+                    info.position = Vector3.zero;
+                    info.addedOffset = Vector3.zero;
 
 
 
@@ -95,9 +100,20 @@ namespace ProcWorld
 
                         info.enabled = true;
                         info.position = new(originIntx + xVal, TerrainGenerator.Instance.GetScaledNoiseAt(originIntx + xVal, originInty + yVal), originInty + yVal);
+
+
+
                         if (m_randomizeYRotation)
                         {
                             info.rotation = Quaternion.Euler(0, noise * 1360, 0); // can't use unity's Random.range in separate thread, use any random thing as rotation
+                        }
+
+                        if (m_alignToGroundNormal)
+                        {
+                            Vector3 up = TerrainGenerator.Instance.GetNormalAt(originIntx + xVal, originInty + yVal);
+                            Vector3 right = Vector3.Cross(up, Vector3.up);
+                            Vector3 forward = Vector3.Cross(right, up);
+                            info.rotation *= Quaternion.LookRotation(forward);
                         }
 
 

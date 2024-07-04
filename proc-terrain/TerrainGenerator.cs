@@ -770,7 +770,21 @@ namespace ProcWorld
             z = chunk.m_noise[sampleX, sampleY];
             return z;
         }
-        public float GetScaledNoiseAt(int x, int y)
+        public Vector3 GetNormalAt(int x, int y)
+        {
+            int border_offset = 0;
+            x += border_offset;
+            y -= border_offset;
+
+            int currentChunkCoordX = Mathf.RoundToInt(x / (float)m_chunkSize);
+            int currentChunkCoordY = Mathf.RoundToInt(y / (float)m_chunkSize);
+            TerrainChunk chunk = terrainChunks[new(currentChunkCoordX, currentChunkCoordY)];
+
+            int sampleX = x - (currentChunkCoordX * m_chunkSize) + m_chunkSize / 2;
+            int sampleY = m_chunkSize / 2 - (y - (currentChunkCoordY * m_chunkSize));
+            return chunk.GetNormalAt(sampleX, sampleY);
+        }
+        public float GetScaledNoiseAt(int x, int y) 
         {
             return _heightCurve.Evaluate(GetNoiseAt(x, y)) * _heightScale;
         }

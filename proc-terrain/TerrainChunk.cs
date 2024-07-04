@@ -93,15 +93,16 @@ namespace ProcWorld
 
 
         public List<float[,]> PreAllocatedNoise;
-        const int NUM_LOD = 3;
-        const int LOD_STEP_SIZE = 1;
+        const int NUM_LOD = 4;
+        const int LOD_STEP_SIZE = 2;
         const int COLLIDER_LOD_INDEX = 0;
-        const int LOD_ENABLE_DISTANCE = 200;
+        const int LOD_ENABLE_DISTANCE = 400;
         List<MeshData> m_lodMeshData = new(NUM_LOD);
         List<TerrainChunkLOD> m_lods = new(NUM_LOD);
         Material m_mat;
 
         int m_currentLOD = 0;
+        public Vector3[] Normals { get; private set; }
 
 
         public TerrainChunk(bool _initial, int _noiseMapSize, int _size, float _heightScale, AnimationCurve _heightCurve, Vector2 _coord, Material _mat, Transform _parent, int _defaultLOD)
@@ -149,6 +150,7 @@ namespace ProcWorld
             SetVisibility(false);
             m_defaultLOD = _defaultLOD;
 
+            Normals = new Vector3[_size * _size];
             // allocate memory only once
             m_noise = new float[_noiseMapSize, _noiseMapSize];
 
@@ -196,9 +198,16 @@ namespace ProcWorld
             }
         }
 
+        public Vector3 GetNormalAt(int x, int y)
+        {
+            return Normals[y*gen.VertsPerSide()+x];
+        }
+
+
         void GenerateLODMeshes(MapData _data)
         {
             m_lodMeshData.Clear();
+
             for (int i = 0; i < NUM_LOD; i++)
             {
                 if (m_lods[i].Empty) return; // last lod is empty
@@ -223,11 +232,7 @@ namespace ProcWorld
             {
                 sw.Start();
             }
-            // CreateMapData();
-            MainThreadDispatcher.Instance.Enqueue(() =>
-          {
             CreateMapData();
-          });
         }
 
         public void UpdateCoord(Vector2 _coord)
@@ -281,6 +286,8 @@ namespace ProcWorld
             MeshData md = MeshGenerator.GenerateMeshFromHeightMap(_data.GetHeightMap(), m_heightScale, m_heightCurve, m_defaultLOD);
             GenerateLODMeshes(_data);
 
+            Normals = md.normals;
+
             sw.Stop();
 
             double elapsed = sw.Elapsed.TotalMilliseconds / 1000f;
@@ -317,6 +324,8 @@ namespace ProcWorld
                 if (m_lods[i].Empty) continue;
                 m_lods[i].OnMeshDataCreated(_lodMeshData[i]);
             }
+
+
 
             chunkObj.transform.localPosition = m_worldPos;
             m_meshInstanceId = m_lods[COLLIDER_LOD_INDEX].meshFilter.mesh.GetInstanceID();
