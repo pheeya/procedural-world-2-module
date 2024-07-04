@@ -94,7 +94,7 @@ namespace ProcWorld
 
         public List<float[,]> PreAllocatedNoise;
         const int NUM_LOD = 3;
-        const int LOD_STEP_SIZE = 2;
+        const int LOD_STEP_SIZE = 1;
         const int COLLIDER_LOD_INDEX = 0;
         const int LOD_ENABLE_DISTANCE = 200;
         List<MeshData> m_lodMeshData = new(NUM_LOD);
@@ -223,8 +223,11 @@ namespace ProcWorld
             {
                 sw.Start();
             }
+            // CreateMapData();
+            MainThreadDispatcher.Instance.Enqueue(() =>
+          {
             CreateMapData();
-
+          });
         }
 
         public void UpdateCoord(Vector2 _coord)
