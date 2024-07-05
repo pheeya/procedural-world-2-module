@@ -102,20 +102,18 @@ namespace ProcWorld
                         info.position = new(originIntx + xVal, TerrainGenerator.Instance.GetScaledNoiseAt(originIntx + xVal, originInty + yVal), originInty + yVal);
 
 
-
-                        if (m_randomizeYRotation)
-                        {
-                            info.rotation = Quaternion.Euler(0, noise * 1360, 0); // can't use unity's Random.range in separate thread, use any random thing as rotation
-                        }
+                        Quaternion randomy = m_randomizeYRotation ? Quaternion.Euler(0, noise * 1360, 0) : Quaternion.identity;
+                        Quaternion alignToGround = Quaternion.identity;
 
                         if (m_alignToGroundNormal)
                         {
                             Vector3 up = TerrainGenerator.Instance.GetNormalAt(originIntx + xVal, originInty + yVal);
                             Vector3 right = Vector3.Cross(up, Vector3.up);
                             Vector3 forward = Vector3.Cross(right, up);
-                            info.rotation *= Quaternion.LookRotation(forward);
+                            alignToGround = Quaternion.LookRotation(forward);
                         }
 
+                        info.rotation = alignToGround * randomy;
 
                         data[i] = info;
 
