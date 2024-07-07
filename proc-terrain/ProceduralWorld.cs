@@ -39,11 +39,7 @@ namespace ProcWorld
         {
             FindObjectOfType<DebugTerrain>().transform.gameObject.SetActive(false);
 
-            generator = FindObjectOfType<TerrainGenerator>();
 
-
-            generator.EOnFinished += OnTerrainFinished;
-            generator.EInitialChunksCreated += OnInitialChunksCreated;
         }
         void OnInitialChunksCreated()
         {
@@ -60,8 +56,15 @@ namespace ProcWorld
             EOnCreated?.Invoke();
         }
         bool m_started = false;
+
+        bool exit = false;
         public void Begin()
         {
+            MainThreadDispatcher.Init();
+
+            generator = FindObjectOfType<TerrainGenerator>();
+            generator.EOnFinished += OnTerrainFinished;
+            generator.EInitialChunksCreated += OnInitialChunksCreated;
             m_started = true;
 
             generator.Init();
@@ -96,8 +99,8 @@ namespace ProcWorld
 
         public float GetNoiseAt(int x, int y)
         {
-            return m_terrainGen.GetNoiseAt(x,y);
-        
+            return m_terrainGen.GetNoiseAt(x, y);
+
         }
 
         public int GetRoadCenterAtPos(int _yPos)
@@ -131,5 +134,38 @@ namespace ProcWorld
             return m_terrainGen.GetPlayableAreaWidth();
         }
         public List<Collider> PhysicsColliders { get { return m_terrainGen.PhysicsColliders; } }
+
+        void Cleanup()
+        {
+            generator.Cleanup();
+        }
+
+        void OnApplicationQuit()
+        {
+
+            if (!exit)
+            {
+                exit = true;
+                Cleanup();
+            }
+
+        }
+        void OnDisable()
+        {
+            if (!exit)
+            {
+                exit = true;
+                Cleanup();
+            }
+        }
+        void OnDestroy()
+        {
+
+            if (!exit)
+            {
+                exit = true;
+                Cleanup();
+            }
+        }
     }
 }

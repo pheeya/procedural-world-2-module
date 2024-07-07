@@ -694,6 +694,14 @@ namespace ProcWorld
 
         }
 
+        public void Cleanup() { 
+            for(int i=0;i<m_processors.Count;i++){
+                m_processors[i].Cleanup();
+            }
+            GeneralBackgroundProcessor.instance.Cleanup();
+
+            SetPlayerPos(Vector3.zero);
+        }
         void CreateChunkPool()
         {
 
@@ -784,7 +792,7 @@ namespace ProcWorld
             int sampleY = m_chunkSize / 2 - (y - (currentChunkCoordY * m_chunkSize));
             return chunk.GetNormalAt(sampleX, sampleY);
         }
-        public float GetScaledNoiseAt(int x, int y) 
+        public float GetScaledNoiseAt(int x, int y)
         {
             return _heightCurve.Evaluate(GetNoiseAt(x, y)) * _heightScale;
         }

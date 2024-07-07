@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using ProcWorld;
+using UnityEditor;
 using UnityEngine;
 
 namespace ProcWorld
@@ -57,6 +58,7 @@ namespace ProcWorld
         void Awake()
         {
             TerrainGenerator.Instance.EInitialChunksCreated += Init;
+
         }
 
         public event Action EInit;
@@ -92,7 +94,8 @@ namespace ProcWorld
                 int range = Mathf.FloorToInt((m_variants[i].probability * PoolAmount));
                 for (int j = 0; j < range; j++)
                 {
-                    GameObject obj = GameObject.Instantiate(m_variants[i].prefab, transform);
+                    GameObject obj = (GameObject)PrefabUtility.InstantiatePrefab(m_variants[i].prefab);
+                    obj.transform.parent = transform;
                     Pools[i].objects.Add(obj);
                     Pool.Add(obj);
                     obj.SetActive(false);

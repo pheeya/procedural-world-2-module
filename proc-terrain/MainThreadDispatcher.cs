@@ -18,7 +18,7 @@ namespace ProcWorld
 
         private void Update()
         {
-            
+
 
             // Execute queued actions on the main thread
             lock (actionQueue)
@@ -40,20 +40,25 @@ namespace ProcWorld
             }
         }
 
+        public static void Init()
+        {
+            if (instance == null)
+            {
+                instance = FindObjectOfType<MainThreadDispatcher>();
+                if (instance == null)
+                {
+                    GameObject obj = new GameObject("MainThreadDispatcher");
+                    instance = obj.AddComponent<MainThreadDispatcher>();
+                }
+            }
+        }
+
         // Get the instance of MainThreadDispatcher
         public static MainThreadDispatcher Instance
         {
             get
             {
-                if (instance == null)
-                {
-                    instance = FindObjectOfType<MainThreadDispatcher>();
-                    if (instance == null)
-                    {
-                        GameObject obj = new GameObject("MainThreadDispatcher");
-                        instance = obj.AddComponent<MainThreadDispatcher>();
-                    }
-                }
+
                 return instance;
             }
         }

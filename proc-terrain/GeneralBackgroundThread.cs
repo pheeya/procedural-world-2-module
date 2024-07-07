@@ -86,34 +86,15 @@ namespace ProcWorld
 
 
         }
-        void Cleanup()
+        public void Cleanup()
         {
             exit = true;
             if (m_main != null && m_main.IsAlive)
             {
-                m_main.Join(); // Wait for the thread to finish
-            }
-        }
-        void OnDestroy()
-        {
-            if (!exit)
-            {
-                Cleanup();
-            }
 
-        }
-        void OnDisable()
-        {
-            if (!exit)
-            {
-                Cleanup();
-            }
-        }
-        void OnApplicationQuit()
-        {
-            if (!exit)
-            {
-                Cleanup();
+                actionQueue.Clear();
+                Debug.Log("Cleaning up general background processors");
+                m_main.Join(); // Wait for the thread to finish
             }
         }
 

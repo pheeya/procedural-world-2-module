@@ -34,7 +34,6 @@ namespace ProcWorld
         }
         List<PropTransformInfo> Process()
         {
-
             Vector2 origin = TerrainGenerator.PlayerPosV2;
             int originIntx = Mathf.RoundToInt(origin.x) / m_spacingX;
             int originInty = Mathf.RoundToInt(origin.y) / m_spacingY;
@@ -110,7 +109,9 @@ namespace ProcWorld
                             Vector3 up = TerrainGenerator.Instance.GetNormalAt(originIntx + xVal, originInty + yVal);
                             Vector3 right = Vector3.Cross(up, Vector3.up);
                             Vector3 forward = Vector3.Cross(right, up);
-                            alignToGround = Quaternion.LookRotation(forward);
+
+                            if (forward != Vector3.zero)
+                                alignToGround = Quaternion.LookRotation(forward);
                         }
 
                         info.rotation = alignToGround * randomy;
@@ -135,8 +136,8 @@ namespace ProcWorld
         }
         void Init()
         {
-            data = new(m_placer.PoolAmount);
-            for (int i = 0; i < m_placer.PoolAmount; i++)
+            data = new(m_placer.PoolActualAmount);
+            for (int i = 0; i < m_placer.PoolActualAmount; i++)
             {
                 PropTransformInfo inf;
                 inf.position = Vector3.zero;

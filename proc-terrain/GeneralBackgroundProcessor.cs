@@ -46,6 +46,12 @@ namespace ProcWorld
             GetNextProcessor().Enqueue(action);
         }
 
+        public void Cleanup(){
+            for(int i=0;i<m_threads.Count;i++){
+                m_threads[i].Cleanup();
+            }
+        }
+
         // Get the instance of GeneralBackgroundProcessor
 
     }
