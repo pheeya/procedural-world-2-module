@@ -63,7 +63,7 @@ namespace ProcWorld
             MainThreadDispatcher.Init();
 
             generator = FindObjectOfType<TerrainGenerator>();
-            generator.EOnFinished += OnTerrainFinished;
+            generator.EOnFinished += OnTerrainFinished; 
             generator.EInitialChunksCreated += OnInitialChunksCreated;
             m_started = true;
 
