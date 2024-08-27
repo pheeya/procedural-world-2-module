@@ -80,12 +80,12 @@ namespace ProcWorld
         {
             return m_terrainGen.GetFinalTerrainSize();
         }
-        public bool GetHeightAtPoint(Vector3 _pos, out float _height)
+        public bool GetHeightAtPoint(Vector3 _pos, out float _height, out RaycastHit hitInfo)
         {
             _height = 0;
             Vector3 sample = _pos;
             sample.y = m_terrainGen._heightScale + 10f; ;
-            bool hit = Physics.Raycast(sample, Vector3.down, out RaycastHit hitInfo, m_terrainGen._heightScale + 20f, m_terrainHeightSampleLayerMask);
+            bool hit = Physics.Raycast(sample, Vector3.down, out hitInfo, m_terrainGen._heightScale + 20f, m_terrainHeightSampleLayerMask);
 
             if (!hit)
             {

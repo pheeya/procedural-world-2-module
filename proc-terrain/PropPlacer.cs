@@ -94,7 +94,12 @@ namespace ProcWorld
                 int range = Mathf.FloorToInt((m_variants[i].probability * PoolAmount));
                 for (int j = 0; j < range; j++)
                 {
+#if UNITY_EDITOR
                     GameObject obj = (GameObject)PrefabUtility.InstantiatePrefab(m_variants[i].prefab);
+
+#else
+                    GameObject obj = (GameObject)GameObject.Instantiate(m_variants[i].prefab);
+#endif
                     obj.transform.parent = transform;
                     Pools[i].objects.Add(obj);
                     Pool.Add(obj);
@@ -102,10 +107,6 @@ namespace ProcWorld
                     PoolActualAmount++;
                 }
             }
-
-
-
-
         }
         public delegate List<PropTransformInfo> PropPlacementFunction();
         PropPlacementFunction Function;
