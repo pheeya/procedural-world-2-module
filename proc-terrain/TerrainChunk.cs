@@ -94,9 +94,10 @@ namespace ProcWorld
 
         public List<float[,]> PreAllocatedNoise;
         const int NUM_LOD = 4;
+        const int LOD_OFFSET = 0;
         const int LOD_STEP_SIZE = 2;
         const int COLLIDER_LOD_INDEX = 0;
-        const int LOD_ENABLE_DISTANCE = 400;
+        const int LOD_ENABLE_DISTANCE = 150;
         List<MeshData> m_lodMeshData = new(NUM_LOD);
         List<TerrainChunkLOD> m_lods = new(NUM_LOD);
         Material m_mat;
@@ -211,7 +212,7 @@ namespace ProcWorld
             for (int i = 0; i < NUM_LOD; i++)
             {
                 if (m_lods[i].Empty) return; // last lod is empty
-                MeshData md = MeshGenerator.GenerateMeshFromHeightMap(_data.GetHeightMap(), m_heightScale, m_heightCurve, i * LOD_STEP_SIZE);
+                MeshData md = MeshGenerator.GenerateMeshFromHeightMap(_data.GetHeightMap(), m_heightScale, m_heightCurve, i * LOD_STEP_SIZE + LOD_OFFSET);
 
                 m_lodMeshData.Add(md);
             }
