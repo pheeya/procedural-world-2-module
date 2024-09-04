@@ -694,8 +694,10 @@ namespace ProcWorld
 
         }
 
-        public void Cleanup() { 
-            for(int i=0;i<m_processors.Count;i++){
+        public void Cleanup()
+        {
+            for (int i = 0; i < m_processors.Count; i++)
+            {
                 m_processors[i].Cleanup();
             }
             GeneralBackgroundProcessor.instance.Cleanup();
@@ -771,7 +773,20 @@ namespace ProcWorld
             float z = 0;
             int currentChunkCoordX = Mathf.RoundToInt(x / (float)m_chunkSize);
             int currentChunkCoordY = Mathf.RoundToInt(y / (float)m_chunkSize);
-            TerrainChunk chunk = terrainChunks[new(currentChunkCoordX, currentChunkCoordY)];
+
+
+
+            // a safety net for when a game might be asking for noise for a chunk that does not exist
+            // added after facing an issue where the game had a dev function which lets the player teleport very far ahead
+            // which means there are no chunks for some time under the player where various functions try to get the noise at
+            // such as prop placer
+            TerrainChunk chunk;
+            bool got = terrainChunks.TryGetValue(new(currentChunkCoordX, currentChunkCoordY), out chunk);
+            if (!got)
+            {
+                Debug.Log("TERRAIN GENERATOR WARNING: No chunk exists at given coordinate " + currentChunkCoordX + " / " + currentChunkCoordY + " returning default 0 noise");
+                return 0;
+            }
 
             int sampleX = x - (currentChunkCoordX * m_chunkSize) + m_chunkSize / 2;
             int sampleY = m_chunkSize / 2 + (y - (currentChunkCoordY * m_chunkSize)) * -1;
@@ -786,7 +801,20 @@ namespace ProcWorld
 
             int currentChunkCoordX = Mathf.RoundToInt(x / (float)m_chunkSize);
             int currentChunkCoordY = Mathf.RoundToInt(y / (float)m_chunkSize);
-            TerrainChunk chunk = terrainChunks[new(currentChunkCoordX, currentChunkCoordY)];
+      
+
+            // a safety net for when a game might be asking for normal for a chunk that does not exist
+            // added after facing an issue where the game had a dev function which lets the player teleport very far ahead
+            // which means there are no chunks for some time under the player where various functions try to get the normal at
+            // such as prop placer
+            TerrainChunk chunk;
+            bool got = terrainChunks.TryGetValue(new(currentChunkCoordX, currentChunkCoordY), out chunk);
+            if (!got)
+            {
+                Debug.Log("TERRAIN GENERATOR WARNING: No chunk exists at given coordinate " + currentChunkCoordX + " / " + currentChunkCoordY + " returning default Up normal");
+                return Vector3.up;
+            }
+
 
             int sampleX = x - (currentChunkCoordX * m_chunkSize) + m_chunkSize / 2;
             int sampleY = m_chunkSize / 2 - (y - (currentChunkCoordY * m_chunkSize));
