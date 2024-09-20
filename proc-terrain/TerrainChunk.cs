@@ -64,6 +64,9 @@ namespace ProcWorld
 
         GameObject colliderObject;
 
+
+// contrary to popular belief and common sense
+// this is not actually worldpos, this is position from terrain generator origin (normalized_coord*size)
         public Vector3 m_worldPos;
         float m_heightScale;
         AnimationCurve m_heightCurve;

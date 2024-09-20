@@ -438,8 +438,9 @@ namespace ProcWorld
             float halfHeight = _map.GetLength(1) / 2f;
 
             // chunk not within rectangle bounds
-            if (Mathf.Abs(_offsetX - _rectWorldCenter.x) > Mathf.Abs(_rectSize.x / 2f + halfWidth + _fallOffSize) || Mathf.Abs(_offsetY - _rectWorldCenter.y) > Mathf.Abs(_rectSize.y / 2f + halfWidth + _fallOffSize))
+            if (Mathf.Abs(_offsetX - _rectWorldCenter.x) > Mathf.Abs(_rectSize.x / 2f + halfWidth + _fallOffSize) || Mathf.Abs(_offsetY + _rectWorldCenter.y) > Mathf.Abs(_rectSize.y / 2f + halfWidth + _fallOffSize))
             {
+          
                 return;
             };
 
