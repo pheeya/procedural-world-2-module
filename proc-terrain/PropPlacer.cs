@@ -13,6 +13,7 @@ namespace ProcWorld
         public Quaternion rotation;
         public bool enabled;
         public Vector2 addedOffset;
+        public int variant;
     }
     [System.Serializable]
     public struct PropVariant
@@ -32,16 +33,24 @@ namespace ProcWorld
     public class PropPlacer : MonoBehaviour
     {
 
+        public struct DeadZone
+        {
+            public Vector2 size;
+            public Vector2 pos;
+        }
+
+        static List<DeadZone> s_deadZones = new();
 
         [SerializeField] List<PropVariant> m_variants;
         [SerializeField] int m_varianceSeedOffset;
+        [SerializeField] bool m_ignoreDeadZone;
 
         [field: SerializeField] public List<PropPool> Pools { get; private set; }
 
 
         [SerializeField] float m_updateDistance;
         [field: SerializeField] public int PoolAmount;
-        [field: SerializeField] public int PoolActualAmount;
+        [field: SerializeField] public int PoolGeneratedAmount;
         public List<Vector3> Positions { get; private set; }
         public List<Vector3> Rotations { get; private set; }
 
@@ -50,6 +59,7 @@ namespace ProcWorld
         public delegate void PropPlacerEvent();
 
         public event PropPlacerEvent ESpawnRequested;
+
 
 
         Vector2 m_lastUpdatePosition;
@@ -77,7 +87,7 @@ namespace ProcWorld
                 Pool.RemoveAt(i);
                 i--;
             }
-            PoolActualAmount = 0;
+            PoolGeneratedAmount = 0;
             Pools = new(m_variants.Count);
             for (int i = 0; i < m_variants.Count; i++)
             {
@@ -104,7 +114,7 @@ namespace ProcWorld
                     Pools[i].objects.Add(obj);
                     Pool.Add(obj);
                     obj.SetActive(false);
-                    PoolActualAmount++;
+                    PoolGeneratedAmount++;
                 }
             }
         }
@@ -150,6 +160,34 @@ namespace ProcWorld
 
             return index;
         }
+
+        public int GetRandomVariant(PropTransformInfo _data)
+        {
+            Vector3 pos = _data.position;
+            //+ pos.y * 12
+            // not adding pos.y in the LCG Random equation anymore
+            // because when we add offset in the prop placement function, we cause a difference in the y value as well which comes from
+            // the offsets causing a change in elevation. Figure it out if we ever need to have Y offset in the functions
+            int random = util.LCGRandom(Mathf.RoundToInt((pos.x - _data.addedOffset.x) * 23 + (pos.z - _data.addedOffset.y) + 25) + m_varianceSeedOffset, 0, 100);
+
+
+            int chosen = ChooseRandomWithProbability(random);
+            if (chosen == -1)
+            {
+                for (int j = 0; j < m_variants.Count; j++)
+                {
+
+                    // if no pool found with correct probability with stock
+                    // choose any with stock left
+                    if (Pools[j].placed < Pools[j].objects.Count)
+                    {
+                        chosen = j;
+                        break;
+                    }
+                }
+            }
+            return chosen;
+        }
         void callback(List<PropTransformInfo> _data)
         {
 
@@ -169,44 +207,11 @@ namespace ProcWorld
 
                 }
 
-                Vector3 pos = _data[i].position;
-                //+ pos.y * 12
-                // not adding pos.y in the LCG Random equation anymore
-                // because when we add offset in the prop placement function, we cause a difference in the y value as well which comes from
-                // the offsets causing a change in elevation. Figure it out if we ever need to have Y offset in the functions
-                int random = util.LCGRandom(Mathf.RoundToInt((pos.x - _data[i].addedOffset.x) * 23 + (pos.z - _data[i].addedOffset.y) + 25) + m_varianceSeedOffset, 0, 100);
 
 
-                int chosen = ChooseRandomWithProbability(random);
-
-
-
-                if (chosen == -1)
-                {
-                    for (int j = 0; j < m_variants.Count; j++)
-                    {
-
-                        // if no pool found with correct probability with stock
-                        // choose any with stock left
-                        if (Pools[j].placed < Pools[j].objects.Count)
-                        {
-                            chosen = j;
-                            break;
-                        }
-                    }
-                }
-
-                if (chosen == -1)
-                {
-                    Debug.Log("out of props, exiting");
-                    return;
-                };
-
-
+                int chosen = _data[i].variant;
 
                 PropPool pool = Pools[chosen];
-
-
 
                 GameObject obj = pool.objects[pool.placed];
                 obj.transform.localPosition = _data[i].position + m_variants[chosen].offset;
@@ -227,7 +232,59 @@ namespace ProcWorld
             }
         }
 
+        public static void AddDeadZone(Vector2 _span, Vector2 _pos)
+        {
+            DeadZone dz;
+            dz.size = _span;
+            dz.pos = _pos;
+            // lock while removing or adding so that the main thread isn't blocked when adding/removing
+            // it's okay if main thread is adding or removing a dead zone and causing background threads to wait
+            lock (s_deadZones)
+            {
+                if (s_deadZones.Contains(dz))
+                {
+                    Debug.Log("Identical dead zone already exists, skipping");
+                    return;
+                }
+                s_deadZones.Add(dz);
+            }
 
+            Debug.Log("added deadzone");
+        }
+        public bool IsInDeadZone(Vector3 _point)
+        {
+            for (int i = 0; i < s_deadZones.Count; i++)
+            {
+                float boundaryXRight = s_deadZones[i].pos.x + s_deadZones[i].size.x;
+                float boundaryXLeft = s_deadZones[i].pos.x - s_deadZones[i].size.x;
+                float boundaryYForward = s_deadZones[i].pos.y + s_deadZones[i].size.y;
+                float boundaryYBackward = s_deadZones[i].pos.y - s_deadZones[i].size.y;
+
+
+
+                if ((_point.x >= boundaryXLeft && _point.x <= boundaryXRight) && (_point.z >= boundaryYBackward && _point.z <= boundaryYForward))
+                {
+                    return true;
+                }
+            }
+            return false;
+
+        }
+        public static void RemoveDeadZone(DeadZone dz)
+        {
+
+            // lock while removing or adding so that the main thread isn't blocked when adding/removing
+            // it's okay if main thread is adding or removing a dead zone and causing background threads to wait
+            lock (s_deadZones)
+            {
+                if (!s_deadZones.Contains(dz))
+                {
+                    Debug.Log("Dead zone doesn't exist in list");
+                    return;
+                }
+                s_deadZones.Remove(dz);
+            }
+        }
 
         void UpdatePlacement()
         {

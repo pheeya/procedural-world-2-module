@@ -90,6 +90,7 @@ namespace ProcWorld
                     info.rotation = Quaternion.identity;
                     info.position = Vector3.zero;
                     info.addedOffset = Vector3.zero;
+                    info.variant = 0;
 
 
 
@@ -100,7 +101,13 @@ namespace ProcWorld
                         info.enabled = true;
                         info.position = new(originIntx + xVal, TerrainGenerator.Instance.GetScaledNoiseAt(originIntx + xVal, originInty + yVal), originInty + yVal);
 
+                        if (m_placer.IsInDeadZone(info.position))
+                        {
 
+                            info.enabled = false;
+                            data[i] = info;
+                            continue;
+                        };
                         Quaternion randomy = m_randomizeYRotation ? Quaternion.Euler(0, noise * 1360, 0) : Quaternion.identity;
                         Quaternion alignToGround = Quaternion.identity;
 
@@ -115,6 +122,7 @@ namespace ProcWorld
                         }
 
                         info.rotation = alignToGround * randomy;
+                        info.variant = m_placer.GetRandomVariant(info);
 
                         data[i] = info;
 
@@ -136,14 +144,15 @@ namespace ProcWorld
         }
         void Init()
         {
-            data = new(m_placer.PoolActualAmount);
-            for (int i = 0; i < m_placer.PoolActualAmount; i++)
+            data = new(m_placer.PoolGeneratedAmount);
+            for (int i = 0; i < m_placer.PoolGeneratedAmount; i++)
             {
                 PropTransformInfo inf;
                 inf.position = Vector3.zero;
                 inf.rotation = Quaternion.identity;
                 inf.enabled = false;
                 inf.addedOffset = m_offset;
+                inf.variant = 0;
                 data.Add(inf);
             }
             m_placer.SetFunction(Process);
