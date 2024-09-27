@@ -198,7 +198,13 @@ namespace ProcWorld
                 pool.placed = 0;
                 Pools[i] = pool;
             }
-            for (int i = 0; i < _data.Count; i++)
+
+
+            // why i < PoolGeneratedAmount instead of i < _data.Count
+            // because data is generated externall based on completely unrelated parameters
+            // it is not aware of pool or the available pool size. 
+            // so we can and we often do have data points more than the available pool
+            for (int i = 0; i < PoolGeneratedAmount; i++)
             {
                 if (!_data[i].enabled)
                 {
@@ -211,6 +217,7 @@ namespace ProcWorld
 
                 int chosen = _data[i].variant;
 
+                Debug.Log(chosen, gameObject);
                 PropPool pool = Pools[chosen];
 
                 GameObject obj = pool.objects[pool.placed];
