@@ -27,6 +27,7 @@ namespace ProcWorld
     public struct PropPool
     {
         public int placed;
+        public int numInUse;
         public List<GameObject> objects;
 
     }
@@ -94,6 +95,7 @@ namespace ProcWorld
                 int range = Mathf.FloorToInt((m_variants[i].probability * PoolAmount));
                 PropPool pool;
                 pool.placed = 0;
+                pool.numInUse = 0;
                 pool.objects = new(range);
                 Pools.Add(pool);
             }
@@ -145,7 +147,7 @@ namespace ProcWorld
                 int start = cumilativeStartingRange;
                 int end = start + Mathf.RoundToInt(m_variants[i].probability * 100);
 
-                if (prob >= start && prob < end && (Pools[i].placed < Pools[i].objects.Count))
+                if (prob >= start && prob < end && (Pools[i].numInUse < Pools[i].objects.Count))
                 {
                     found = true;
                     index = i;
@@ -161,7 +163,7 @@ namespace ProcWorld
             return index;
         }
 
-        public int GetRandomVariant(PropTransformInfo _data)
+        public int GetNextRandomVariant(PropTransformInfo _data)
         {
             Vector3 pos = _data.position;
             //+ pos.y * 12
@@ -179,13 +181,17 @@ namespace ProcWorld
 
                     // if no pool found with correct probability with stock
                     // choose any with stock left
-                    if (Pools[j].placed < Pools[j].objects.Count)
+                    if (Pools[j].numInUse < Pools[j].objects.Count)
                     {
                         chosen = j;
                         break;
                     }
                 }
             }
+
+            PropPool pool = Pools[chosen];
+            pool.numInUse++;
+            Pools[chosen] = pool;
             return chosen;
         }
         void callback(List<PropTransformInfo> _data)
@@ -199,12 +205,8 @@ namespace ProcWorld
                 Pools[i] = pool;
             }
 
-
-            // why i < PoolGeneratedAmount instead of i < _data.Count
-            // because data is generated externall based on completely unrelated parameters
-            // it is not aware of pool or the available pool size. 
-            // so we can and we often do have data points more than the available pool
-            for (int i = 0; i < PoolGeneratedAmount; i++)
+    
+            for (int i = 0; i < _data.Count; i++)
             {
                 if (!_data[i].enabled)
                 {
@@ -217,7 +219,6 @@ namespace ProcWorld
 
                 int chosen = _data[i].variant;
 
-                Debug.Log(chosen, gameObject);
                 PropPool pool = Pools[chosen];
 
                 GameObject obj = pool.objects[pool.placed];
@@ -256,7 +257,6 @@ namespace ProcWorld
                 s_deadZones.Add(dz);
             }
 
-            Debug.Log("added deadzone");
         }
         public bool IsInDeadZone(Vector3 _point)
         {
@@ -298,6 +298,15 @@ namespace ProcWorld
             m_lastUpdatePosition = TerrainGenerator.PlayerPosV2;
             GeneralBackgroundProcessor.instance.Enqueue(() =>
             {
+
+                for (int i = 0; i < Pools.Count; i++)
+                {
+
+                    PropPool pool = Pools[i];
+                    pool.numInUse = 0;
+                    Pools[i] = pool;
+                }
+
                 List<PropTransformInfo> data = Function();
 
                 MainThreadDispatcher.Instance.Enqueue(() =>
