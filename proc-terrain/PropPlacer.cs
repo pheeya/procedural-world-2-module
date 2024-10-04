@@ -68,6 +68,7 @@ namespace ProcWorld
 
         void Awake()
         {
+            s_deadZones = new();
             TerrainGenerator.Instance.EInitialChunksCreated += Init;
 
         }
@@ -158,6 +159,7 @@ namespace ProcWorld
             if (!found)
             {
                 index = -1;
+
             }
 
             return index;
@@ -189,9 +191,9 @@ namespace ProcWorld
                 }
             }
 
-            PropPool pool = Pools[chosen];
-            pool.numInUse++;
-            Pools[chosen] = pool;
+            // PropPool pool = Pools[chosen];
+            // pool.numInUse++;
+            // Pools[chosen] = pool;
             return chosen;
         }
         void callback(List<PropTransformInfo> _data)
@@ -203,9 +205,10 @@ namespace ProcWorld
                 PropPool pool = Pools[i];
                 pool.placed = 0;
                 Pools[i] = pool;
+
             }
 
-    
+
             for (int i = 0; i < _data.Count; i++)
             {
                 if (!_data[i].enabled)
@@ -221,6 +224,18 @@ namespace ProcWorld
 
                 PropPool pool = Pools[chosen];
 
+                if (pool.placed >= pool.objects.Count)
+                {
+                    for (int d = 0; d < _data.Count; d++)
+                    {
+                        Debug.Log(_data[d].variant);
+                    }
+                    Debug.Log("Out of pool", gameObject);
+                    Debug.Log(pool.numInUse);
+                    Debug.Log(pool.objects.Count);
+                    Debug.Log(pool.placed);
+                    Debug.Log(chosen);
+                }
                 GameObject obj = pool.objects[pool.placed];
                 obj.transform.localPosition = _data[i].position + m_variants[chosen].offset;
                 obj.transform.localRotation = _data[i].rotation;
@@ -307,8 +322,22 @@ namespace ProcWorld
                     Pools[i] = pool;
                 }
 
-                List<PropTransformInfo> data = Function();
 
+                List<PropTransformInfo> data = Function();
+                for (int i = 0; i < data.Count; i++)
+                {
+                    int variant = GetNextRandomVariant(data[i]);
+                    PropTransformInfo info = data[i];
+                    info.variant = variant;
+
+                    PropPool pool = Pools[variant];
+                    pool.numInUse++;
+
+                    Pools[variant] = pool;
+
+                    data[i] = info;
+                }
+                
                 MainThreadDispatcher.Instance.Enqueue(() =>
                 {
                     callback(data);

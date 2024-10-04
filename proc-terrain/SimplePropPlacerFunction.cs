@@ -122,8 +122,6 @@ namespace ProcWorld
                         }
 
                         info.rotation = alignToGround * randomy;
-                        info.variant = m_placer.GetNextRandomVariant(info);
-
                         data[i] = info;
 
                         i++;
