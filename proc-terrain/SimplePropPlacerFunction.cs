@@ -28,6 +28,9 @@ namespace ProcWorld
 
 
         List<PropTransformInfo> data;
+
+        Vector2 m_lastOrigin;
+
         void Awake()
         {
             m_placer.EInit += Init;
@@ -137,7 +140,8 @@ namespace ProcWorld
                 }
 
             }
-
+            m_lastOrigin.x = originIntx;
+            m_lastOrigin.y = originInty;
             return data;
         }
         void Init()

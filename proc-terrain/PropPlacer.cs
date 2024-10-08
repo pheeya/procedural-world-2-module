@@ -26,9 +26,12 @@ namespace ProcWorld
     [System.Serializable]
     public struct PropPool
     {
-        public int placed;
+        public int numPlaced;
         public int numInUse;
         public List<GameObject> objects;
+
+        public List<GameObject> placed;
+        public List<GameObject> available;
 
     }
     public class PropPlacer : MonoBehaviour
@@ -95,9 +98,12 @@ namespace ProcWorld
             {
                 int range = Mathf.FloorToInt((m_variants[i].probability * PoolAmount));
                 PropPool pool;
-                pool.placed = 0;
+                pool.numPlaced = 0;
                 pool.numInUse = 0;
                 pool.objects = new(range);
+                pool.available = new(range);
+                pool.placed = new(range);
+
                 Pools.Add(pool);
             }
 
@@ -203,7 +209,7 @@ namespace ProcWorld
             {
 
                 PropPool pool = Pools[i];
-                pool.placed = 0;
+                pool.numPlaced = 0;
                 Pools[i] = pool;
 
             }
@@ -224,7 +230,7 @@ namespace ProcWorld
 
                 PropPool pool = Pools[chosen];
 
-                if (pool.placed >= pool.objects.Count)
+                if (pool.numPlaced >= pool.objects.Count)
                 {
                     for (int d = 0; d < _data.Count; d++)
                     {
@@ -233,22 +239,22 @@ namespace ProcWorld
                     Debug.Log("Out of pool", gameObject);
                     Debug.Log(pool.numInUse);
                     Debug.Log(pool.objects.Count);
-                    Debug.Log(pool.placed);
+                    Debug.Log(pool.numPlaced);
                     Debug.Log(chosen);
                 }
-                GameObject obj = pool.objects[pool.placed];
+                GameObject obj = pool.objects[pool.numPlaced];
                 obj.transform.localPosition = _data[i].position + m_variants[chosen].offset;
                 obj.transform.localRotation = _data[i].rotation;
 
                 obj.SetActive(_data[i].enabled);
 
-                pool.placed++;
+                pool.numPlaced++;
                 Pools[chosen] = pool;
             }
 
             for (int i = 0; i < Pools.Count; i++)
             {
-                for (int j = Pools[i].placed; j < Pools[i].objects.Count; j++)
+                for (int j = Pools[i].numPlaced; j < Pools[i].objects.Count; j++)
                 {
                     Pools[i].objects[j].SetActive(false);
                 }
