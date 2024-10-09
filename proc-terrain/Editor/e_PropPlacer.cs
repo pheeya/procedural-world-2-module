@@ -11,13 +11,7 @@ namespace ProcWorld
         {
             base.OnInspectorGUI();
 
-
-            bool generate = GUILayout.Button("Generate Pool");
-            if(!generate) return;
-            PropPlacer tar = (PropPlacer)target;
-
-            tar.GeneratePool();
-            EditorUtility.SetDirty(tar);
+// no longer generating pool in editor, doing it at run time upon chunks creation
 
         }
     }

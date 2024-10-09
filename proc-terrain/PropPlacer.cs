@@ -7,33 +7,26 @@ using UnityEngine;
 
 namespace ProcWorld
 {
+
+
+    [System.Serializable]
     public struct PropTransformInfo
     {
         public Vector3 position;
         public Quaternion rotation;
-        public bool enabled;
         public Vector2 addedOffset;
-        public int variant;
+        public Prop associatedObject;
+        public bool skip;
     }
     [System.Serializable]
     public struct PropVariant
     {
-        [SerializeField] public GameObject prefab;
+        [SerializeField] public Prop prefab;
         [SerializeField, Range(0, 1)] public float probability;
         public Vector3 offset;
     }
 
-    [System.Serializable]
-    public struct PropPool
-    {
-        public int numPlaced;
-        public int numInUse;
-        public List<GameObject> objects;
 
-        public List<GameObject> placed;
-        public List<GameObject> available;
-
-    }
     public class PropPlacer : MonoBehaviour
     {
 
@@ -48,8 +41,7 @@ namespace ProcWorld
         [SerializeField] List<PropVariant> m_variants;
         [SerializeField] int m_varianceSeedOffset;
         [SerializeField] bool m_ignoreDeadZone;
-
-        [field: SerializeField] public List<PropPool> Pools { get; private set; }
+        [SerializeField] string m_debugString;
 
 
         [SerializeField] float m_updateDistance;
@@ -59,7 +51,9 @@ namespace ProcWorld
         public List<Vector3> Rotations { get; private set; }
 
 
-        [field: SerializeField] public List<GameObject> Pool { get; private set; } = new();
+        [field: SerializeField] public List<Prop> AllObjects { get; private set; }
+        [field: SerializeField] public List<Prop> Pool { get; private set; }
+        [field: SerializeField] public List<Prop> Placed { get; private set; } = new();
         public delegate void PropPlacerEvent();
 
         public event PropPlacerEvent ESpawnRequested;
@@ -68,6 +62,9 @@ namespace ProcWorld
 
         Vector2 m_lastUpdatePosition;
 
+
+
+        [SerializeField] List<PropTransformInfo> m_lastData;
 
         void Awake()
         {
@@ -80,49 +77,32 @@ namespace ProcWorld
         bool m_init = false;
         void Init()
         {
+            GeneratePool();
             m_lastUpdatePosition = TerrainGenerator.PlayerPosV2;
             m_init = true;
+
             EInit?.Invoke();
         }
         public void GeneratePool()
         {
-            for (int i = 0; i < Pool.Count; i++)
-            {
-                DestroyImmediate(Pool[i]);
-                Pool.RemoveAt(i);
-                i--;
-            }
+
+            Pool = new(PoolAmount);
+            AllObjects = new(PoolAmount);
+            m_lastData = new(PoolAmount);
+
             PoolGeneratedAmount = 0;
-            Pools = new(m_variants.Count);
-            for (int i = 0; i < m_variants.Count; i++)
-            {
-                int range = Mathf.FloorToInt((m_variants[i].probability * PoolAmount));
-                PropPool pool;
-                pool.numPlaced = 0;
-                pool.numInUse = 0;
-                pool.objects = new(range);
-                pool.available = new(range);
-                pool.placed = new(range);
-
-                Pools.Add(pool);
-            }
-
             for (int i = 0; i < m_variants.Count; i++)
             {
 
                 int range = Mathf.FloorToInt((m_variants[i].probability * PoolAmount));
                 for (int j = 0; j < range; j++)
                 {
-#if UNITY_EDITOR
-                    GameObject obj = (GameObject)PrefabUtility.InstantiatePrefab(m_variants[i].prefab);
-
-#else
-                    GameObject obj = (GameObject)GameObject.Instantiate(m_variants[i].prefab);
-#endif
+                    Prop obj = Instantiate(m_variants[i].prefab);
+                    obj.Init(i);
                     obj.transform.parent = transform;
-                    Pools[i].objects.Add(obj);
                     Pool.Add(obj);
-                    obj.SetActive(false);
+                    AllObjects.Add(obj);
+                    obj.gameObject.SetActive(false);
                     PoolGeneratedAmount++;
                 }
             }
@@ -136,88 +116,29 @@ namespace ProcWorld
             UpdatePlacement();
         }
 
-        public int ChooseRandomWithProbability(int prob)
-        {
 
-            // give each variant a "band" in the 1-100 range based on its probability
-            // for example if two variants have 30, 30 probability 
-            // then 0-30 is the first variant's band, and 30-60 is the second's 
-            // then select based on which band the prob value falls in
-
-
-            int cumilativeStartingRange = 0;
-            int index = 0;
-            bool found = false;
-            for (int i = 0; i < m_variants.Count; i++)
-            {
-
-                int start = cumilativeStartingRange;
-                int end = start + Mathf.RoundToInt(m_variants[i].probability * 100);
-
-                if (prob >= start && prob < end && (Pools[i].numInUse < Pools[i].objects.Count))
-                {
-                    found = true;
-                    index = i;
-                    break;
-                }
-                cumilativeStartingRange += Mathf.RoundToInt(m_variants[i].probability * 100);
-            }
-            if (!found)
-            {
-                index = -1;
-
-            }
-
-            return index;
-        }
-
-        public int GetNextRandomVariant(PropTransformInfo _data)
+        public int GetRandomObjectIndex(PropTransformInfo _data)
         {
             Vector3 pos = _data.position;
+
+            if(Pool.Count == 1) return 0;
             //+ pos.y * 12
             // not adding pos.y in the LCG Random equation anymore
             // because when we add offset in the prop placement function, we cause a difference in the y value as well which comes from
             // the offsets causing a change in elevation. Figure it out if we ever need to have Y offset in the functions
-            int random = util.LCGRandom(Mathf.RoundToInt((pos.x - _data.addedOffset.x) * 23 + (pos.z - _data.addedOffset.y) + 25) + m_varianceSeedOffset, 0, 100);
+            int random = util.LCGRandom(Mathf.RoundToInt((pos.x - _data.addedOffset.x) * 23 + (pos.z - _data.addedOffset.y) + 25) + m_varianceSeedOffset, 0, Pool.Count - 1);
 
-
-            int chosen = ChooseRandomWithProbability(random);
-            if (chosen == -1)
-            {
-                for (int j = 0; j < m_variants.Count; j++)
-                {
-
-                    // if no pool found with correct probability with stock
-                    // choose any with stock left
-                    if (Pools[j].numInUse < Pools[j].objects.Count)
-                    {
-                        chosen = j;
-                        break;
-                    }
-                }
-            }
-
-            // PropPool pool = Pools[chosen];
-            // pool.numInUse++;
-            // Pools[chosen] = pool;
+            int chosen = random;
             return chosen;
         }
+
+
         void callback(List<PropTransformInfo> _data)
         {
 
-            for (int i = 0; i < Pools.Count; i++)
-            {
-
-                PropPool pool = Pools[i];
-                pool.numPlaced = 0;
-                Pools[i] = pool;
-
-            }
-
-
             for (int i = 0; i < _data.Count; i++)
             {
-                if (!_data[i].enabled)
+                if (_data[i].skip)
                 {
 
                     continue;
@@ -225,40 +146,27 @@ namespace ProcWorld
                 }
 
 
+                int chosen = _data[i].associatedObject.GetPropVarient();
 
-                int chosen = _data[i].variant;
 
-                PropPool pool = Pools[chosen];
-
-                if (pool.numPlaced >= pool.objects.Count)
-                {
-                    for (int d = 0; d < _data.Count; d++)
-                    {
-                        Debug.Log(_data[d].variant);
-                    }
-                    Debug.Log("Out of pool", gameObject);
-                    Debug.Log(pool.numInUse);
-                    Debug.Log(pool.objects.Count);
-                    Debug.Log(pool.numPlaced);
-                    Debug.Log(chosen);
-                }
-                GameObject obj = pool.objects[pool.numPlaced];
+                Prop obj = _data[i].associatedObject;
                 obj.transform.localPosition = _data[i].position + m_variants[chosen].offset;
                 obj.transform.localRotation = _data[i].rotation;
 
-                obj.SetActive(_data[i].enabled);
+                obj.gameObject.SetActive(true);
 
-                pool.numPlaced++;
-                Pools[chosen] = pool;
+
+
+
+
             }
 
-            for (int i = 0; i < Pools.Count; i++)
+            for (int i = 0; i < Pool.Count; i++)
             {
-                for (int j = Pools[i].numPlaced; j < Pools[i].objects.Count; j++)
-                {
-                    Pools[i].objects[j].SetActive(false);
-                }
+                Pool[i].gameObject.SetActive(false);
             }
+
+
         }
 
         public static void AddDeadZone(Vector2 _span, Vector2 _pos)
@@ -314,36 +222,102 @@ namespace ProcWorld
             }
         }
 
+
+        bool DataContainsPosition(List<PropTransformInfo> info, Vector3 pos, out int _dataIndex)
+        {
+            _dataIndex = 0;
+            for (int i = 0; i < info.Count; i++)
+            {
+                if (info[i].position == pos)
+                {
+                    _dataIndex = i;
+                    return true;
+                };
+            }
+            return false;
+        }
+
         void UpdatePlacement()
         {
             m_lastUpdatePosition = TerrainGenerator.PlayerPosV2;
             GeneralBackgroundProcessor.instance.Enqueue(() =>
             {
 
-                for (int i = 0; i < Pools.Count; i++)
-                {
 
-                    PropPool pool = Pools[i];
-                    pool.numInUse = 0;
-                    Pools[i] = pool;
-                }
 
 
                 List<PropTransformInfo> data = Function();
+
+                for (int i = 0; i < m_lastData.Count; i++)
+                {
+                    PropTransformInfo info = m_lastData[i];
+                    info.skip = false;
+                    m_lastData[i] = info;
+                }
+
+                Pool.Clear();
+                Placed.Clear();
+
+                for (int i = 0; i < AllObjects.Count; i++)
+                {
+                    Pool.Add(AllObjects[i]);
+                }
+
+                for (int j = 0; j < m_lastData.Count; j++)
+                {
+                    if (DataContainsPosition(data, m_lastData[j].position, out int index))
+                    {
+                        PropTransformInfo info = m_lastData[j];
+                        info.skip = true;
+                        data[index] = info;
+                        Placed.Add(data[index].associatedObject);
+                        Pool.Remove(data[index].associatedObject);
+                    }
+                    // else
+                    // {
+                    //     Prop go = m_lastData[j].associatedObject;
+                    //     Pool.Add(go);
+                    // }
+                }
+
+
+
                 for (int i = 0; i < data.Count; i++)
                 {
-                    int variant = GetNextRandomVariant(data[i]);
+                    if (data[i].skip)
+                    {
+                        continue;
+                    }
+
+
                     PropTransformInfo info = data[i];
-                    info.variant = variant;
 
-                    PropPool pool = Pools[variant];
-                    pool.numInUse++;
+                    int index = GetRandomObjectIndex(data[i]);
 
-                    Pools[variant] = pool;
 
+                    info.associatedObject = Pool[index];
+
+                    Placed.Add(info.associatedObject);
+                    Pool.Remove(info.associatedObject);
                     data[i] = info;
                 }
-                
+
+
+
+                // dont do m_lastdata = data;
+                // these are lists, ref types
+                m_lastData.Clear();
+                for (int i = 0; i < data.Count; i++)
+                {
+                    m_lastData.Add(data[i]);
+
+                }
+
+
+
+
+
+
                 MainThreadDispatcher.Instance.Enqueue(() =>
                 {
                     callback(data);

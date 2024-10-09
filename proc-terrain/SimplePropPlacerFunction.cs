@@ -9,6 +9,8 @@ namespace ProcWorld
     {
 
 
+[SerializeField] bool m_debugAlwaysSpawn;
+[SerializeField] bool m_debugNeverSpawn;
         [SerializeField] bool m_randomizeYRotation;
         [SerializeField] bool m_alignToGroundNormal;
         [SerializeField] Vector2 m_offset;
@@ -31,18 +33,34 @@ namespace ProcWorld
 
         Vector2 m_lastOrigin;
 
+
+
         void Awake()
         {
             m_placer.EInit += Init;
+
+
+
         }
         List<PropTransformInfo> Process()
         {
+            data.Clear();
+
+            if(m_debugNeverSpawn) return data;
+
             Vector2 origin = TerrainGenerator.PlayerPosV2;
             int originIntx = Mathf.RoundToInt(origin.x) / m_spacingX;
+
             int originInty = Mathf.RoundToInt(origin.y) / m_spacingY;
 
             originIntx *= m_spacingX;
             originInty *= m_spacingY;
+
+
+
+   
+
+
 
             Vector2[] offsets = NoiseGenerator.GetOctaveOffsets(m_perlinConfig, originIntx, -originInty);
 
@@ -56,7 +74,8 @@ namespace ProcWorld
 
                 for (int x = -m_spanX; x <= m_spanX; x += m_spacingX)
                 {
-                    if (i >= data.Count) return data;
+                    if (i >= data.Capacity) return data;
+                    PropTransformInfo info;
 
 
                     int xVal, yVal;
@@ -88,27 +107,24 @@ namespace ProcWorld
 
 
 
-                    PropTransformInfo info;
-                    info.enabled = data[i].enabled;
                     info.rotation = Quaternion.identity;
                     info.position = Vector3.zero;
                     info.addedOffset = Vector3.zero;
-                    info.variant = 0;
+                    info.associatedObject = null;
+                    info.skip=false;
 
 
 
-                    if (noise > m_perlinNoiseSpawnThreshold && (Mathf.Abs(originIntx + xVal) > m_forbiddenBandWidth))
+                    if (noise > m_perlinNoiseSpawnThreshold && (Mathf.Abs(originIntx + xVal) > m_forbiddenBandWidth) || m_debugAlwaysSpawn)
                     {
 
 
-                        info.enabled = true;
                         info.position = new(originIntx + xVal, TerrainGenerator.Instance.GetScaledNoiseAt(originIntx + xVal, originInty + yVal), originInty + yVal);
 
                         if (m_placer.IsInDeadZone(info.position))
                         {
 
-                            info.enabled = false;
-                            data[i] = info;
+
                             continue;
                         };
                         Quaternion randomy = m_randomizeYRotation ? Quaternion.Euler(0, noise * 1360, 0) : Quaternion.identity;
@@ -125,14 +141,10 @@ namespace ProcWorld
                         }
 
                         info.rotation = alignToGround * randomy;
-                        data[i] = info;
 
                         i++;
-                    }
-                    else
-                    {
-                        info.enabled = false;
-                        data[i] = info;
+
+                        data.Add(info);
                     }
 
 
@@ -147,16 +159,17 @@ namespace ProcWorld
         void Init()
         {
             data = new(m_placer.PoolGeneratedAmount);
-            for (int i = 0; i < m_placer.PoolGeneratedAmount; i++)
-            {
-                PropTransformInfo inf;
-                inf.position = Vector3.zero;
-                inf.rotation = Quaternion.identity;
-                inf.enabled = false;
-                inf.addedOffset = m_offset;
-                inf.variant = 0;
-                data.Add(inf);
-            }
+            // for (int i = 0; i < m_placer.PoolGeneratedAmount; i++)
+            // {
+            //     PropTransformInfo inf;
+            //     inf.position = Vector3.zero;
+            //     inf.rotation = Quaternion.identity;
+            //     inf.enabled = false;
+            //     inf.addedOffset = m_offset;
+            //     inf.variant = 0;
+            //     inf.skip = false;
+            //     data.Add(inf);
+            // }
             m_placer.SetFunction(Process);
         }
     }
