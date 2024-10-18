@@ -54,6 +54,7 @@ namespace ProcWorld
         [field: SerializeField] public List<Prop> AllObjects { get; private set; }
         [field: SerializeField] public List<Prop> Pool { get; private set; }
         [field: SerializeField] public List<Prop> Placed { get; private set; } = new();
+        [SerializeField] List<PropPlacer> m_avoidCollisionsWith;
         public delegate void PropPlacerEvent();
 
         public event PropPlacerEvent ESpawnRequested;
@@ -66,23 +67,20 @@ namespace ProcWorld
 
         [SerializeField] List<PropTransformInfo> m_lastData;
 
-        void Awake()
-        {
-            s_deadZones = new();
-            TerrainGenerator.Instance.EInitialChunksCreated += Init;
-
-        }
 
         public event Action EInit;
         bool m_init = false;
-        void Init()
+        public void Init()
         {
+            s_deadZones = new();
+
             GeneratePool();
             m_lastUpdatePosition = TerrainGenerator.PlayerPosV2;
             m_init = true;
 
             EInit?.Invoke();
         }
+
         public void GeneratePool()
         {
 
@@ -121,7 +119,7 @@ namespace ProcWorld
         {
             Vector3 pos = _data.position;
 
-            if(Pool.Count == 1) return 0;
+            if (Pool.Count == 1) return 0;
             //+ pos.y * 12
             // not adding pos.y in the LCG Random equation anymore
             // because when we add offset in the prop placement function, we cause a difference in the y value as well which comes from
@@ -237,16 +235,45 @@ namespace ProcWorld
             return false;
         }
 
+        public bool CurrentlyHasPropAtPosition(Vector3 _pos)
+        {
+            return DataContainsPosition(m_lastData, _pos, out int x);
+        }
+
+        public int GetLastDataCount() { return m_lastData.Count; }
+
         void UpdatePlacement()
         {
+            Debug.Log(m_debugString);
             m_lastUpdatePosition = TerrainGenerator.PlayerPosV2;
             GeneralBackgroundProcessor.instance.Enqueue(() =>
             {
 
 
 
-
                 List<PropTransformInfo> data = Function();
+
+                // if (m_avoidCollisionsWith.Count > 0)
+                // {
+                //     Debug.Log(m_avoidCollisionsWith[0].GetLastDataCount());
+                // }
+                for (int i = 0; i < data.Count; i++)
+                {
+                    for (int j = 0; j < m_avoidCollisionsWith.Count; j++)
+                    {
+
+
+                        // lock so that the propplacer at J doesn't add to the list while we reading it
+                        lock (m_avoidCollisionsWith[j])
+                        {
+                            if (m_avoidCollisionsWith[j].CurrentlyHasPropAtPosition(data[i].position))
+                            {
+                                data.RemoveAt(i);
+                                i--;
+                            }
+                        }
+                    }
+                }
 
                 for (int i = 0; i < m_lastData.Count; i++)
                 {
@@ -317,14 +344,15 @@ namespace ProcWorld
 
 
 
-
                 MainThreadDispatcher.Instance.Enqueue(() =>
                 {
                     callback(data);
                 });
             });
         }
-        void FixedUpdate()
+
+
+        public void ManualUpdate()
         {
             if (!m_init) return;
 
@@ -337,7 +365,6 @@ namespace ProcWorld
 
 
         }
-
     }
 
 }
