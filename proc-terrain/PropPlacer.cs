@@ -70,9 +70,15 @@ namespace ProcWorld
 
         public event Action EInit;
         bool m_init = false;
-        public void Init()
+
+
+        [InitializeOnLoadMethod]
+        static void ResetStatic()
         {
             s_deadZones = new();
+        }
+        public void Init()
+        {
 
             GeneratePool();
             m_lastUpdatePosition = TerrainGenerator.PlayerPosV2;
@@ -183,7 +189,6 @@ namespace ProcWorld
                 }
                 s_deadZones.Add(dz);
             }
-
         }
         public bool IsInDeadZone(Vector3 _point)
         {
@@ -244,7 +249,6 @@ namespace ProcWorld
 
         void UpdatePlacement()
         {
-            Debug.Log(m_debugString);
             m_lastUpdatePosition = TerrainGenerator.PlayerPosV2;
             GeneralBackgroundProcessor.instance.Enqueue(() =>
             {
@@ -253,10 +257,7 @@ namespace ProcWorld
 
                 List<PropTransformInfo> data = Function();
 
-                // if (m_avoidCollisionsWith.Count > 0)
-                // {
-                //     Debug.Log(m_avoidCollisionsWith[0].GetLastDataCount());
-                // }
+
                 for (int i = 0; i < data.Count; i++)
                 {
                     for (int j = 0; j < m_avoidCollisionsWith.Count; j++)

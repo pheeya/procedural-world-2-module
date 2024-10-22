@@ -716,6 +716,8 @@ namespace ProcWorld
             int currentChunkCoordX = Mathf.RoundToInt(PlayerPosV2.x / m_chunkSize);
             int currentChunkCoordY = Mathf.RoundToInt(PlayerPosV2.y / m_chunkSize);
 
+
+
             int created = 0;
 
             for (int yOffset = -(maxChunksVisible + extraChunks); yOffset <= (maxChunksVisible + extraChunks); yOffset++)
@@ -801,7 +803,7 @@ namespace ProcWorld
 
             int currentChunkCoordX = Mathf.RoundToInt(x / (float)m_chunkSize);
             int currentChunkCoordY = Mathf.RoundToInt(y / (float)m_chunkSize);
-      
+
 
             // a safety net for when a game might be asking for normal for a chunk that does not exist
             // added after facing an issue where the game had a dev function which lets the player teleport very far ahead
