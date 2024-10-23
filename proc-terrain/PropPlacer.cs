@@ -72,8 +72,7 @@ namespace ProcWorld
         bool m_init = false;
 
 
-        [InitializeOnLoadMethod]
-        static void ResetStatic()
+        void Awake()
         {
             s_deadZones = new();
         }
