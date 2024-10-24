@@ -9,6 +9,7 @@ namespace ProcWorld
     {
 
 
+        [field: SerializeField] public int Order { get; private set; }
         [field: SerializeField] public bool Disabled { get; private set; }
         NoiseModifierFunction m_func;
 
