@@ -142,7 +142,7 @@ namespace ProcWorld
         void Cleanup()
         {
             generator.Cleanup();
-        }
+        } 
 
         void OnApplicationQuit()
         {

@@ -440,7 +440,7 @@ namespace ProcWorld
             // chunk not within rectangle bounds
             if (Mathf.Abs(_offsetX - _rectWorldCenter.x) > Mathf.Abs(_rectSize.x / 2f + halfWidth + _fallOffSize) || Mathf.Abs(_offsetY + _rectWorldCenter.y) > Mathf.Abs(_rectSize.y / 2f + halfWidth + _fallOffSize))
             {
-          
+
                 return;
             };
 
@@ -461,6 +461,7 @@ namespace ProcWorld
 
             AnimationCurve _threadSafe = new(_fallOff.keys);
 
+
             for (int y = 0; y < _map.GetLength(1); y++)
             {
                 for (int x = 0; x < _map.GetLength(0); x++)
@@ -474,13 +475,23 @@ namespace ProcWorld
                     float xWorld = x + _offsetX - halfWidth;
                     float yWorld = y - _offsetY - halfHeight;
 
-                    float dx = Mathf.Max(topLeft.x - xWorld, 0, xWorld - topRight.x);
-                    float dy = Mathf.Max(bottomLeft.y - yWorld, 0, yWorld - topLeft.y);
-                    float dist = Mathf.Sqrt(dx * dx + dy * dy) / _fallOffSize;
-                    dist = 1 - dist;
-                    dist = Mathf.Clamp01(dist);
+                    float dist = 0;
 
-                    dist = _threadSafe.Evaluate(dist);
+   
+
+                    float bleedX = Mathf.Abs(xWorld) - Mathf.Abs(_rectWorldCenter.x / 2f);
+                    float bleedY = Mathf.Abs(yWorld) - Mathf.Abs(_rectWorldCenter.y / 2f);
+                    if (bleedX > 0 || bleedY > 0)
+                    {
+
+                        float dx = Mathf.Max(topLeft.x - xWorld, 0, xWorld - topRight.x);
+                        float dy = Mathf.Max(bottomLeft.y - yWorld, 0, yWorld - topLeft.y);
+                        dist = Mathf.Sqrt(dx * dx + dy * dy) / _fallOffSize;
+                        dist = 1 - dist;
+                        dist = Mathf.Clamp01(dist);
+                        dist = _threadSafe.Evaluate(dist);
+                    }
+
 
                     _map[x, y] = Mathf.Lerp(_map[x, y], _targetNormalizedHeight, dist * _blend);
 

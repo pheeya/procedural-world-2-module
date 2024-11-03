@@ -7,7 +7,7 @@ namespace ProcWorld
     public class RectangleFlattenNoiseModifier : MonoBehaviour
     {
 
-        [SerializeField] bool m_useTransform;
+        [SerializeField] bool m_useTransform = true;
         [SerializeField] NoiseModifier m_modifier;
         [SerializeField, Range(0, 1)] float m_flattenedNormalizedHeight;
         [SerializeField, Range(0, 1)] float m_flattenBlend;
@@ -33,7 +33,7 @@ namespace ProcWorld
             m_modifier.SetFunction(Flatten, CreateBoundsRelative());
 
 
-   
+
         }
 
         void FixedUpdate()
@@ -52,7 +52,7 @@ namespace ProcWorld
                  m_flattenedNormalizedHeight,
                  m_flattenBlend,
                 GetRelativePosV2YInverted(),
-                GetDimensionsWithFalloffVec2(),
+                GetDimensionsVec2(),
                  m_flattenAreaFalloff,
                  m_flattenAreaFalloffSize,
                  _offsetX, _offsetY);
@@ -119,14 +119,24 @@ namespace ProcWorld
             size.z = m_flattenArea.y;
 
             return size;
+        }
 
+        public Vector2 GetDimensionsVec2()
+        {
+            Vector3 size = GetDimensions();
+            Vector2 sz;
+            sz.x = size.x;
+            sz.y = size.z;
+
+            return sz;
         }
         public Vector3 GetDimensionsWithFalloff()
         {
             Vector3 dimensions = GetDimensions();
 
-            dimensions.x += m_flattenAreaFalloffSize;
-            dimensions.z += m_flattenAreaFalloffSize;
+            // multiplied by 2 because add fall off size to both sides
+            dimensions.x += m_flattenAreaFalloffSize * 2f;
+            dimensions.z += m_flattenAreaFalloffSize * 2f;
 
             return dimensions;
         }
@@ -137,8 +147,9 @@ namespace ProcWorld
             dimensions.x = dimensionsVec3.x;
             dimensions.y = dimensionsVec3.z;
 
-            dimensions.x += m_flattenAreaFalloffSize;
-            dimensions.y += m_flattenAreaFalloffSize;
+            // multiplied by 2 because add fall off size to both sides
+            dimensions.x += m_flattenAreaFalloffSize * 2f;
+            dimensions.y += m_flattenAreaFalloffSize * 2f;
 
             return dimensions;
         }
@@ -147,7 +158,8 @@ namespace ProcWorld
         {
             if (!m_applicationPlaying)
             {
-                if(TerrainGenerator.Instance == null){
+                if (TerrainGenerator.Instance == null)
+                {
                     return GetRelativePos();
                 }
                 return GetRelativePos() + TerrainGenerator.Instance.GetTerrainChunksParent().position;
