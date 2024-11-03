@@ -54,8 +54,8 @@ namespace ProcWorld
             Helpers.Reset2DArray(_c.PreAllocatedNoise[1]);
             Helpers.Reset2DArray(_c.PreAllocatedNoise[2]);
 
-            float ofstX = terrainGen._offsetX + _c.m_worldPos.x;
-            float ofstY = terrainGen._offsetY + _c.m_worldPos.z;
+            float ofstX = terrainGen._offsetX + _c.m_relativePosToParent.x;
+            float ofstY = terrainGen._offsetY + _c.m_relativePosToParent.z;
 
             NoiseGenerator.GenerateNoiseMapNonAlloc(_c.m_noise, m_perlin, terrainGen.VertsPerSide() + 2, terrainGen.VertsPerSide() + 2, ofstX, ofstY);
             AddRoadNoiseNonAlloc(_c.m_noise, m_road, _c.PreAllocatedNoise[0], _c.PreAllocatedNoise[1], ofstX, ofstY);

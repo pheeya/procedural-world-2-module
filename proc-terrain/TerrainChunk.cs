@@ -7,7 +7,7 @@ namespace ProcWorld
 
 
 
-   
+
     class TerrainChunkLOD
     {
         public MeshRenderer meshRenderer;
@@ -69,7 +69,7 @@ namespace ProcWorld
 
         // contrary to popular belief and common sense
         // this is not actually worldpos, this is position from terrain generator origin (normalized_coord*size)
-        public Vector3 m_worldPos;
+        public Vector3 m_relativePosToParent;
         float m_heightScale;
         AnimationCurve m_heightCurve;
         int m_defaultLOD;
@@ -141,7 +141,7 @@ namespace ProcWorld
 
             m_mat = _mat;
             // meshRenderer.material.mainTexture = _tex;
-            m_worldPos = positionV3;
+            m_relativePosToParent = positionV3;
             chunkObj.transform.localPosition = positionV3;
             // chunkObj.transform.localScale = Vector3.one * _size / 10f;
             chunkObj.transform.parent = _parent;
@@ -254,7 +254,7 @@ namespace ProcWorld
             position = ChunkCoordinate * m_size;
             bounds.center = position;
             Vector3 positionV3 = new Vector3(position.x, 0, position.y);
-            m_worldPos = positionV3;
+            m_relativePosToParent = positionV3;
 
         }
 
@@ -270,8 +270,8 @@ namespace ProcWorld
 
 
 
-            // float ofstX = gen._offsetX + m_worldPos.x;
-            // float ofstY = gen._offsetY + m_worldPos.z;
+            // float ofstX = gen._offsetX + m_relativePosToParent.x;
+            // float ofstY = gen._offsetY + m_relativePosToParent.z;
 
             // NoiseGenerator.GenerateNoiseMapNonAlloc(m_noise, gen.PerlinConfig, gen.VertsPerSide() + 2, gen.VertsPerSide() + 2, ofstX, ofstY);
 
@@ -340,7 +340,7 @@ namespace ProcWorld
 
 
 
-            chunkObj.transform.localPosition = m_worldPos;
+            chunkObj.transform.localPosition = m_relativePosToParent;
             m_meshInstanceId = m_lods[COLLIDER_LOD_INDEX].meshFilter.mesh.GetInstanceID();
 
 
@@ -387,23 +387,24 @@ namespace ProcWorld
             return m_heightMap;
         }
 
-        public bool IsInBounds(BoundsVec2 bounds)
+        public bool IsInBounds(BoundsVec2 relativeBounds)
         {
-            if (Mathf.Abs(ChunkCoordinate.x - bounds.center.x) > Mathf.Abs(bounds.size.x/2f) || Mathf.Abs(ChunkCoordinate.y - bounds.center.y) > Mathf.Abs(bounds.size.y/2f))
+
+            if (Mathf.Abs(m_relativePosToParent.x - relativeBounds.center.x) > Mathf.Abs(relativeBounds.size.x / 2f) || Mathf.Abs(m_relativePosToParent.z - relativeBounds.center.y) > Mathf.Abs(relativeBounds.size.y / 2f))
             {
                 return false;
             }
+
+            Debug.Log(relativeBounds.center.x);
+            Debug.Log(relativeBounds.center.y);
+            Debug.Log(relativeBounds.size.x);
+            Debug.Log(relativeBounds.size.y);
+            Debug.Log(m_relativePosToParent.x);
+            Debug.Log(m_relativePosToParent.y);
             return true;
         }
 
-        public bool IsInWorldSpaceBounds(BoundsVec2 bounds)
-        {
-            if (Mathf.Abs(m_worldPos.x - bounds.center.x) > Mathf.Abs(bounds.size.x/2f) || Mathf.Abs(m_worldPos.z - bounds.center.y) > Mathf.Abs(bounds.size.y/2f))
-            {
-                return false;
-            }
-            return true;
-        }
+
 
 
         public void SetVisibility(bool _v)
