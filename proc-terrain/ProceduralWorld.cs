@@ -4,6 +4,12 @@ using UnityEngine;
 
 namespace ProcWorld
 {
+
+    public struct BoundsVec2
+    {
+        public Vector2 center;
+        public Vector2 size;
+    }
     public class ProceduralWorld : MonoBehaviour
     {
 
@@ -63,7 +69,7 @@ namespace ProcWorld
             MainThreadDispatcher.Init();
 
             generator = FindObjectOfType<TerrainGenerator>();
-            generator.EOnFinished += OnTerrainFinished; 
+            generator.EOnFinished += OnTerrainFinished;
             generator.EInitialChunksCreated += OnInitialChunksCreated;
             m_started = true;
 
@@ -80,9 +86,8 @@ namespace ProcWorld
         {
             return m_terrainGen.GetFinalTerrainSize();
         }
-        public bool GetHeightAtPoint(Vector3 _pos, out float _height, out RaycastHit hitInfo)
+        public bool GetHeightAtPoint(Vector3 _pos, out RaycastHit hitInfo)
         {
-            _height = 0;
             Vector3 sample = _pos;
             sample.y = m_terrainGen._heightScale + 10f; ;
             bool hit = Physics.Raycast(sample, Vector3.down, out hitInfo, m_terrainGen._heightScale + 20f, m_terrainHeightSampleLayerMask);
@@ -93,7 +98,6 @@ namespace ProcWorld
                 return false;
             }
 
-            _height = hitInfo.point.y;
             return true;
         }
 

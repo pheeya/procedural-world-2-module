@@ -6,6 +6,8 @@ namespace ProcWorld
 {
 
 
+
+   
     class TerrainChunkLOD
     {
         public MeshRenderer meshRenderer;
@@ -65,8 +67,8 @@ namespace ProcWorld
         GameObject colliderObject;
 
 
-// contrary to popular belief and common sense
-// this is not actually worldpos, this is position from terrain generator origin (normalized_coord*size)
+        // contrary to popular belief and common sense
+        // this is not actually worldpos, this is position from terrain generator origin (normalized_coord*size)
         public Vector3 m_worldPos;
         float m_heightScale;
         AnimationCurve m_heightCurve;
@@ -169,6 +171,12 @@ namespace ProcWorld
             // Regenerate();
         }
 
+        public bool Dirty { get; private set; }
+        public void MarkDirty()
+        {
+            Dirty = true;
+        }
+
         void CreateLODObjects()
         {
             for (int i = 0; i < NUM_LOD; i++)
@@ -204,7 +212,7 @@ namespace ProcWorld
 
         public Vector3 GetNormalAt(int x, int y)
         {
-            return Normals[y*gen.VertsPerSide()+x];
+            return Normals[y * gen.VertsPerSide() + x];
         }
 
 
@@ -225,6 +233,7 @@ namespace ProcWorld
         System.Diagnostics.Stopwatch sw = new();
         public void Regenerate()
         {
+            Dirty = false;
             // ThreadPool.QueueUserWorkItem(CreateMapData, gen);
             // Thread th = new Thread(new ThreadStart(CreateMapData));
             // th.IsBackground = true;
@@ -376,6 +385,24 @@ namespace ProcWorld
         public HeightMap GetHeightMap()
         {
             return m_heightMap;
+        }
+
+        public bool IsInBounds(BoundsVec2 bounds)
+        {
+            if (Mathf.Abs(ChunkCoordinate.x - bounds.center.x) > Mathf.Abs(bounds.size.x/2f) || Mathf.Abs(ChunkCoordinate.y - bounds.center.y) > Mathf.Abs(bounds.size.y/2f))
+            {
+                return false;
+            }
+            return true;
+        }
+
+        public bool IsInWorldSpaceBounds(BoundsVec2 bounds)
+        {
+            if (Mathf.Abs(m_worldPos.x - bounds.center.x) > Mathf.Abs(bounds.size.x/2f) || Mathf.Abs(m_worldPos.z - bounds.center.y) > Mathf.Abs(bounds.size.y/2f))
+            {
+                return false;
+            }
+            return true;
         }
 
 

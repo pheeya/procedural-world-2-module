@@ -72,8 +72,8 @@ namespace ProcWorld
         bool m_init = false;
 
 
-        void Awake()
-        {
+     
+        public static void ResetDeadZones(){
             s_deadZones = new();
         }
         public void Init()

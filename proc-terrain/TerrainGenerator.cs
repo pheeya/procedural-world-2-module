@@ -584,7 +584,16 @@ namespace ProcWorld
                     bool containskey = terrainChunks.ContainsKey(viewedChunkCoord);
                     Profiler.EndSample();
 
-                    if (containskey) continue;
+                    if (containskey)
+                    {
+
+                        TerrainChunk existing = terrainChunks[viewedChunkCoord];
+                        if (existing.Dirty)
+                        {
+                            existing.Regenerate();
+                        }
+                        continue;
+                    };
 
                     if (m_chunkpool.Count == 0) continue;
 
@@ -648,11 +657,16 @@ namespace ProcWorld
         bool m_started = false;
         System.Diagnostics.Stopwatch m_chunkCreationStopwatch = new();
 
+        public Transform GetTerrainChunksParent()
+        {
+            return m_chunksParent;
+        }
 
         public void Stop()
         {
             m_started = false;
         }
+
         public void Init()
         {
             GeneralBackgroundProcessor.instance.Init();

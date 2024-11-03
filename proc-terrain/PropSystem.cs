@@ -13,6 +13,7 @@ public class PropSystem : MonoBehaviour
     bool m_init = false;
     void Awake()
     {
+        PropPlacer.ResetDeadZones();
         TerrainGenerator.Instance.EInitialChunksCreated += Init;
 
     }

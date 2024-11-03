@@ -126,6 +126,11 @@ namespace ProcWorld
         {
             throw new System.NotImplementedException();
         }
+
+        public override void OnNoiseModifierCreated(NoiseModifier mod)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 
 }

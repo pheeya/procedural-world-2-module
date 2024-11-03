@@ -8,15 +8,29 @@ namespace ProcWorld
     public class NoiseModifier : MonoBehaviour
     {
 
-
         [field: SerializeField] public int Order { get; private set; }
         [field: SerializeField] public bool Disabled { get; private set; }
+        public BoundsVec2 Bounds { get; private set; }
         NoiseModifierFunction m_func;
 
         public NoiseModifierFunction GetNoiseModifierFunction() { return m_func; }
-        public void SetFunction(NoiseModifierFunction func)
+        public void SetFunction(NoiseModifierFunction func, BoundsVec2 bounds)
         {
             m_func = func;
+            Bounds = bounds;
+            TerrainGenerator.Instance.noiseFunction.OnNoiseModifierCreated(this);
+
+
+            if (TerrainGenerator.Instance.terrainChunks != null)
+            {
+                foreach (TerrainChunk chunk in TerrainGenerator.Instance.terrainChunks.Values)
+                {
+                    if (chunk.IsInBounds(bounds))
+                    {
+                        chunk.MarkDirty();
+                    }
+                }
+            }
         }
     }
 }
