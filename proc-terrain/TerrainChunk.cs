@@ -62,7 +62,7 @@ namespace ProcWorld
         // MeshRenderer meshRenderer;
         // MeshFilter meshFilter;
         MeshCollider meshCollider;
-        Bounds bounds;
+        Bounds m_bounds;
 
         GameObject colliderObject;
 
@@ -119,7 +119,7 @@ namespace ProcWorld
 
             Initial = _initial;
             position = _coord * _size;
-            bounds = new Bounds(position, Vector2.one * _size);
+            m_bounds = new Bounds(position, Vector2.one * _size);
             Vector3 positionV3 = new Vector3(position.x, 0, position.y);
 
             m_roadConfig = gen.RoadConfig;
@@ -189,7 +189,7 @@ namespace ProcWorld
         }
         public void OnUpdate()
         {
-            float closestDist = Mathf.Sqrt(bounds.SqrDistance(TerrainGenerator.PlayerPosV2));
+            float closestDist = Mathf.Sqrt(m_bounds.SqrDistance(TerrainGenerator.PlayerPosV2));
 
 
             int index = NUM_LOD - 1;
@@ -252,7 +252,7 @@ namespace ProcWorld
         {
             ChunkCoordinate = _coord;
             position = ChunkCoordinate * m_size;
-            bounds.center = position;
+            m_bounds.center = position;
             Vector3 positionV3 = new Vector3(position.x, 0, position.y);
             m_relativePosToParent = positionV3;
 
@@ -389,19 +389,63 @@ namespace ProcWorld
 
         public bool IsInBounds(BoundsVec2 relativeBounds)
         {
+            float overlapX = Mathf.Abs(m_relativePosToParent.x - relativeBounds.center.x);
+            overlapX -= m_bounds.size.x / 2f;
+            overlapX -= relativeBounds.size.x / 2f;
 
-            if (Mathf.Abs(m_relativePosToParent.x - relativeBounds.center.x) > Mathf.Abs(relativeBounds.size.x / 2f) || Mathf.Abs(m_relativePosToParent.z - relativeBounds.center.y) > Mathf.Abs(relativeBounds.size.y / 2f))
+            float overlapY = Mathf.Abs(m_relativePosToParent.z - relativeBounds.center.y);
+            overlapY -= m_bounds.size.y / 2f;
+            overlapY -= relativeBounds.size.y / 2f;
+
+
+            bool overlapsOnX = overlapX <= 0;
+            bool overlapsOnY = overlapY <= 0;
+
+            if (overlapsOnY && overlapsOnX)
             {
-                return false;
-            }
+                // Debug.Log("overlaps", gameObject);
+                // Debug.Log("OVERLAP X");
+                // Debug.Log("Amount of overlap X: " + overlapX);
+                // Debug.Log("Chunk position X: " + m_relativePosToParent.x);
+                // Debug.Log("Compare position X: " + relativeBounds.center.x);
+                // Debug.Log("OVERLAP Y");
+                // Debug.Log("Amount of overlap Y: " + overlapY);
+                // Debug.Log("Chunk position Y: " + m_relativePosToParent.y);
+                // Debug.Log("Compare position Y: " + relativeBounds.center.y);
 
-            Debug.Log(relativeBounds.center.x);
-            Debug.Log(relativeBounds.center.y);
-            Debug.Log(relativeBounds.size.x);
-            Debug.Log(relativeBounds.size.y);
-            Debug.Log(m_relativePosToParent.x);
-            Debug.Log(m_relativePosToParent.y);
-            return true;
+
+
+
+                // Debug.Log(overlapY);
+
+                // Debug.Log(m_relativePosToParent.x);
+                // Debug.Log(m_relativePosToParent.z);
+                // Debug.Log(relativeBounds.size.x);
+                // Debug.Log(relativeBounds.size.y);
+                // Debug.Log(m_bounds.size.x);
+                // Debug.Log(m_bounds.size.y);
+
+
+                return true;
+            }
+            // else
+            // {
+            //     Debug.Log("does NOT overlap", gameObject);
+            //     Debug.Log("OVERLAP X");
+            //     Debug.Log("Amount of overlap X: " + overlapX);
+            //     Debug.Log("Chunk position X: " + m_relativePosToParent.x);
+            //     Debug.Log("Compare position X: " + relativeBounds.center.x);
+            //     Debug.Log("Chunk Size X: " + m_bounds.size.x);
+            //     Debug.Log("Compare Size X: " + relativeBounds.size.x);
+            //     Debug.Log("OVERLAP Y");
+            //     Debug.Log("Amount of overlap Y: " + overlapY);
+            //     Debug.Log("Chunk position Y: " + m_relativePosToParent.z);
+            //     Debug.Log("Compare position Y: " + relativeBounds.center.y);
+            //     Debug.Log("Chunk Size Y: " + m_bounds.size.y);
+            //     Debug.Log("Compare Size Y: " + relativeBounds.size.y);
+            // }
+
+            return false;
         }
 
 

@@ -590,8 +590,7 @@ namespace ProcWorld
                         TerrainChunk existing = terrainChunks[viewedChunkCoord];
                         if (existing.Dirty && !existing.Processing)
                         {
-                            Debug.Log("regenerating");
-                            Debug.Log(viewedChunkCoord);
+                     
                             existing.Regenerate();
                         }
                         continue;

@@ -21,17 +21,13 @@ namespace ProcWorld
             TerrainGenerator.Instance.noiseFunction.OnNoiseModifierCreated(this);
 
 
-            Debug.Log(bounds.center);
             if (TerrainGenerator.Instance.terrainChunks != null)
             {
                 foreach (TerrainChunk chunk in TerrainGenerator.Instance.terrainChunks.Values)
                 {
                     if (chunk.IsInBounds(bounds))
                     {
-                        Debug.Log("Marking dirty", chunk.gameObject);
-                        Debug.Log(chunk.ChunkCoordinate);
                         chunk.MarkDirty();
-
 
                     }
                 }
