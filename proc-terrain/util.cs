@@ -30,20 +30,10 @@ namespace ProcWorld
         public static Vector2 RotateAround(Vector2 _point, Vector2 _around, float _radians)
         {
 
-            float relX = _point.x - _around.x;
-            float relY = _point.y - _around.y;
-
-            float rotatedRelX = relX * Mathf.Cos(-_radians) - relY * Mathf.Sin(-_radians);
-            float rotatedRelY = relX * Mathf.Sin(-_radians) + relY * Mathf.Cos(-_radians);
-
-
-
-            _point.x = relX + _around.x;
-            _point.y = relY + _around.y;
-            return _point;
+            return RotateAround(_point.x, _point.y,_around.x, _around.y, _radians);
         }
 
-        public static Vector2 RotateVec2Around(float _pointx, float _pointy,float _aroundx, float _aroundy, float _radians)
+        public static Vector2 RotateAround(float _pointx, float _pointy, float _aroundx, float _aroundy, float _radians)
         {
 
             float relX = _pointx - _aroundx;
@@ -57,6 +47,18 @@ namespace ProcWorld
             _pointx = rotatedRelX + _aroundx;
             _pointy = rotatedRelY + _aroundy;
             return new Vector2(_pointx, _pointy);
+        }
+
+        public static bool IsInBounds(Vector2 _point, Vector2 _boundCenter, Vector2 _boundsSize)
+        {
+            _point -= _boundCenter;
+
+
+            bool overlapX = Mathf.Abs(_point.x) <= _boundsSize.x / 2f;
+            bool overlapY = Mathf.Abs(_point.y) <= _boundsSize.y / 2f;
+
+
+            return overlapX && overlapY;
         }
     }
 }

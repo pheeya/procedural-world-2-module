@@ -430,63 +430,127 @@ namespace ProcWorld
 
         }
 
+        // public static void FlattenRectangle(float[,] _map, float _targetNormalizedHeight, float _blend, Vector2 _rectWorldCenter, float _rotation, Vector2 _rectSize, AnimationCurve _fallOff, float _fallOffSize, float _offsetX, float _offsetY)
+        // {
 
+        //     float halfWidth = _map.GetLength(0) / 2f;
+        //     float halfHeight = _map.GetLength(1) / 2f;
+
+        //     // chunk not within rectangle bounds
+        //     if (Mathf.Abs(_offsetX - _rectWorldCenter.x) > Mathf.Abs(_rectSize.x / 2f + halfWidth + _fallOffSize) || Mathf.Abs(_offsetY + _rectWorldCenter.y) > Mathf.Abs(_rectSize.y / 2f + halfWidth + _fallOffSize))
+        //     {
+
+        //         return;
+        //     };
+
+
+
+        //     Vector2 topLeft = new(_rectWorldCenter.x - _rectSize.x / 2f, _rectWorldCenter.y + _rectSize.y / 2f);
+        //     Vector2 topRight = new(_rectWorldCenter.x + _rectSize.x / 2f, _rectWorldCenter.y + _rectSize.y / 2f);
+
+
+
+
+        //     // Y is same for left or right pos
+        //     Vector2 bottomLeft = new(_rectWorldCenter.x - _rectSize.x / 2f, _rectWorldCenter.y - _rectSize.y / 2f);
+
+
+        //     float rectMag = _rectSize.magnitude;
+
+
+        //     AnimationCurve _threadSafe = new(_fallOff.keys);
+
+
+        //     for (int y = 0; y < _map.GetLength(1); y++)
+        //     {
+        //         for (int x = 0; x < _map.GetLength(0); x++)
+        //         {
+
+
+
+        //             // https://stackoverflow.com/questions/5254838/calculating-distance-between-a-point-and-a-rectangular-box-nearest-point
+        //             // distance to rectangle
+
+        //             float xWorld = x + _offsetX - halfWidth;
+        //             float yWorld = y - _offsetY - halfHeight;
+
+        //             float dist = 0;
+
+
+
+        //             float bleedX = Mathf.Abs(xWorld) - Mathf.Abs(_rectWorldCenter.x / 2f);
+        //             float bleedY = Mathf.Abs(yWorld) - Mathf.Abs(_rectWorldCenter.y / 2f);
+        //             if (bleedX > 0 || bleedY > 0)
+        //             {
+
+        //                 float dx = Mathf.Max(topLeft.x - xWorld, 0, xWorld - topRight.x);
+        //                 float dy = Mathf.Max(bottomLeft.y - yWorld, 0, yWorld - topLeft.y);
+        //                 dist = Mathf.Sqrt(dx * dx + dy * dy) / _fallOffSize;
+        //                 dist = 1 - dist;
+        //                 dist = Mathf.Clamp01(dist);
+        //                 dist = _threadSafe.Evaluate(dist);
+        //             }
+
+
+        //             _map[x, y] = Mathf.Lerp(_map[x, y], _targetNormalizedHeight, dist * _blend);
+
+        //         }
+        //     }
+
+        // }
         public static void FlattenRectangle(float[,] _map, float _targetNormalizedHeight, float _blend, Vector2 _rectWorldCenter, float _rotation, Vector2 _rectSize, AnimationCurve _fallOff, float _fallOffSize, float _offsetX, float _offsetY)
         {
 
             float halfWidth = _map.GetLength(0) / 2f;
             float halfHeight = _map.GetLength(1) / 2f;
 
+            Vector2 mapSize = new Vector2(halfWidth * 2f, halfHeight * 2f);
+
             // chunk not within rectangle bounds
+            Vector2 chunkCenter = new(_offsetX, _offsetY);
+
+            Vector2 rectTopRight = _rectWorldCenter;
+            rectTopRight.x += _rectSize.x / 2f;
+            rectTopRight.y += _rectSize.y / 2f;
+
+            Vector2 rectBottomRight = _rectWorldCenter;
+            rectBottomRight.x += _rectSize.x / 2f;
+            rectBottomRight.y -= _rectSize.y / 2f;
 
 
-            Vector2 rotatedChunkPosition = util.RotateVec2Around(_offsetX, _offsetY, _rectWorldCenter.x, _rectWorldCenter.y, -_rotation);
-            float overlapX = Mathf.Abs(rotatedChunkPosition.x-_rectWorldCenter.x);
-            float overlapY = Mathf.Abs(rotatedChunkPosition.y-_rectWorldCenter.y);
+            Vector2 rectTopLeft = _rectWorldCenter;
+            rectTopLeft.x -= _rectSize.x / 2f;
+            rectTopLeft.y += _rectSize.y / 2f;
+
+            Vector2 rectBottomLeft = _rectWorldCenter;
+            rectBottomLeft.x -= _rectSize.x / 2f;
+            rectBottomLeft.y -= _rectSize.y / 2f;
+
+
+
+
+
+            Vector2 rectTopRightRot = util.RotateAround(rectTopRight, _rectWorldCenter, -_rotation);
+            Vector2 rectTopLeftRot = util.RotateAround(rectTopLeft, _rectWorldCenter, -_rotation);
+            Vector2 rectBottomRightRot = util.RotateAround(rectBottomRight, _rectWorldCenter, -_rotation);
+            Vector2 rectBottomLeftRot = util.RotateAround(rectBottomLeft, _rectWorldCenter, -_rotation);
+
+
 
             // if (Mathf.Abs(rotatedChunkPosition.x - _rectWorldCenter.x) > Mathf.Abs(_rectSize.x / 2f + halfWidth + _fallOffSize) || Mathf.Abs(rotatedChunkPosition.y - _rectWorldCenter.y) > Mathf.Abs(_rectSize.y / 2f + halfWidth + _fallOffSize))
-            
-            if(overlapX > (_rectSize.x/2f + _fallOffSize) && overlapY > (_rectSize.y/2f + _fallOffSize))
+
+            if (
+                util.IsInBounds(rectTopRightRot, chunkCenter, mapSize) ||
+                util.IsInBounds(rectTopLeftRot, chunkCenter, mapSize) ||
+                util.IsInBounds(rectBottomRightRot, chunkCenter, mapSize) ||
+                util.IsInBounds(rectBottomLeftRot, chunkCenter, mapSize)
+            )
             {
 
-                for (int y = 0; y < _map.GetLength(1); y++)
-                {
-                    for (int x = 0; x < _map.GetLength(0); x++)
-                    {
-
-                        _map[x, y] = 0;
-
-                    }
-                }
-                return;
             }
-            else
-            {
-                Debug.Log(_offsetX);
-                Debug.Log(_offsetY);
-
-                for (int y = 0; y < _map.GetLength(1); y++)
-                {
-                    for (int x = 0; x < _map.GetLength(0); x++)
-                    {
-
-                        _map[x, y] = 1;
-
-                    }
-                }
-                return;
-            }
+         
 
 
-
-            Vector2 topLeft = new(_rectWorldCenter.x - _rectSize.x / 2f, _rectWorldCenter.y + _rectSize.y / 2f);
-            Vector2 topRight = new(_rectWorldCenter.x + _rectSize.x / 2f, _rectWorldCenter.y + _rectSize.y / 2f);
-
-
-
-
-            // Y is same for left or right pos
-            Vector2 bottomLeft = new(_rectWorldCenter.x - _rectSize.x / 2f, _rectWorldCenter.y - _rectSize.y / 2f);
 
 
             float rectMag = _rectSize.magnitude;
@@ -506,10 +570,10 @@ namespace ProcWorld
                     // distance to rectangle
 
                     float xWorld = x + _offsetX - halfWidth;
-                    float yWorld = y - _offsetY - halfHeight;
+                    float yWorld = y + _offsetY - halfHeight;
 
 
-                    Vector2 rotated = util.RotateVec2Around(xWorld, yWorld, _rectWorldCenter.x, _rectWorldCenter.y, -_rotation);
+                    Vector2 rotated = util.RotateAround(xWorld, yWorld, _rectWorldCenter.x, _rectWorldCenter.y, -_rotation);
 
                     float dist = 0;
 
@@ -517,26 +581,15 @@ namespace ProcWorld
                     yWorld = rotated.y;
 
 
-// WRONG, dont compare world pos, compare distance from rectworld pos and see if it's greater than rectSize
-                    float bleedX = Mathf.Abs(xWorld) - Mathf.Abs(_rectWorldCenter.x / 2f);
-                    float bleedY = Mathf.Abs(yWorld) - Mathf.Abs(_rectWorldCenter.y / 2f);
+                    float dx = Mathf.Max(rectTopLeft.x - xWorld, 0, xWorld - rectTopRight.x);
+                    float dy = Mathf.Max(rectBottomLeft.y - yWorld, 0, yWorld - rectTopLeft.y);
 
-
-                    float dx = Mathf.Max(topLeft.x - xWorld, 0, xWorld - topRight.x);
-                    float dy = Mathf.Max(bottomLeft.y - yWorld, 0, yWorld - topLeft.y);
-
-
-
-                    // if (bleedX > 0 || bleedY > 0)
-                    // {
 
 
                     dist = Mathf.Sqrt(dx * dx + dy * dy) / _fallOffSize;
                     dist = 1 - dist;
                     dist = Mathf.Clamp01(dist);
                     dist = _threadSafe.Evaluate(dist);
-                    // }
-
 
                     _map[x, y] = Mathf.Lerp(_map[x, y], _targetNormalizedHeight, dist * _blend);
 

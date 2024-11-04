@@ -96,10 +96,8 @@ namespace ProcWorld
 
         Vector2 GetRelativePosV2YInverted()
         {
-            Vector3 vec3 = GetRelativePos();
-            Vector2 vec2;
-            vec2.x = vec3.x;
-            vec2.y = vec3.z * -1;
+            Vector2 vec2 = GetRelativePosV2();
+            vec2.y*=-1;
             return vec2;
         }
         Vector2 GetRelativePosV2()
