@@ -4,15 +4,18 @@ using UnityEngine;
 
 namespace ProcWorld
 {
+    [RequireComponent(typeof(NoiseModifier))]
     public class RectangleFlattenNoiseModifier : MonoBehaviour
     {
 
-        [SerializeField] bool m_useTransform = true;
+        bool m_useTransform = true;
         [SerializeField] NoiseModifier m_modifier;
         [SerializeField, Range(0, 1)] float m_flattenedNormalizedHeight;
         [SerializeField, Range(0, 1)] float m_flattenBlend;
-        [SerializeField] Vector2 m_flattenArea;
-        [SerializeField] Vector2 m_localPositionToTerrain;
+
+        // not using anymore, just use transforms man why you confusing yourself
+        [SerializeField, HideInInspector] Vector2 m_flattenArea;
+        [SerializeField, HideInInspector] Vector2 m_localPositionToTerrain;
         [SerializeField] AnimationCurve m_flattenAreaFalloff;
         [SerializeField] float m_flattenAreaFalloffSize;
 
@@ -28,18 +31,24 @@ namespace ProcWorld
             m_applicationPlaying = true;
             m_staticPos = transform.position;
             m_staticScale = transform.lossyScale;
+            m_rotationY = transform.rotation.eulerAngles.y;
             m_chunkParentPos = TerrainGenerator.Instance.GetTerrainChunksParent().position;
-
             m_modifier.SetFunction(Flatten, CreateBoundsRelative());
 
 
 
         }
 
+        void OnValidate()
+        {
+            m_modifier = GetComponent<NoiseModifier>();
+        }
+        float m_rotationY;
         void FixedUpdate()
         {
             if (m_useTransform)
             {
+                m_rotationY = transform.rotation.eulerAngles.y;
                 m_staticPos = transform.position;
                 m_staticScale = transform.lossyScale;
                 m_chunkParentPos = TerrainGenerator.Instance.GetTerrainChunksParent().position;
@@ -51,7 +60,8 @@ namespace ProcWorld
                  _original,
                  m_flattenedNormalizedHeight,
                  m_flattenBlend,
-                GetRelativePosV2YInverted(),
+                GetRelativePosV2(),
+                Mathf.Deg2Rad * m_rotationY,
                 GetDimensionsVec2(),
                  m_flattenAreaFalloff,
                  m_flattenAreaFalloffSize,
@@ -108,7 +118,6 @@ namespace ProcWorld
             {
                 size = transform.lossyScale;
             }
-            size.y = 50;
 
 
             if (m_useTransform)
@@ -176,15 +185,20 @@ namespace ProcWorld
             return bounds;
         }
 
-        void OnDrawGizmosSelected()
+        void OnDrawGizmos()
         {
-            Gizmos.color = Color.black;
 
-            Gizmos.DrawWireCube(GetWorldPos(), GetDimensions());
+            Gizmos.matrix = transform.localToWorldMatrix;
 
 
             Gizmos.color = Color.gray;
-            Gizmos.DrawWireCube(GetWorldPos(), GetDimensionsWithFalloff());
+
+            Vector3 dimensions = GetDimensionsWithFalloff();
+            Gizmos.DrawWireCube(Vector3.zero, new Vector3(dimensions.x / transform.lossyScale.x, dimensions.y / transform.lossyScale.y, dimensions.z / transform.lossyScale.z));
+
+            Gizmos.color = Color.black;
+
+            Gizmos.DrawWireCube(Vector3.zero, Vector3.one);
 
         }
     }
