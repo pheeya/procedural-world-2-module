@@ -55,6 +55,7 @@ namespace ProcWorld
 
         void OnDestroy()
         {
+            if(TerrainGenerator.Instance!=null)
             TerrainGenerator.Instance.noiseFunction.OnNoiseModifierRemoved(Source);
         }
     }

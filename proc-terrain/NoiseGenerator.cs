@@ -471,21 +471,21 @@ namespace ProcWorld
 
             // rect with fall off corners
             Vector2 rectWithFalloffTopRight = _rectWorldCenter;
-            rectWithFalloffTopRight.x += _rectSize.x / 2f + _fallOffSize;
-            rectWithFalloffTopRight.y += _rectSize.y / 2f + _fallOffSize;
+            rectWithFalloffTopRight.x += rectSizeWithFallOff.x / 2f;
+            rectWithFalloffTopRight.y += rectSizeWithFallOff.y / 2f;
 
             Vector2 rectWithFalloffBottomRight = _rectWorldCenter;
-            rectWithFalloffBottomRight.x += _rectSize.x / 2f + _fallOffSize;
-            rectWithFalloffBottomRight.y -= _rectSize.y / 2f + _fallOffSize;
+            rectWithFalloffBottomRight.x += rectSizeWithFallOff.x / 2f;
+            rectWithFalloffBottomRight.y -= rectSizeWithFallOff.y / 2f;
 
 
             Vector2 rectWithFalloffTopLeft = _rectWorldCenter;
-            rectWithFalloffTopLeft.x -= _rectSize.x / 2f + _fallOffSize;
-            rectWithFalloffTopLeft.y += _rectSize.y / 2f + _fallOffSize;
+            rectWithFalloffTopLeft.x -= rectSizeWithFallOff.x / 2f;
+            rectWithFalloffTopLeft.y += rectSizeWithFallOff.y / 2f;
 
             Vector2 rectWithFalloffBottomLeft = _rectWorldCenter;
-            rectWithFalloffBottomLeft.x -= _rectSize.x / 2f + _fallOffSize;
-            rectWithFalloffBottomLeft.y -= _rectSize.y / 2f + _fallOffSize;
+            rectWithFalloffBottomLeft.x -= rectSizeWithFallOff.x / 2f;
+            rectWithFalloffBottomLeft.y -= rectSizeWithFallOff.y / 2f;
 
 
 
@@ -587,7 +587,30 @@ namespace ProcWorld
             }
 
 
+            // if (anyintersection)
+            // {
+            //     for (int y = 0; y < _map.GetLength(1); y++)
+            //     {
+            //         for (int x = 0; x < _map.GetLength(0); x++)
+            //         {
+            //             _map[x, y] = 1;
+            //         }
+            //     }
 
+            //     return;
+            // }
+            // else
+            // {
+            //     for (int y = 0; y < _map.GetLength(1); y++)
+            //     {
+            //         for (int x = 0; x < _map.GetLength(0); x++)
+            //         {
+            //             _map[x, y] = 0;
+            //         }
+            //     }
+
+            //     return;
+            // }
 
             AnimationCurve _threadSafe = new(_fallOff.keys);
 

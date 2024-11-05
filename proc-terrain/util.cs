@@ -91,17 +91,17 @@ namespace ProcWorld
 
         public static bool IntersectSegments(Vector2 a1, Vector2 a2, Vector2 b1, Vector2 b2)
         {
-            
+
             Vector2 dirA = (a2 - a1);
             Vector2 dirB = (b2 - b1);
 
 
-            // a1.x + t*dirA.x = b1.x + u*dirB.x;
-            // a1.y + t*dirA.y = b1.y + u*dirB.y;
+            // a1.x + t*dirA.x = b1.x + u*dirB.x;    ---- 1
+            // a1.y + t*dirA.y = b1.y + u*dirB.y;    ---- 2
 
-            // t = (b1.y + u*dirB.y - a1.y)/dirA.y 
+            // t = (b1.y + u*dirB.y - a1.y)/dirA.y ---- 3
 
-            // u = (a1.x + t*dirA.x - b1.x)/dirB.x
+            // u = (a1.x + t*dirA.x - b1.x)/dirB.x ---- 4
 
 
             // t = (b1.y +  ((a1.x + t*dirA.x -b1.x)/dirB.x) *dirB.y - a1.y )/dirA.y
@@ -119,10 +119,20 @@ namespace ProcWorld
             {
                 return false;
             }
+            // float t = (dirB.x * (b1.y - a1.y) + (a1.x - b1.x) * dirB.y) / den;
+
+
+            // float u = (a1.x + t * dirA.x - b1.x) / dirB.x;
+
+            // alternative for u, to avoid dividied by 0 cases for when dirB.x = 0
+            // float u = (dirA.x * (b1.y - a1.y) + (a1.x - b1.x) * dirA.y) / den
+            // this was derrived by equation 3 into equation 1
+
+            // using the previous u equation results in errors, u goes to infinity and intersection is dropped
+
+
             float t = (dirB.x * (b1.y - a1.y) + (a1.x - b1.x) * dirB.y) / den;
-
-
-            float u = (a1.x + t * dirA.x - b1.x) / dirB.x;
+            float u = (dirA.x * (b1.y - a1.y) + (a1.x - b1.x) * dirA.y) / den;
 
 
             return t >= 0 && t <= 1 && u >= 0 && u <= 1;
