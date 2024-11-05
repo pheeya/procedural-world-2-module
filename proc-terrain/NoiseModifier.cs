@@ -5,20 +5,39 @@ using UnityEngine;
 namespace ProcWorld
 {
     public delegate void NoiseModifierFunction(float[,] original, float _offsetX, float _offsetY);
+
+
+
+
+    public class NoiseModifierSource
+    {
+        public int Order { get; private set; }
+        public NoiseModifierFunction Function { get; private set; }
+        public BoundsVec2 Bounds { get; private set; }
+        public bool Disabled { get; private set; }
+        public NoiseModifierSource(NoiseModifierFunction func, int order, BoundsVec2 bounds, bool disabled)
+        {
+            Order = order;
+            Function = func;
+            Bounds = bounds;
+            Disabled = disabled;
+        }
+    }
     public class NoiseModifier : MonoBehaviour
     {
 
         [field: SerializeField] public int Order { get; private set; }
         [field: SerializeField] public bool Disabled { get; private set; }
         public BoundsVec2 Bounds { get; private set; }
-        NoiseModifierFunction m_func;
-
-        public NoiseModifierFunction GetNoiseModifierFunction() { return m_func; }
+        public NoiseModifierSource Source { get; private set; }
         public void SetFunction(NoiseModifierFunction func, BoundsVec2 bounds)
         {
-            m_func = func;
-            Bounds = bounds;
-            TerrainGenerator.Instance.noiseFunction.OnNoiseModifierCreated(this);
+            if (Source != null)
+            {
+                TerrainGenerator.Instance.noiseFunction.OnNoiseModifierRemoved(Source);
+            }
+            Source = new(func, Order, bounds, Disabled);
+            TerrainGenerator.Instance.noiseFunction.OnNoiseModifierCreated(Source);
 
 
             if (TerrainGenerator.Instance.terrainChunks != null)
@@ -32,6 +51,11 @@ namespace ProcWorld
                     }
                 }
             }
+        }
+
+        void OnDestroy()
+        {
+            TerrainGenerator.Instance.noiseFunction.OnNoiseModifierRemoved(Source);
         }
     }
 }

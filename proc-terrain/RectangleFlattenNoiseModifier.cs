@@ -44,16 +44,16 @@ namespace ProcWorld
             m_modifier = GetComponent<NoiseModifier>();
         }
         float m_rotationY;
-        void FixedUpdate()
-        {
-            if (m_useTransform)
-            {
-                m_rotationY = transform.rotation.eulerAngles.y;
-                m_staticPos = transform.position;
-                m_staticScale = transform.lossyScale;
-                m_chunkParentPos = TerrainGenerator.Instance.GetTerrainChunksParent().position;
-            }
-        }
+        // void FixedUpdate()
+        // {
+        //     if (m_useTransform)
+        //     {
+        //         m_rotationY = transform.rotation.eulerAngles.y;
+        //         m_staticPos = transform.position;
+        //         m_staticScale = transform.lossyScale;
+        //         m_chunkParentPos = TerrainGenerator.Instance.GetTerrainChunksParent().position;
+        //     }
+        // }
         void Flatten(float[,] _original, float _offsetX, float _offsetY)
         {
             NoiseGenerator.FlattenRectangle(

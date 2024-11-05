@@ -9,8 +9,8 @@ namespace ProcWorld
     {
 
 
-[SerializeField] bool m_debugAlwaysSpawn;
-[SerializeField] bool m_debugNeverSpawn;
+        [SerializeField] bool m_debugAlwaysSpawn;
+        [SerializeField] bool m_debugNeverSpawn;
         [SerializeField] bool m_randomizeYRotation;
         [SerializeField] bool m_alignToGroundNormal;
         [SerializeField] Vector2 m_offset;
@@ -39,14 +39,12 @@ namespace ProcWorld
         {
             m_placer.EInit += Init;
 
-
-
         }
         List<PropTransformInfo> Process()
         {
             data.Clear();
 
-            if(m_debugNeverSpawn) return data;
+            if (m_debugNeverSpawn) return data;
 
             Vector2 origin = TerrainGenerator.PlayerPosV2;
             int originIntx = Mathf.RoundToInt(origin.x) / m_spacingX;
@@ -58,7 +56,7 @@ namespace ProcWorld
 
 
 
-   
+
 
 
 
@@ -67,7 +65,6 @@ namespace ProcWorld
 
 
             int i = 0;
-
 
             for (int y = -m_spanY; y <= m_spanY; y += m_spacingY)
             {
@@ -111,7 +108,7 @@ namespace ProcWorld
                     info.position = Vector3.zero;
                     info.addedOffset = Vector3.zero;
                     info.associatedObject = null;
-                    info.skip=false;
+                    info.skip = false;
 
 
 
@@ -121,7 +118,9 @@ namespace ProcWorld
 
                         info.position = new(originIntx + xVal, TerrainGenerator.Instance.GetScaledNoiseAt(originIntx + xVal, originInty + yVal), originInty + yVal);
 
-                        if (m_placer.IsInDeadZone(info.position))
+                        bool indeadzone = m_placer.IsInDeadZone(info.position);
+
+                        if (indeadzone)
                         {
 
 

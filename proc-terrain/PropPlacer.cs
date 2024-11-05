@@ -9,6 +9,7 @@ namespace ProcWorld
 {
 
 
+
     [System.Serializable]
     public struct PropTransformInfo
     {
@@ -30,13 +31,8 @@ namespace ProcWorld
     public class PropPlacer : MonoBehaviour
     {
 
-        public struct DeadZone
-        {
-            public Vector2 size;
-            public Vector2 pos;
-        }
+        [SerializeField] bool m_log;
 
-        static List<DeadZone> s_deadZones = new();
 
         [SerializeField] List<PropVariant> m_variants;
         [SerializeField] int m_varianceSeedOffset;
@@ -72,12 +68,11 @@ namespace ProcWorld
         bool m_init = false;
 
 
-     
-        public static void ResetDeadZones(){
-            s_deadZones = new();
-        }
+
+        PropSystem m_propSystem;
         public void Init()
         {
+            m_propSystem = PropSystem.Instance;
 
             GeneratePool();
             m_lastUpdatePosition = TerrainGenerator.PlayerPosV2;
@@ -116,7 +111,6 @@ namespace ProcWorld
         public void SetFunction(PropPlacementFunction _a)
         {
             Function = _a;
-            UpdatePlacement();
         }
 
 
@@ -172,57 +166,29 @@ namespace ProcWorld
 
         }
 
-        public static void AddDeadZone(Vector2 _span, Vector2 _pos)
-        {
-            DeadZone dz;
-            dz.size = _span;
-            dz.pos = _pos;
-            // lock while removing or adding so that the main thread isn't blocked when adding/removing
-            // it's okay if main thread is adding or removing a dead zone and causing background threads to wait
-            lock (s_deadZones)
-            {
-                if (s_deadZones.Contains(dz))
-                {
-                    Debug.Log("Identical dead zone already exists, skipping");
-                    return;
-                }
-                s_deadZones.Add(dz);
-            }
-        }
+
         public bool IsInDeadZone(Vector3 _point)
         {
-            for (int i = 0; i < s_deadZones.Count; i++)
+            for (int i = 0; i < m_propSystem.DeadZones.Count; i++)
             {
-                float boundaryXRight = s_deadZones[i].pos.x + s_deadZones[i].size.x;
-                float boundaryXLeft = s_deadZones[i].pos.x - s_deadZones[i].size.x;
-                float boundaryYForward = s_deadZones[i].pos.y + s_deadZones[i].size.y;
-                float boundaryYBackward = s_deadZones[i].pos.y - s_deadZones[i].size.y;
 
 
+                Vector2 pointVec2;
+                pointVec2.x = _point.x;
+                pointVec2.y = _point.z;
+                Vector2 rotatedPoint = util.RotateAround(pointVec2, m_propSystem.DeadZones[i].pos, -m_propSystem.DeadZones[i].rotation);
 
-                if ((_point.x >= boundaryXLeft && _point.x <= boundaryXRight) && (_point.z >= boundaryYBackward && _point.z <= boundaryYForward))
-                {
-                    return true;
-                }
+                bool inbounds = util.IsInBounds(rotatedPoint, m_propSystem.DeadZones[i].pos, m_propSystem.DeadZones[i].size);
+
+
+                if (inbounds) return true;
+
+
             }
             return false;
 
         }
-        public static void RemoveDeadZone(DeadZone dz)
-        {
 
-            // lock while removing or adding so that the main thread isn't blocked when adding/removing
-            // it's okay if main thread is adding or removing a dead zone and causing background threads to wait
-            lock (s_deadZones)
-            {
-                if (!s_deadZones.Contains(dz))
-                {
-                    Debug.Log("Dead zone doesn't exist in list");
-                    return;
-                }
-                s_deadZones.Remove(dz);
-            }
-        }
 
 
         bool DataContainsPosition(List<PropTransformInfo> info, Vector3 pos, out int _dataIndex)
@@ -355,10 +321,11 @@ namespace ProcWorld
         public void ManualUpdate()
         {
             if (!m_init) return;
-
             Vector3 dist = (TerrainGenerator.PlayerPosV2 - m_lastUpdatePosition);
 
-            if (dist.magnitude >= m_updateDistance)
+
+       
+            if (dist.magnitude >= m_updateDistance || m_propSystem.AddedNewDeadzonesLastFrame)
             {
                 UpdatePlacement();
             }

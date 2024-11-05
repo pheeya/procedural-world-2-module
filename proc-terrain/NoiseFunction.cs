@@ -16,7 +16,8 @@ namespace ProcWorld
         public abstract bool ShouldGeneratePhysics(TerrainChunk _c);
         public abstract List<NoiseMapPart> GetDebugNoiseMapParts();
         public abstract void GenerateTestNoiseNonAlloc(float[,] n);
-        public abstract void OnNoiseModifierCreated(NoiseModifier mod);
+        public abstract void OnNoiseModifierCreated(NoiseModifierSource mod);
+        public abstract void OnNoiseModifierRemoved(NoiseModifierSource mod);
 
     }
 
