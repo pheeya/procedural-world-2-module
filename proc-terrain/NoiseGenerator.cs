@@ -430,7 +430,11 @@ namespace ProcWorld
 
         }
 
-    
+        struct Edge
+        {
+            public Vector2 a;
+            public Vector2 b;
+        }
         public static void FlattenRectangle(float[,] _map, float _targetNormalizedHeight, float _blend, Vector2 _rectWorldCenter, float _rotation, Vector2 _rectSize, AnimationCurve _fallOff, float _fallOffSize, float _offsetX, float _offsetY)
         {
 
@@ -441,7 +445,12 @@ namespace ProcWorld
 
             // chunk not within rectangle bounds
             Vector2 chunkCenter = new(_offsetX, _offsetY);
+            Vector2 rectSizeWithFallOff = _rectSize;
+            rectSizeWithFallOff.x += _fallOffSize * 2;
+            rectSizeWithFallOff.y += _fallOffSize * 2;
 
+
+            // rect corners
             Vector2 rectTopRight = _rectWorldCenter;
             rectTopRight.x += _rectSize.x / 2f;
             rectTopRight.y += _rectSize.y / 2f;
@@ -460,6 +469,46 @@ namespace ProcWorld
             rectBottomLeft.y -= _rectSize.y / 2f;
 
 
+            // rect with fall off corners
+            Vector2 rectWithFalloffTopRight = _rectWorldCenter;
+            rectWithFalloffTopRight.x += _rectSize.x / 2f + _fallOffSize;
+            rectWithFalloffTopRight.y += _rectSize.y / 2f + _fallOffSize;
+
+            Vector2 rectWithFalloffBottomRight = _rectWorldCenter;
+            rectWithFalloffBottomRight.x += _rectSize.x / 2f + _fallOffSize;
+            rectWithFalloffBottomRight.y -= _rectSize.y / 2f + _fallOffSize;
+
+
+            Vector2 rectWithFalloffTopLeft = _rectWorldCenter;
+            rectWithFalloffTopLeft.x -= _rectSize.x / 2f + _fallOffSize;
+            rectWithFalloffTopLeft.y += _rectSize.y / 2f + _fallOffSize;
+
+            Vector2 rectWithFalloffBottomLeft = _rectWorldCenter;
+            rectWithFalloffBottomLeft.x -= _rectSize.x / 2f + _fallOffSize;
+            rectWithFalloffBottomLeft.y -= _rectSize.y / 2f + _fallOffSize;
+
+
+
+            // chunk/noise corners
+
+            Vector2 chunkTopRight = chunkCenter;
+            chunkTopRight.x += mapSize.x / 2f;
+            chunkTopRight.y += mapSize.y / 2f;
+
+            Vector2 chunkBottomRight = chunkCenter;
+            chunkBottomRight.x += mapSize.x / 2f;
+            chunkBottomRight.y -= mapSize.y / 2f;
+
+
+            Vector2 chunkTopLeft = chunkCenter;
+            chunkTopLeft.x -= mapSize.x / 2f;
+            chunkTopLeft.y += mapSize.y / 2f;
+
+            Vector2 chunkBottomLeft = chunkCenter;
+            chunkBottomLeft.x -= mapSize.x / 2f;
+            chunkBottomLeft.y -= mapSize.y / 2f;
+
+
 
 
 
@@ -467,21 +516,77 @@ namespace ProcWorld
             Vector2 rectTopLeftRot = util.RotateAround(rectTopLeft, _rectWorldCenter, -_rotation);
             Vector2 rectBottomRightRot = util.RotateAround(rectBottomRight, _rectWorldCenter, -_rotation);
             Vector2 rectBottomLeftRot = util.RotateAround(rectBottomLeft, _rectWorldCenter, -_rotation);
+            Vector2 rectCenterRot = util.RotateAround(_rectWorldCenter, _rectWorldCenter, -_rotation);
+
+            Vector2 chunkTopRightRot = util.RotateAround(chunkTopRight, _rectWorldCenter, -_rotation);
+            Vector2 chunkTopLeftRot = util.RotateAround(chunkTopLeft, _rectWorldCenter, -_rotation);
+            Vector2 chunkBottomRightRot = util.RotateAround(chunkBottomRight, _rectWorldCenter, -_rotation);
+            Vector2 chunkBottomLeftRot = util.RotateAround(chunkBottomLeft, _rectWorldCenter, -_rotation);
+            Vector2 chunkCenterRot = util.RotateAround(chunkCenter, _rectWorldCenter, -_rotation);
 
 
 
-            bool inBounds = util.IsInBounds(rectTopRightRot, chunkCenter, mapSize) ||
-                            util.IsInBounds(rectTopLeftRot, chunkCenter, mapSize) ||
-                            util.IsInBounds(rectBottomRightRot, chunkCenter, mapSize) ||
-                            util.IsInBounds(rectBottomLeftRot, chunkCenter, mapSize);
-            if (!inBounds)
+            // bool rectInBoundsOfChunk = util.IsInBounds(rectTopRightRot, chunkCenter, mapSize) ||
+            //                 util.IsInBounds(rectTopLeftRot, chunkCenter, mapSize) ||
+            //                 util.IsInBounds(rectBottomRightRot, chunkCenter, mapSize) ||
+            //                 util.IsInBounds(rectBottomLeftRot, chunkCenter, mapSize);
+
+
+            // bool chunkInBoundsOfRect = util.IsInBounds(chunkTopRightRot, _rectWorldCenter, rectSizeWithFallOff) ||
+            //                             util.IsInBounds(chunkTopLeftRot, _rectWorldCenter, rectSizeWithFallOff) ||
+            //                             util.IsInBounds(chunkBottomRightRot, _rectWorldCenter, rectSizeWithFallOff) ||
+            //                             util.IsInBounds(chunkBottomLeftRot, _rectWorldCenter, rectSizeWithFallOff);
+
+
+            // float distFromRectTopRight = util.SqrDistanceFromRectangle(chunkTopRightRot, _rectWorldCenter, rectSizeWithFallOff);
+            // float distFromRectTopLeft = util.SqrDistanceFromRectangle(chunkTopLeftRot, _rectWorldCenter, rectSizeWithFallOff);
+
+            // float distFromRectBottomRight = util.SqrDistanceFromRectangle(chunkBottomRightRot, _rectWorldCenter, rectSizeWithFallOff);
+            // float distFromRectBottomLeft = util.SqrDistanceFromRectangle(chunkBottomLeftRot, _rectWorldCenter, rectSizeWithFallOff);
+
+
+
+            bool chunkCenterIsInRect = util.IsInBounds(chunkCenterRot, _rectWorldCenter, rectSizeWithFallOff);
+            bool rectCenterIsInChunk = util.IsInBounds(rectCenterRot, chunkCenter, mapSize);
+
+
+            Edge[] chunkRotatedEdges = new Edge[4];
+
+            chunkRotatedEdges[0] = new Edge { a = chunkTopLeftRot, b = chunkTopRightRot };
+            chunkRotatedEdges[1] = new Edge { a = chunkTopRightRot, b = chunkBottomRightRot };
+            chunkRotatedEdges[2] = new Edge { a = chunkBottomRightRot, b = chunkBottomLeftRot };
+            chunkRotatedEdges[3] = new Edge { a = chunkBottomLeftRot, b = chunkTopLeftRot };
+
+
+            Edge[] rectEdges = new Edge[4];
+
+
+            rectEdges[0] = new Edge { a = rectWithFalloffTopLeft, b = rectWithFalloffTopRight };
+            rectEdges[1] = new Edge { a = rectWithFalloffTopRight, b = rectWithFalloffBottomRight };
+            rectEdges[2] = new Edge { a = rectWithFalloffBottomRight, b = rectWithFalloffBottomLeft };
+            rectEdges[3] = new Edge { a = rectWithFalloffBottomLeft, b = rectWithFalloffTopLeft };
+
+            bool anyintersection = false;
+            for (int i = 0; i < 4; i++)
             {
+                for (int j = 0; j < 4; j++)
+                {
+                    anyintersection = util.IntersectSegments(chunkRotatedEdges[i].a, chunkRotatedEdges[i].b, rectEdges[j].a, rectEdges[j].b);
+                    if (anyintersection)
+                    {
+                        break;
+                    }
+                }
+                if (anyintersection) break;
+            }
+            if (!anyintersection && !chunkCenterIsInRect && !rectCenterIsInChunk)
+            {
+
+
                 return;
             }
 
 
-
-            float rectMag = _rectSize.magnitude;
 
 
             AnimationCurve _threadSafe = new(_fallOff.keys);
@@ -513,7 +618,21 @@ namespace ProcWorld
 
 
 
-                    dist = Mathf.Sqrt(dx * dx + dy * dy) / _fallOffSize;
+                    if (_fallOffSize == 0)
+                    {
+
+                        // dont sqrt here, 0 is 0
+                        dist = dx * dx + dy * dy;
+
+                        if (dist > 0)
+                        {
+                            dist = 1;
+                        }
+                    }
+                    else
+                    {
+                        dist = Mathf.Sqrt(dx * dx + dy * dy) / _fallOffSize;
+                    }
                     dist = 1 - dist;
                     dist = Mathf.Clamp01(dist);
                     dist = _threadSafe.Evaluate(dist);

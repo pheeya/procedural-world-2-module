@@ -30,7 +30,7 @@ namespace ProcWorld
         public static Vector2 RotateAround(Vector2 _point, Vector2 _around, float _radians)
         {
 
-            return RotateAround(_point.x, _point.y,_around.x, _around.y, _radians);
+            return RotateAround(_point.x, _point.y, _around.x, _around.y, _radians);
         }
 
         public static Vector2 RotateAround(float _pointx, float _pointy, float _aroundx, float _aroundy, float _radians)
@@ -59,6 +59,73 @@ namespace ProcWorld
 
 
             return overlapX && overlapY;
+        }
+
+        public static float SqrDistanceFromRectangle(Vector2 _point, Vector2 _rectCenter, Vector2 _rectSize)
+        {
+
+
+            Vector2 rectTopRight = _rectCenter;
+            rectTopRight.x += _rectSize.x / 2f;
+            rectTopRight.y += _rectSize.y / 2f;
+
+            Vector2 rectBottomRight = _rectCenter;
+            rectBottomRight.x += _rectSize.x / 2f;
+            rectBottomRight.y -= _rectSize.y / 2f;
+
+
+            Vector2 rectTopLeft = _rectCenter;
+            rectTopLeft.x -= _rectSize.x / 2f;
+            rectTopLeft.y += _rectSize.y / 2f;
+
+            Vector2 rectBottomLeft = _rectCenter;
+            rectBottomLeft.x -= _rectSize.x / 2f;
+            rectBottomLeft.y -= _rectSize.y / 2f;
+
+
+            float dx = Mathf.Max(rectTopLeft.x - _point.x, 0, _point.x - rectTopRight.x);
+            float dy = Mathf.Max(rectBottomLeft.y - _point.y, 0, _point.y - rectTopLeft.y);
+
+            return dx * dx + dy * dy;
+        }
+
+        public static bool IntersectSegments(Vector2 a1, Vector2 a2, Vector2 b1, Vector2 b2)
+        {
+            
+            Vector2 dirA = (a2 - a1);
+            Vector2 dirB = (b2 - b1);
+
+
+            // a1.x + t*dirA.x = b1.x + u*dirB.x;
+            // a1.y + t*dirA.y = b1.y + u*dirB.y;
+
+            // t = (b1.y + u*dirB.y - a1.y)/dirA.y 
+
+            // u = (a1.x + t*dirA.x - b1.x)/dirB.x
+
+
+            // t = (b1.y +  ((a1.x + t*dirA.x -b1.x)/dirB.x) *dirB.y - a1.y )/dirA.y
+            // t * dirA.y = (b1.y +  ((a1.x + t*dirA.x -b1.x)/dirB.x) *dirB.y - a1.y )
+
+
+            // t*dirA.y * dirB.x = b1.y *dirB.x + (a1.x + t*dirA.x - b1.x)*dirB.y - a1.y *dirB.x
+
+            // t*dirA.y*  dirB.x - t*dirA.x*dirB.y = b1.y*dirB.x + (a1.x-b1.x)*dirB.1 - a1.y*dirB.x
+            // t = (b1.y*dirB.x + (a1.x-b1.x)*dirB.y - a1.y*dirB.x) / (dirA.y * dirB.x - dirA.x*dirB.y)
+
+            // t = (dirB.x(b1.y - a1.y) + (a1.x-b1.x)*dirB.y) / (dirA.y * dirB.x - dirA.x*dirB.y)
+            float den = (dirA.y * dirB.x - dirA.x * dirB.y);
+            if (Mathf.Approximately(den, 0))
+            {
+                return false;
+            }
+            float t = (dirB.x * (b1.y - a1.y) + (a1.x - b1.x) * dirB.y) / den;
+
+
+            float u = (a1.x + t * dirA.x - b1.x) / dirB.x;
+
+
+            return t >= 0 && t <= 1 && u >= 0 && u <= 1;
         }
     }
 }
