@@ -325,7 +325,7 @@ namespace ProcWorld
 
 
        
-            if (dist.magnitude >= m_updateDistance || m_propSystem.AddedNewDeadzonesLastFrame)
+            if (dist.magnitude >= m_updateDistance || m_propSystem.AddedNewDeadzonesLastFrame || m_propSystem.IsDirty)
             {
                 UpdatePlacement();
             }

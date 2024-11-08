@@ -6,7 +6,9 @@ namespace ProcWorld
 {
     public class PropDeadZone : MonoBehaviour
     {
-        void Awake()
+
+      
+        void Start()
         {
             if (PropSystem.Instance.DidInit)
             {
@@ -17,6 +19,7 @@ namespace ProcWorld
                 PropSystem.Instance.EOnInit += Add;
             }
         }
+
         void Add()
         {
             Vector3 size = transform.lossyScale;

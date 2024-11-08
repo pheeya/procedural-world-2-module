@@ -590,7 +590,7 @@ namespace ProcWorld
                         TerrainChunk existing = terrainChunks[viewedChunkCoord];
                         if (existing.Dirty && !existing.Processing)
                         {
-                     
+
                             existing.Regenerate();
                         }
                         continue;
@@ -668,6 +668,8 @@ namespace ProcWorld
             m_started = false;
         }
 
+
+        public Action EBeforeChunkGenerationStarted;
         public void Init()
         {
             GeneralBackgroundProcessor.instance.Init();
@@ -695,6 +697,7 @@ namespace ProcWorld
             maxChunksVisible = Mathf.RoundToInt(_drawDistance / m_chunkSize);
 
 
+            EBeforeChunkGenerationStarted?.Invoke();
             if (Mode == TerrainMode.Static)
             {
                 GenerateTerrain();

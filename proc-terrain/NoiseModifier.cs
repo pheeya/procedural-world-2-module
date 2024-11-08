@@ -51,12 +51,14 @@ namespace ProcWorld
                     }
                 }
             }
+
+            PropSystem.Instance.MarkDirty();
         }
 
         void OnDestroy()
         {
-            if(TerrainGenerator.Instance!=null)
-            TerrainGenerator.Instance.noiseFunction.OnNoiseModifierRemoved(Source);
+            if (TerrainGenerator.Instance != null)
+                TerrainGenerator.Instance.noiseFunction.OnNoiseModifierRemoved(Source);
         }
     }
 }

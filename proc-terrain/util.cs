@@ -137,5 +137,15 @@ namespace ProcWorld
 
             return t >= 0 && t <= 1 && u >= 0 && u <= 1;
         }
+
+
+        public static float DistanceXZ(Vector3 vec1, Vector3 vec2)
+        {
+            vec1.y = 0;
+            vec2.y = 0;
+
+
+            return Vector3.Distance(vec1, vec2);
+        }
     }
 }

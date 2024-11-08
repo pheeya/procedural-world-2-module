@@ -26,8 +26,22 @@ namespace ProcWorld
         Vector3 m_staticScale;
 
         bool m_applicationPlaying = false;
+
+
+        // do this in start so that this always happens after a scenario has been placed, in case this is part of scenario
+        //  this is because the sceneLoaded event is called after Awake but before start so the position of the scene is set before start and after awake
+
         void Awake()
         {
+            TerrainGenerator.Instance.EBeforeChunkGenerationStarted += Init;
+        }
+
+        bool m_added = false;
+        void Add()
+        {
+            if (m_added) return;
+
+            m_added = true;
             m_applicationPlaying = true;
             m_staticPos = transform.position;
             m_staticScale = transform.lossyScale;
@@ -36,7 +50,20 @@ namespace ProcWorld
             m_modifier.SetFunction(Flatten, CreateBoundsRelative());
 
 
+        }
 
+
+        // this is to ensure that any noise modifiers that exist already from scene start as part of the scene
+        // are loaded before the chunk generation
+        void Init()
+        {
+            Add();
+        }
+
+        // this is for modifiers that are added dynamically at run time
+        void Start()
+        {
+            Add();
         }
 
         void OnValidate()
@@ -97,7 +124,7 @@ namespace ProcWorld
         Vector2 GetRelativePosV2YInverted()
         {
             Vector2 vec2 = GetRelativePosV2();
-            vec2.y*=-1;
+            vec2.y *= -1;
             return vec2;
         }
         Vector2 GetRelativePosV2()

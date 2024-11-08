@@ -79,6 +79,12 @@ namespace ProcWorld
 
             AddedNewDeadzonesLastFrame = true;
         }
+
+        public bool IsDirty { get; private set; }
+        public void MarkDirty()
+        {
+            IsDirty = true;
+        }
         public void RemoveDeadZone(DeadZoneSource dz)
         {
 
@@ -103,6 +109,7 @@ namespace ProcWorld
                 m_propPlacers[i].ManualUpdate();
             }
             AddedNewDeadzonesLastFrame = false;
+            IsDirty = false;
         }
     }
 
