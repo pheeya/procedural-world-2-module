@@ -27,7 +27,7 @@ namespace ProcWorld
 
         [SerializeField] TerrainGenerator m_terrainGen;
 
-        [field:SerializeField, Tooltip("Optional, arbitray height that can be used by anything")] public float BaseLineHeight {get;private set;}
+        [field: SerializeField, Tooltip("Optional, arbitray height that can be used by anything")] public float BaseLineHeight { get; private set; }
 
         static ProceduralWorld _instance;
         public static ProceduralWorld Instance
@@ -50,7 +50,7 @@ namespace ProcWorld
         }
         void OnInitialChunksCreated()
         {
-         
+
 
             EInitialChunksCreated?.Invoke();
         }
@@ -60,6 +60,7 @@ namespace ProcWorld
 
             // for now, only terrain is being generated so consider the whole world generated
             m_finished = true;
+            Loaded = true;
 
 
             EOnCreated?.Invoke();
@@ -78,6 +79,8 @@ namespace ProcWorld
 
             generator.Init();
         }
+
+        public bool Loaded { get; private set; }
 
         public void Stop()
         {

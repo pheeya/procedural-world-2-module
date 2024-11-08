@@ -87,7 +87,7 @@ namespace ProcWorld
 
             if (!m_spawnSubScene) return;
             if (LoadStarted || Loaded) return;
-            if (!Game.Instance.Loaded) return;
+            if (!ProceduralWorld.Instance.Loaded) return;
 
 
 
