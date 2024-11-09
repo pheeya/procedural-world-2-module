@@ -54,7 +54,7 @@ MonoBehaviour:
   m_numBackgroundThreads: 4
   _featureGenerator: {fileID: 6131098863559810031}
   <noiseFunction>k__BackingField: {fileID: 8903148467807767722}
-  _terrainMat: {fileID: 2100000, guid: 9cc90b7d7028a1941a5705c42e63c3d2, type: 2}
+  _terrainMat: {fileID: 2100000, guid: 08f135f1fddcdf245883d63863a605ac, type: 2}
   Mode: 1
   m_chunksParent: {fileID: 4991065311066778598}
   <DefaultLOD>k__BackingField: 0
@@ -431,7 +431,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 9cc90b7d7028a1941a5705c42e63c3d2, type: 2}
+  - {fileID: 2100000, guid: 08f135f1fddcdf245883d63863a605ac, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
