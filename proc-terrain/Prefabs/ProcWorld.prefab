@@ -50,15 +50,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8d1bf775654835347944a7e23b070586, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_timeStepMS: 0
-  m_numBackgroundThreads: 0
+  m_timeStepMS: 20
+  m_numBackgroundThreads: 4
   _featureGenerator: {fileID: 6131098863559810031}
   <noiseFunction>k__BackingField: {fileID: 8903148467807767722}
-  _terrainMat: {fileID: 2100000, guid: 08f135f1fddcdf245883d63863a605ac, type: 2}
-  Mode: 0
+  _terrainMat: {fileID: 2100000, guid: 9cc90b7d7028a1941a5705c42e63c3d2, type: 2}
+  Mode: 1
   m_chunksParent: {fileID: 4991065311066778598}
   <DefaultLOD>k__BackingField: 0
-  <Normalize>k__BackingField: 1
+  <Normalize>k__BackingField: 0
   terrainTypes:
   - name: water
     height: 0
@@ -70,7 +70,7 @@ MonoBehaviour:
     height: 1
     color: {r: 0.8117647, g: 0.7633675, b: 0.654902, a: 1}
   <RoadConfig>k__BackingField:
-    amplitude: 5
+    amplitude: 6
     brushRadius: 25
     brushSpacing: 5
     blurPadding: 100
@@ -110,79 +110,29 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   <RoadCurveConfig>k__BackingField:
-    amplitude: 0
-    padding: 0
-    width: 0
+    amplitude: 6
+    padding: 125
+    width: 25
     distanceModifier:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    invert: 0
-    perlinConfig:
-      seed: 0
-      scale: 0
-      octaves: 0
-      persistance: 0
-      lacunarity: 0
-      standardMaxValue: 0
-  <ValleyCurveConfig>k__BackingField:
-    amplitude: 0
-    padding: 0
-    width: 0
-    distanceModifier:
-      serializedVersion: 2
-      m_Curve: []
-      m_PreInfinity: 2
-      m_PostInfinity: 2
-      m_RotationOrder: 4
-    invert: 0
-    perlinConfig:
-      seed: 0
-      scale: 0
-      octaves: 0
-      persistance: 0
-      lacunarity: 0
-      standardMaxValue: 0
-  <RoadNoiseMaxHeight>k__BackingField: 0.5
-  <RoadNoiseBlend>k__BackingField: 0.9
-  <ValleyConfig>k__BackingField:
-    amplitude: 5
-    brushRadius: 120
-    brushSpacing: 75
-    blurPadding: 450
-    blurAmount: 6
-    test: 0
-    brush:
       serializedVersion: 2
       m_Curve:
       - serializedVersion: 3
         time: 0
         value: 0
-        inSlope: 1.3320891
-        outSlope: 1.3320891
+        inSlope: 1.9546156
+        outSlope: 1.9546156
         tangentMode: 34
         weightedMode: 0
         inWeight: 0
         outWeight: 0.33333334
       - serializedVersion: 3
-        time: 0.16857584
-        value: 0.22455803
-        inSlope: 2.1187203
-        outSlope: 2.1187203
+        time: 0.51160955
+        value: 1
+        inSlope: 0
+        outSlope: 0
         tangentMode: 0
         weightedMode: 0
-        inWeight: 0.26890516
-        outWeight: 0.08120509
-      - serializedVersion: 3
-        time: 0.87829983
-        value: 1
-        inSlope: 0.36987698
-        outSlope: 0
-        tangentMode: 1
-        weightedMode: 0
-        inWeight: 0.11403036
+        inWeight: 0.33333334
         outWeight: 0.33333334
       - serializedVersion: 3
         time: 1
@@ -196,24 +146,119 @@ MonoBehaviour:
       m_PreInfinity: 2
       m_PostInfinity: 2
       m_RotationOrder: 4
-  <ValleyNoiseExtrusion>k__BackingField: 0
+    invert: 0
+    perlinConfig:
+      seed: 1
+      scale: 600
+      octaves: 2
+      persistance: 0.5
+      lacunarity: 2
+      standardMaxValue: 0
+  <ValleyCurveConfig>k__BackingField:
+    amplitude: 6
+    padding: 600
+    width: 400
+    distanceModifier:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 1.96111
+        outSlope: 1.96111
+        tangentMode: 34
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.51160955
+        value: 1.0033226
+        inSlope: 0
+        outSlope: 0
+        tangentMode: 0
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.7
+        value: 0
+        inSlope: -5.325762
+        outSlope: -5.325762
+        tangentMode: 34
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+    invert: 0
+    perlinConfig:
+      seed: 1
+      scale: 600
+      octaves: 2
+      persistance: 0.5
+      lacunarity: 2
+      standardMaxValue: 0
+  <RoadNoiseMaxHeight>k__BackingField: 0.2
+  <RoadNoiseBlend>k__BackingField: 0.9
+  <ValleyConfig>k__BackingField:
+    amplitude: 6
+    brushRadius: 150
+    brushSpacing: 80
+    blurPadding: 550
+    blurAmount: 3
+    test: 0
+    brush:
+      serializedVersion: 2
+      m_Curve:
+      - serializedVersion: 3
+        time: 0
+        value: 0
+        inSlope: 2.4316518
+        outSlope: 2.4316518
+        tangentMode: 34
+        weightedMode: 0
+        inWeight: 0
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 0.25807154
+        value: 0.6275401
+        inSlope: 1.4668338
+        outSlope: 1.4668338
+        tangentMode: 34
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0.33333334
+      - serializedVersion: 3
+        time: 1
+        value: 1
+        inSlope: 0.5020159
+        outSlope: 0.5020159
+        tangentMode: 34
+        weightedMode: 0
+        inWeight: 0.33333334
+        outWeight: 0
+      m_PreInfinity: 2
+      m_PostInfinity: 2
+      m_RotationOrder: 4
+  <ValleyNoiseExtrusion>k__BackingField: 0.5
   <ValleyNoiseBlend>k__BackingField: 1
-  m_chunkSize: 238
-  m_neighboursX: 3
-  m_neighboursY: 3
+  m_chunkSize: 118
+  m_neighboursX: 5
+  m_neighboursY: 13
   <PerlinConfig>k__BackingField:
-    seed: 1
+    seed: 2
     scale: 200
     octaves: 3
     persistance: 0.126
     lacunarity: 3.92
-    standardMaxValue: 0
+    standardMaxValue: 1.7
   <RoadHorizontalPerlinConfig>k__BackingField:
-    seed: 5
+    seed: 1
     scale: 600
-    octaves: 1
-    persistance: 0.01
-    lacunarity: 1
+    octaves: 2
+    persistance: 0.5
+    lacunarity: 2
     standardMaxValue: 0
   <RoadVerticalPerlinConfig>k__BackingField:
     seed: 1
@@ -223,11 +268,11 @@ MonoBehaviour:
     lacunarity: 1
     standardMaxValue: 0
   <ValleyPerlinConfig>k__BackingField:
-    seed: 5
+    seed: 1
     scale: 600
     octaves: 2
     persistance: 0.5
-    lacunarity: 2.5
+    lacunarity: 2
     standardMaxValue: 0
   _offsetX: 0
   _offsetY: 0
@@ -262,7 +307,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 512
   m_terrainGen: {fileID: 3314144022405146678}
-  <BaseLineHeight>k__BackingField: 0
+  <BaseLineHeight>k__BackingField: 14.676
 --- !u!114 &4604378020155984071
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -318,6 +363,7 @@ GameObject:
   - component: {fileID: 3637111174493244373}
   - component: {fileID: 7768340361023716504}
   - component: {fileID: 2254129465748418129}
+  - component: {fileID: 9085228656517208112}
   m_Layer: 0
   m_Name: DebugTerrain
   m_TagString: Untagged
@@ -382,7 +428,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: cb644a6710cff6543a974c65d8336498, type: 2}
+  - {fileID: 2100000, guid: 9cc90b7d7028a1941a5705c42e63c3d2, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -404,6 +450,28 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &9085228656517208112
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7073969558852055452}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: 0}
 --- !u!1 &8629696481272575017
 GameObject:
   m_ObjectHideFlags: 0
