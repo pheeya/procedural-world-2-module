@@ -54,7 +54,7 @@ MonoBehaviour:
   m_numBackgroundThreads: 0
   _featureGenerator: {fileID: 6131098863559810031}
   <noiseFunction>k__BackingField: {fileID: 8903148467807767722}
-  _terrainMat: {fileID: 2100000, guid: 08f135f1fddcdf245883d63863a605ac, type: 2}
+  _terrainMat: {fileID: 2100000, guid: f6fd10fb89110714ab37a31bccb71339, type: 2}
   Mode: 0
   m_chunksParent: {fileID: 4991065311066778598}
   <DefaultLOD>k__BackingField: 0
@@ -260,9 +260,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_terrainHeightSampleLayerMask:
     serializedVersion: 2
-    m_Bits: 512
+    m_Bits: 0
   m_terrainGen: {fileID: 3314144022405146678}
-  <BaseLineHeight>k__BackingField: 0
+  <BaseLineHeight>k__BackingField: 5
 --- !u!114 &4604378020155984071
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -272,7 +272,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 371271285687471738}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e8a5c816356f66b499705aa866ca9114, type: 3}
+  m_Script: {fileID: 11500000, guid: 5d04a6a6a6be4594fae4cfd0924de11f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &1756790704923694779
@@ -379,6 +379,9 @@ MeshRenderer:
   m_ReflectionProbeUsage: 1
   m_RayTracingMode: 2
   m_RayTraceProcedural: 0
+  m_RayTracingAccelStructBuildFlagsOverride: 0
+  m_RayTracingAccelStructBuildFlags: 1
+  m_SmallMeshCulling: 1
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
@@ -445,7 +448,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 8629696481272575017}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e3b75fffcbc00c6498b269f79f116a98, type: 3}
+  m_Script: {fileID: 11500000, guid: 0665e4ad8acdb4f44b5896a61b58638f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_terrainGenerator: {fileID: 3314144022405146678}
@@ -480,5 +483,5 @@ MonoBehaviour:
     octaves: 4
     persistance: 0.31
     lacunarity: 2.71
-    standardMaxValue: 0
-  m_maxApproximateNoiseValue: 0.9
+    standardMaxValue: 0.9
+  m_maxApproximateNoiseValue: 0

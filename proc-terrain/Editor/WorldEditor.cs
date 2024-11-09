@@ -38,7 +38,7 @@ namespace ProcWorld
 
             if (debugTerrain == null)
             {
-                debugTerrain = FindObjectOfType<DebugTerrain>();
+                debugTerrain = FindFirstObjectByType<DebugTerrain>();
             }
 
             m_draw.Clear();
