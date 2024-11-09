@@ -137,7 +137,6 @@ namespace ProcWorld
                     float yPos = _heightCurve.Evaluate(_heightmap.Values[sx, sy]) * _heightScale;
 
                     Vector3 pos = new Vector3(xPos, yPos, zPos);
-                    pos.y = 0;
                     // Vector3 pos = new Vector3(topLeftX + x, yPos, topLeftZ - y); 
                     if (isBorder)
                     {
