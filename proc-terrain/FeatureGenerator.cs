@@ -8,7 +8,7 @@ namespace ProcWorld
     {
         public Feature[] features;
 
-        public void GenerateFeatures(float[,] map, float _heightScale, AnimationCurve _heightCurve, float[,] _terrainMap)
+        public void GenerateFeatures(float[,] map, float _heightScale, ThreadSafeAnimationCurve _heightCurve, float[,] _terrainMap)
         {
             int width = map.GetLength(0);
             int height = map.GetLength(1);

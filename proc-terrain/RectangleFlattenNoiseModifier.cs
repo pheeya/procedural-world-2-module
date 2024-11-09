@@ -17,6 +17,7 @@ namespace ProcWorld
         [SerializeField, HideInInspector] Vector2 m_flattenArea;
         [SerializeField, HideInInspector] Vector2 m_localPositionToTerrain;
         [SerializeField] AnimationCurve m_flattenAreaFalloff;
+        [SerializeField] ThreadSafeAnimationCurve m_flattenAreaFalloffThreadSafe;
         [SerializeField] float m_flattenAreaFalloffSize;
 
 
@@ -90,7 +91,7 @@ namespace ProcWorld
                 GetRelativePosV2(),
                 Mathf.Deg2Rad * m_rotationY,
                 GetDimensionsVec2(),
-                 m_flattenAreaFalloff,
+                 m_flattenAreaFalloffThreadSafe,
                  m_flattenAreaFalloffSize,
                  _offsetX, _offsetY);
         }

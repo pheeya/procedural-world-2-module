@@ -67,7 +67,7 @@ Material:
     - _QueueControl: 0
     - _QueueOffset: 0
     m_Colors:
-    - _PositionOffset: {r: 0, g: 0, b: -406.60938, a: 0}
+    - _PositionOffset: {r: 0, g: 0, b: -982.7604, a: 0}
     - _TexColorX: {r: 0.754717, g: 0.754717, b: 0.754717, a: 0}
     - _TexColorY: {r: 0.9339623, g: 0.9220169, b: 0.8590691, a: 0}
     - _TexColorZ: {r: 0.41509432, g: 0.41509432, b: 0.41509432, a: 0}

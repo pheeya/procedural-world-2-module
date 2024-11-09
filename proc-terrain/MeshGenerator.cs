@@ -8,7 +8,7 @@ namespace ProcWorld
     public class MeshGenerator
     {
         static int logs = 0;
-        public static MeshData GenerateMeshFromHeightMap(HeightMap _heightmap, float _heightScale, AnimationCurve _heightCurve, int _lod)
+        public static MeshData GenerateMeshFromHeightMap(HeightMap _heightmap, float _heightScale, ThreadSafeAnimationCurve _heightCurve, int _lod)
         {
 
 
