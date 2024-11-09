@@ -19,7 +19,7 @@ namespace ProcWorld
         public abstract void OnNoiseModifierCreated(NoiseModifierSource mod);
         public abstract void OnNoiseModifierRemoved(NoiseModifierSource mod);
 
-        public abstract AnimationCurve GetTerrainHeightCurve();
+        public abstract ThreadSafeAnimationCurve GetTerrainHeightCurve();
 
         public abstract float GetHeightScale();
 

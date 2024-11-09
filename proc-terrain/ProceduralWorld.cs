@@ -22,7 +22,7 @@ namespace ProcWorld
         bool m_terrainFinished = false;
 
         public delegate void ProceduralWorldEvent();
-        public ProceduralWorldEvent EOnCreated;
+        public ProceduralWorldEvent EInitialWorldCreated;
         public ProceduralWorldEvent EInitialChunksCreated;
 
         [SerializeField] TerrainGenerator m_terrainGen;
@@ -53,8 +53,9 @@ namespace ProcWorld
 
 
             EInitialChunksCreated?.Invoke();
+            OnWorldCreated();
         }
-        void OnTerrainFinished()
+        void OnWorldCreated()
         {
             m_terrainFinished = true;
 
@@ -63,7 +64,7 @@ namespace ProcWorld
             Loaded = true;
 
 
-            EOnCreated?.Invoke();
+            EInitialWorldCreated?.Invoke();
         }
         bool m_started = false;
 
@@ -73,7 +74,6 @@ namespace ProcWorld
             MainThreadDispatcher.Init();
 
             generator = FindObjectOfType<TerrainGenerator>();
-            generator.EOnFinished += OnTerrainFinished;
             generator.EInitialChunksCreated += OnInitialChunksCreated;
             m_started = true;
 

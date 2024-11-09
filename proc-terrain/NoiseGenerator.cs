@@ -318,7 +318,6 @@ namespace ProcWorld
             System.Diagnostics.Stopwatch sw = new();
 
             int blurredMapWidth = _width + _config.padding;
-            _config.distanceModifier = new(_config.distanceModifier.keys);
 
 
 
@@ -435,7 +434,7 @@ namespace ProcWorld
             public Vector2 a;
             public Vector2 b;
         }
-        public static void FlattenRectangle(float[,] _map, float _targetNormalizedHeight, float _blend, Vector2 _rectWorldCenter, float _rotation, Vector2 _rectSize, AnimationCurve _fallOff, float _fallOffSize, float _offsetX, float _offsetY)
+        public static void FlattenRectangle(float[,] _map, float _targetNormalizedHeight, float _blend, Vector2 _rectWorldCenter, float _rotation, Vector2 _rectSize, ThreadSafeAnimationCurve _fallOff, float _fallOffSize, float _offsetX, float _offsetY)
         {
 
             float halfWidth = _map.GetLength(0) / 2f;
@@ -612,7 +611,6 @@ namespace ProcWorld
             //     return;
             // }
 
-            AnimationCurve _threadSafe = new(_fallOff.keys);
 
 
             for (int y = 0; y < _map.GetLength(1); y++)
@@ -658,7 +656,7 @@ namespace ProcWorld
                     }
                     dist = 1 - dist;
                     dist = Mathf.Clamp01(dist);
-                    dist = _threadSafe.Evaluate(dist);
+                    dist = _fallOff.Evaluate(dist);
 
                     _map[x, y] = Mathf.Lerp(_map[x, y], _targetNormalizedHeight, dist * _blend);
 
@@ -694,8 +692,6 @@ namespace ProcWorld
             Vector2[] verticalOctaveOffsets = GetOctaveOffsets(_verticalNoise, 0, _offsetY);
 
 
-            // find a way to not have to allocate memory every time
-            AnimationCurve brush = new(_roadConfig.brush.keys);
 
             for (int y = 0; y < blurredMapWidth; y += _roadConfig.brushSpacing)
             {
@@ -741,14 +737,14 @@ namespace ProcWorld
                         for (float t = 0; t < 1; t += (1f / strokes))
                         {
                             Vector2 pos = Vector2.Lerp(previousPos, currentPos, t);
-                            StampCircleNonAlloc(generatedBlurredMap, Mathf.RoundToInt(pos.x), Mathf.RoundToInt(pos.y), _roadConfig.brushRadius, brush);
+                            StampCircleNonAlloc(generatedBlurredMap, Mathf.RoundToInt(pos.x), Mathf.RoundToInt(pos.y), _roadConfig.brushRadius, _roadConfig.brush);
 
                         }
 
                     }
                 }
 
-                StampCircleNonAlloc(generatedBlurredMap, xPosLocal, y - startingYPos, _roadConfig.brushRadius, brush);
+                StampCircleNonAlloc(generatedBlurredMap, xPosLocal, y - startingYPos, _roadConfig.brushRadius, _roadConfig.brush);
                 previousPos = currentPos;
 
             }
@@ -841,7 +837,7 @@ namespace ProcWorld
         }
         static int maxLogs = 100;
         static int logs = 0;
-        public static float[,] StampCircle(float[,] _noise, int _centerX, int _centerY, int _radius, AnimationCurve _brush)
+        public static float[,] StampCircle(float[,] _noise, int _centerX, int _centerY, int _radius, ThreadSafeAnimationCurve _brush)
         {
 
 
@@ -893,7 +889,7 @@ namespace ProcWorld
             return _noise;
         }
 
-        public static void StampCircleNonAlloc(float[,] _noise, int _centerX, int _centerY, int _radius, AnimationCurve _brush)
+        public static void StampCircleNonAlloc(float[,] _noise, int _centerX, int _centerY, int _radius, ThreadSafeAnimationCurve _brush)
         {
 
             Vector2 pos;
@@ -1154,7 +1150,7 @@ namespace ProcWorld
         public int blurPadding;
         public int blurAmount;
         public int test;
-        public AnimationCurve brush;
+        public ThreadSafeAnimationCurve brush;
 
     }
     [System.Serializable]
@@ -1163,7 +1159,7 @@ namespace ProcWorld
         public float amplitude;
         public int padding;
         public int width;
-        public AnimationCurve distanceModifier;
+        public ThreadSafeAnimationCurve distanceModifier;
         public bool invert;
         public PerlinNoiseConfig perlinConfig;
 

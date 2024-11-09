@@ -71,7 +71,7 @@ namespace ProcWorld
         // this is not actually worldpos, this is position from terrain generator origin (normalized_coord*size)
         public Vector3 m_relativePosToParent;
         float m_heightScale;
-        AnimationCurve m_heightCurve;
+        ThreadSafeAnimationCurve m_heightCurve;
         int m_defaultLOD;
         public bool Initial { get; private set; }
 
@@ -111,8 +111,11 @@ namespace ProcWorld
         public Vector3[] Normals { get; private set; }
 
 
-        public TerrainChunk(bool _initial, int _noiseMapSize, int _size, float _heightScale, AnimationCurve _heightCurve, Vector2 _coord, Material _mat, Transform _parent, int _defaultLOD)
+        public TerrainChunk(bool _initial, int _noiseMapSize, int _size, float _heightScale, ThreadSafeAnimationCurve _heightCurve, Vector2 _coord, Material _mat, Transform _parent, int _defaultLOD)
         {
+
+            m_heightCurve = _heightCurve;
+
             gen = TerrainGenerator.Instance;
             ChunkCoordinate = _coord;
             m_size = _size;
@@ -125,8 +128,6 @@ namespace ProcWorld
             m_roadConfig = gen.RoadConfig;
             m_valleyConfig = gen.ValleyConfig;
 
-            m_roadConfig.brush = new(m_roadConfig.brush.keys);
-            m_valleyConfig.brush = new(m_valleyConfig.brush.keys);
 
 
             chunkObj = new GameObject("Chunk");
@@ -150,7 +151,6 @@ namespace ProcWorld
 
 
             m_heightScale = _heightScale;
-            m_heightCurve = new(_heightCurve.keys);
 
 
             SetVisibility(false);

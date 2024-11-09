@@ -91,8 +91,8 @@ namespace ProcWorld
 
 
 
-
             float distFromOrigin = util.DistanceXZ(TerrainGenerator.PlayerPosV3, m_originMeters);
+
             if (Mathf.Abs(distFromOrigin) <= m_spawnDistanceMeters)
             {
 

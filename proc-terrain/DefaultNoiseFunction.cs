@@ -8,7 +8,7 @@ namespace ProcWorld
     {
         [SerializeField] TerrainGenerator m_terrainGenerator;
         [SerializeField] float m_heightScale;
-        [SerializeField] AnimationCurve m_terrainHeightCurve;
+        [SerializeField] ThreadSafeAnimationCurve m_threadSafeTerrainHeightCurve;
         [SerializeField] PerlinNoiseConfig m_noiseConfig;
         [SerializeField] float m_maxApproximateNoiseValue;
         List<NoiseModifierSource> m_modifiers = new();
@@ -63,9 +63,9 @@ namespace ProcWorld
             return list;
         }
 
-        public override AnimationCurve GetTerrainHeightCurve()
+        public override ThreadSafeAnimationCurve GetTerrainHeightCurve()
         {
-            return m_terrainHeightCurve;
+            return m_threadSafeTerrainHeightCurve;
         }
 
         public override void OnNoiseModifierCreated(NoiseModifierSource mod)
