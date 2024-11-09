@@ -27,7 +27,7 @@ namespace ProcWorld
         void OnValidate()
         {
             DebugTerrain debugTerrain;
-            debugTerrain = FindObjectOfType<DebugTerrain>();
+            debugTerrain = FindFirstObjectByType<DebugTerrain>();
             debugTerrain.GenerateMesh(TerrainGenerator.Instance.GenerateTestMeshData().CreateMesh(), null);
         }
 
