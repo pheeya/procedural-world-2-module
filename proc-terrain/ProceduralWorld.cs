@@ -95,8 +95,8 @@ namespace ProcWorld
         public bool GetHeightAtPoint(Vector3 _pos, out RaycastHit hitInfo)
         {
             Vector3 sample = _pos;
-            sample.y = m_terrainGen._heightScale + 10f; ;
-            bool hit = Physics.Raycast(sample, Vector3.down, out hitInfo, m_terrainGen._heightScale + 20f, m_terrainHeightSampleLayerMask);
+            sample.y = m_terrainGen.noiseFunction.GetHeightScale() + 10f; ;
+            bool hit = Physics.Raycast(sample, Vector3.down, out hitInfo, m_terrainGen.noiseFunction.GetHeightScale() + 20f, m_terrainHeightSampleLayerMask);
 
             if (!hit)
             {

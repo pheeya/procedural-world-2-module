@@ -19,6 +19,19 @@ namespace ProcWorld
         public abstract void OnNoiseModifierCreated(NoiseModifierSource mod);
         public abstract void OnNoiseModifierRemoved(NoiseModifierSource mod);
 
+        public abstract AnimationCurve GetTerrainHeightCurve();
+
+        public abstract float GetHeightScale();
+
+
+        void OnValidate()
+        {
+            DebugTerrain debugTerrain;
+            debugTerrain = FindObjectOfType<DebugTerrain>();
+            debugTerrain.GenerateMesh(TerrainGenerator.Instance.GenerateTestMeshData().CreateMesh(), null);
+        }
+
+
     }
 
 

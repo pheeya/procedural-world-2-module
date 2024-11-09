@@ -27,13 +27,11 @@ namespace ProcWorld
         public FeatureGenerator _featureGenerator;
         [field: SerializeField] public NoiseFunction noiseFunction { get; private set; }
         public Material _terrainMat;
-        public AnimationCurve _heightCurve;
         public static Vector2 PlayerPosV2 { get; private set; }
 
         [Header("Terrain Config")]
         [field: SerializeField] TerrainMode Mode;
         [SerializeField] Transform m_chunksParent;
-        public float _heightScale;
         [field: SerializeField, Range(0, 6)] public int DefaultLOD { get; private set; }
         [field: SerializeField] public bool Normalize { get; private set; }
         public static int _drawDistance = 900;
@@ -207,7 +205,7 @@ namespace ProcWorld
         {
             HeightMap hm = GenerateTestHeightMap();
 
-            return MeshGenerator.GenerateMeshFromHeightMap(hm, _heightScale, _heightCurve, DefaultLOD);
+            return MeshGenerator.GenerateMeshFromHeightMap(hm, noiseFunction.GetHeightScale(), noiseFunction.GetTerrainHeightCurve(), DefaultLOD);
         }
 
 
@@ -486,21 +484,21 @@ namespace ProcWorld
                     int index = x + y * m_neighboursX;
                     MapData mapdata = MapDatas[index];
                     Texture tex = TextureGenerator.TextureFromMap(mapdata.colormap, VertsPerSide() + 2, VertsPerSide() + 2);
-                    TerrainChunk chunk = new TerrainChunk(true, VertsPerSide() + 2, m_chunkSize, _heightScale, _heightCurve, pos, _terrainMat, m_chunksParent, DefaultLOD);
-                    // chunk.SetMesh(MeshGenerator.GenerateMeshFromHeightMap(mapdata.GetHeightMap(), _heightScale, _heightCurve, DefaultLOD).mesh);
+                    TerrainChunk chunk = new TerrainChunk(true, VertsPerSide() + 2, m_chunkSize, noiseFunction.GetHeightScale(), noiseFunction.GetTerrainHeightCurve(), pos, _terrainMat, m_chunksParent, DefaultLOD);
+                    // chunk.SetMesh(MeshGenerator.GenerateMeshFromHeightMap(mapdata.GetHeightMap(), noiseFunction.GetHeightScale(), noiseFunction.GetTerrainHeightCurve(), DefaultLOD).mesh);
                     terrainChunks.Add(pos, chunk);
                     chunk.SetVisibility(true);
                 }
             }
 
             // Texture tex = TextureGenerator.TextureFromMap(mapdata.colormap, VertsPerSide(), VertsPerSide());
-            // TerrainChunk terrain = new TerrainChunk(m_chunkSize, new HeightMap(m_chunkSize, m_chunkSize, mapdata.GetHeightMap().Values), mapdata.GetColorMap(), _heightScale, _heightCurve, Vector2.zero, _terrainMat, tex, transform);
+            // TerrainChunk terrain = new TerrainChunk(m_chunkSize, new HeightMap(m_chunkSize, m_chunkSize, mapdata.GetHeightMap().Values), mapdata.GetColorMap(), noiseFunction.GetHeightScale(), noiseFunction.GetTerrainHeightCurve(), Vector2.zero, _terrainMat, tex, transform);
 
 
-            // terrain.SetMesh(MeshGenerator.GenerateMeshFromHeightMap(mapdata.GetHeightMap(), _heightScale, _heightCurve).mesh);
+            // terrain.SetMesh(MeshGenerator.GenerateMeshFromHeightMap(mapdata.GetHeightMap(), noiseFunction.GetHeightScale(), noiseFunction.GetTerrainHeightCurve()).mesh);
             // terrain.SetVisibility(true);
             //disabled features for now
-            //_featureGenerator.GenerateFeatures(NoiseGenerator.GenerateNoiseMap(_seed+1, VertsPerSide(), VertsPerSide(), _noiseScale, _octaves, _persistance, _lacunarity, _offsetX, _offsetY), _heightScale, _heightCurve, mapdata.GetHeightMap());
+            //_featureGenerator.GenerateFeatures(NoiseGenerator.GenerateNoiseMap(_seed+1, VertsPerSide(), VertsPerSide(), _noiseScale, _octaves, _persistance, _lacunarity, _offsetX, _offsetY), noiseFunction.GetHeightScale(), noiseFunction.GetTerrainHeightCurve(), mapdata.GetHeightMap());
 
 
 
@@ -625,7 +623,7 @@ namespace ProcWorld
                     // else
                     // {
 
-                    //     TerrainChunk chunk = new TerrainChunk(false, m_chunkSize, _heightScale, _heightCurve, viewedChunkCoord, _terrainMat, m_chunksParent, DefaultLOD);
+                    //     TerrainChunk chunk = new TerrainChunk(false, m_chunkSize, noiseFunction.GetHeightScale(), noiseFunction.GetTerrainHeightCurve(), viewedChunkCoord, _terrainMat, m_chunksParent, DefaultLOD);
                     //     terrainChunks.Add(viewedChunkCoord, chunk);
 
                     //     m_visibleChunks.Add(chunk);
@@ -744,7 +742,7 @@ namespace ProcWorld
                 {
                     Vector2 viewedChunkCoord = new Vector2(currentChunkCoordX + xOffset, currentChunkCoordY + yOffset);
 
-                    TerrainChunk chunk = new TerrainChunk(true, VertsPerSide() + 2, m_chunkSize, _heightScale, _heightCurve, viewedChunkCoord, _terrainMat, m_chunksParent, DefaultLOD);
+                    TerrainChunk chunk = new TerrainChunk(true, VertsPerSide() + 2, m_chunkSize, noiseFunction.GetHeightScale(), noiseFunction.GetTerrainHeightCurve(), viewedChunkCoord, _terrainMat, m_chunksParent, DefaultLOD);
                     chunk.UpdateCoord(viewedChunkCoord);
 
                     terrainChunks.Add(viewedChunkCoord, chunk);
@@ -842,7 +840,7 @@ namespace ProcWorld
         }
         public float GetScaledNoiseAt(int x, int y)
         {
-            return _heightCurve.Evaluate(GetNoiseAt(x, y)) * _heightScale;
+            return noiseFunction.GetTerrainHeightCurve().Evaluate(GetNoiseAt(x, y)) * noiseFunction.GetHeightScale();
         }
         private void FixedUpdate()
         {
