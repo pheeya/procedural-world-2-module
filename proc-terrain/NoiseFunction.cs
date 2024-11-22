@@ -28,6 +28,12 @@ namespace ProcWorld
         {
             DebugTerrain debugTerrain;
             debugTerrain = FindFirstObjectByType<DebugTerrain>();
+
+
+// weird bug, this OnValidate keeps getting called even when this script isn't instantiated in the game world
+// perhaps something to do with it being abstract
+
+            if (debugTerrain == null) return;
             debugTerrain.GenerateMesh(TerrainGenerator.Instance.GenerateTestMeshData().CreateMesh(), null);
         }
 
